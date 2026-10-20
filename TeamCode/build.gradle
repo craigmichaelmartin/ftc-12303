@@ -22,6 +22,16 @@ android {
     packagingOptions {
         jniLibs.useLegacyPackaging true
     }
+
+    // FTC 12303: the Pedro AutoTune procedures (TeamCode/src/autotune/java) are compiled only when
+    // pedroAutoTune = true in build.dependencies.gradle. Keep it false for events (R704.D, Q&A 26).
+    sourceSets {
+        main {
+            if (pedroAutoTune) {
+                java.srcDirs += 'src/autotune/java'
+            }
+        }
+    }
 }
 
 dependencies {

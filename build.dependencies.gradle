@@ -1,7 +1,29 @@
 repositories {
     mavenCentral()
+    // Dairy Foundation repo: Pedro Pathing's AutoTune web pages need Sloth/Sinister from here.
+    // (Pedro's own artifacts are on Maven Central.)
+    maven { url 'https://repo.dairy.foundation/releases/' }
     google() // Needed for androidx
 }
+
+// -------------------------------------------------------------------------------------------------
+// FTC 12303 - Pedro Pathing AutoTune switch
+//
+// Pedro's AutoTune (com.pedropathing:tuning) starts a Wi-Fi web server (ports 10158 + 12649) every
+// time the Robot Controller app starts. It has no on/off switch. R704.D + official Q&A 26 (2026-10-19):
+// Wi-Fi streaming/debug services are NOT allowed anywhere in an event venue - pits and practice
+// field included. So:
+//
+//   * At home, while tuning Pedro:   PEDRO_AUTOTUNE = true, build, open http://192.168.43.1:10158
+//   * BEFORE EVERY EVENT:            PEDRO_AUTOTUNE = false, rebuild, re-deploy (over USB).
+//
+// When false, the AutoTune library AND the files in TeamCode/src/autotune/java are left out of the
+// build (see TeamCode/build.gradle). The 12303 OpModes print a warning in INIT if AutoTune is present.
+// Command-line override (no file edit):  ./gradlew :TeamCode:assembleDebug -PpedroAutoTune=true
+// -------------------------------------------------------------------------------------------------
+def PEDRO_AUTOTUNE = false
+ext.pedroAutoTune = project.hasProperty('pedroAutoTune') ?
+        project.property('pedroAutoTune').toString().toBoolean() : PEDRO_AUTOTUNE
 
 dependencies {
     implementation 'org.firstinspires.ftc:Inspection:12.0.0'
@@ -13,5 +35,15 @@ dependencies {
     implementation 'org.firstinspires.ftc:FtcCommon:12.0.0'
     implementation 'org.firstinspires.ftc:Vision:12.0.0'
     implementation 'androidx.appcompat:appcompat:1.2.0'
-}
 
+    // Pedro Pathing 3 path follower (Pinpoint localizer + mecanum). Pinned to the Pedro Quickstart
+    // versions. revhub 3.0.2 (2026-10-16) exists with controller/heading fixes - upgrade on purpose,
+    // re-run the Line/Curve tests after upgrading.
+    implementation 'com.pedropathing:revhub:3.0.1'
+    if (pedroAutoTune) {
+        implementation 'com.pedropathing:tuning:1.0.1'   // AutoTune web pages - NOT legal at events
+    }
+
+    // NOTE: FTC Dashboard / FTControl Panels are deliberately NOT included. If you add one for home
+    // practice, it must be disabled/removed before an event (R704.D, Q&A 26).
+}
