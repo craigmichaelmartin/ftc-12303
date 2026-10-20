@@ -1,0 +1,807 @@
+{
+ "state_A": "match start: red AUDIENCE cell up (IDs 34-37), blue SCORING cell up (IDs 42-45)",
+ "state_B": "after one tip of that hive: red SCORING cell up (30-33) / blue AUDIENCE cell up (38-41)",
+ "walls_inner_face": 70.67,
+ "tile_seams": [
+  -47.0,
+  -23.5,
+  0.0,
+  23.5,
+  47.0
+ ],
+ "wall_height_top_rail": 11.64,
+ "columns_Y": {
+  "A": [
+   -70.67,
+   -47.0
+  ],
+  "B": [
+   -47.0,
+   -23.5
+  ],
+  "C": [
+   -23.5,
+   0.0
+  ],
+  "D": [
+   0.0,
+   23.5
+  ],
+  "E": [
+   23.5,
+   47.0
+  ],
+  "F": [
+   47.0,
+   70.67
+  ]
+ },
+ "rows_X": {
+  "1": [
+   47.0,
+   70.67
+  ],
+  "2": [
+   23.5,
+   47.0
+  ],
+  "3": [
+   0.0,
+   23.5
+  ],
+  "4": [
+   -23.5,
+   0.0
+  ],
+  "5": [
+   -47.0,
+   -23.5
+  ],
+  "6": [
+   -70.67,
+   -47.0
+  ]
+ },
+ "hive_pivots": {
+  "red": [
+   0.0,
+   -12.74,
+   43.95
+  ],
+  "blue": [
+   0.0,
+   12.76,
+   43.95
+  ],
+  "axis": "parallel to +Y"
+ },
+ "hive_tilt_deg": 30.1,
+ "tip_rotation_deg": 60.2,
+ "flowers_opening_center_Z21.40": {
+  "far_wall_red_half": [
+   -68.04,
+   -23.39
+  ],
+  "red_wall": [
+   23.39,
+   -68.04
+  ],
+  "audience_wall_blue_half": [
+   68.04,
+   23.39
+  ],
+  "blue_wall": [
+   -23.39,
+   68.04
+  ]
+ },
+ "flower_footprint_half_size": "about 5.9 in along wall x 5.0 in out from wall (rings), opening center 2.63 in from wall",
+ "loading_zones": {
+  "red": {
+   "X": [
+    -46.6,
+    -23.91
+   ],
+   "Y": [
+    -70.67,
+    -59.1
+   ]
+  },
+  "blue": {
+   "X": [
+    23.91,
+    46.6
+   ],
+   "Y": [
+    59.1,
+    70.67
+   ]
+  }
+ },
+ "gardens": {
+  "red": {
+   "X": [
+    68.1,
+    70.67
+   ],
+   "Y": [
+    -70.1,
+    -47.41
+   ]
+  },
+  "blue": {
+   "X": [
+    -70.67,
+    -68.1
+   ],
+   "Y": [
+    47.41,
+    70.1
+   ]
+  }
+ },
+ "alliance_areas": {
+  "red": {
+   "X": [
+    -48.41,
+    48.41
+   ],
+   "Y": [
+    -125.65,
+    -71.65
+   ]
+  },
+  "blue": {
+   "X": [
+    -48.41,
+    48.41
+   ],
+   "Y": [
+    71.65,
+    125.65
+   ]
+  }
+ },
+ "red_start_candidates_robot_center": {
+  "S1_audience_wall_on_red_hive_axis": [
+   61.67,
+   -12.75
+  ],
+  "S2_audience_wall_red_half": [
+   61.67,
+   -37.5
+  ],
+  "S3_red_wall_audience_side": [
+   45.0,
+   -61.67
+  ],
+  "S4_red_wall_center": [
+   0.0,
+   -61.67
+  ],
+  "S5_far_red_corner": [
+   -61.67,
+   -61.67
+  ],
+  "S6_far_wall_on_red_hive_axis": [
+   -61.67,
+   -10.1
+  ],
+  "S7_far_wall_red_half": [
+   -61.67,
+   -40.0
+  ]
+ },
+ "blue_equivalent": "(X, Y, heading) -> (-X, -Y, heading+180)",
+ "cells": {
+  "blue1|A": {
+   "name": "BLUE AUDIENCE cell",
+   "state": "A",
+   "up": false,
+   "opening_center_sdk_cluster_origin": [
+    20.65,
+    12.76,
+    36.77
+   ],
+   "opening_outward_normal": [
+    0.87,
+    -0.0,
+    -0.5
+   ],
+   "tag_face_normal": [
+    -0.5,
+    0.0,
+    -0.87
+   ],
+   "opening_floor_edge_center": [
+    17.82,
+    12.76,
+    31.9
+   ],
+   "opening_apex": [
+    24.95,
+    12.76,
+    44.19
+   ],
+   "tags": {
+    "38": [
+     11.61,
+     6.26,
+     35.52
+    ],
+    "39": [
+     11.61,
+     10.01,
+     35.52
+    ],
+    "40": [
+     11.61,
+     15.51,
+     35.52
+    ],
+    "41": [
+     11.61,
+     19.26,
+     35.52
+    ]
+   }
+  },
+  "blue2|A": {
+   "name": "BLUE SCORING (far cell)",
+   "state": "A",
+   "up": true,
+   "opening_center_sdk_cluster_origin": [
+    -16.5,
+    12.76,
+    58.27
+   ],
+   "opening_outward_normal": [
+    -0.87,
+    0.0,
+    0.5
+   ],
+   "tag_face_normal": [
+    -0.5,
+    0.0,
+    -0.87
+   ],
+   "opening_floor_edge_center": [
+    -19.33,
+    12.76,
+    53.39
+   ],
+   "opening_apex": [
+    -12.2,
+    12.76,
+    65.68
+   ],
+   "tags": {
+    "42": [
+     -13.1,
+     19.26,
+     49.8
+    ],
+    "43": [
+     -13.1,
+     15.51,
+     49.8
+    ],
+    "44": [
+     -13.1,
+     10.01,
+     49.8
+    ],
+    "45": [
+     -13.1,
+     6.26,
+     49.8
+    ]
+   }
+  },
+  "red1|A": {
+   "name": "RED AUDIENCE cell",
+   "state": "A",
+   "up": true,
+   "opening_center_sdk_cluster_origin": [
+    16.5,
+    -12.74,
+    58.27
+   ],
+   "opening_outward_normal": [
+    0.87,
+    0.0,
+    0.5
+   ],
+   "tag_face_normal": [
+    0.5,
+    -0.0,
+    -0.87
+   ],
+   "opening_floor_edge_center": [
+    19.33,
+    -12.74,
+    53.39
+   ],
+   "opening_apex": [
+    12.2,
+    -12.74,
+    65.68
+   ],
+   "tags": {
+    "34": [
+     13.1,
+     -19.24,
+     49.8
+    ],
+    "35": [
+     13.1,
+     -15.49,
+     49.8
+    ],
+    "36": [
+     13.1,
+     -9.99,
+     49.8
+    ],
+    "37": [
+     13.1,
+     -6.24,
+     49.8
+    ]
+   }
+  },
+  "red2|A": {
+   "name": "RED SCORING (far cell)",
+   "state": "A",
+   "up": false,
+   "opening_center_sdk_cluster_origin": [
+    -20.65,
+    -12.74,
+    36.77
+   ],
+   "opening_outward_normal": [
+    -0.87,
+    -0.0,
+    -0.5
+   ],
+   "tag_face_normal": [
+    0.5,
+    0.0,
+    -0.87
+   ],
+   "opening_floor_edge_center": [
+    -17.82,
+    -12.74,
+    31.9
+   ],
+   "opening_apex": [
+    -24.95,
+    -12.74,
+    44.19
+   ],
+   "tags": {
+    "30": [
+     -11.61,
+     -6.24,
+     35.52
+    ],
+    "31": [
+     -11.61,
+     -9.99,
+     35.52
+    ],
+    "32": [
+     -11.61,
+     -15.49,
+     35.52
+    ],
+    "33": [
+     -11.61,
+     -19.24,
+     35.52
+    ]
+   }
+  },
+  "blue1|B": {
+   "name": "BLUE AUDIENCE cell",
+   "state": "B",
+   "up": true,
+   "opening_center_sdk_cluster_origin": [
+    16.48,
+    12.76,
+    58.31
+   ],
+   "opening_outward_normal": [
+    0.87,
+    0.0,
+    0.5
+   ],
+   "tag_face_normal": [
+    0.5,
+    0.0,
+    -0.87
+   ],
+   "opening_floor_edge_center": [
+    19.31,
+    12.76,
+    53.43
+   ],
+   "opening_apex": [
+    12.18,
+    12.76,
+    65.72
+   ],
+   "tags": {
+    "38": [
+     13.08,
+     6.26,
+     49.84
+    ],
+    "39": [
+     13.08,
+     10.01,
+     49.84
+    ],
+    "40": [
+     13.08,
+     15.51,
+     49.84
+    ],
+    "41": [
+     13.08,
+     19.26,
+     49.84
+    ]
+   }
+  },
+  "blue2|B": {
+   "name": "BLUE SCORING (far cell)",
+   "state": "B",
+   "up": false,
+   "opening_center_sdk_cluster_origin": [
+    -20.62,
+    12.76,
+    36.74
+   ],
+   "opening_outward_normal": [
+    -0.87,
+    0.0,
+    -0.5
+   ],
+   "tag_face_normal": [
+    0.5,
+    0.0,
+    -0.87
+   ],
+   "opening_floor_edge_center": [
+    -17.79,
+    12.76,
+    31.86
+   ],
+   "opening_apex": [
+    -24.92,
+    12.76,
+    44.15
+   ],
+   "tags": {
+    "42": [
+     -11.58,
+     19.26,
+     35.48
+    ],
+    "43": [
+     -11.58,
+     15.51,
+     35.48
+    ],
+    "44": [
+     -11.58,
+     10.01,
+     35.48
+    ],
+    "45": [
+     -11.58,
+     6.26,
+     35.48
+    ]
+   }
+  },
+  "red1|B": {
+   "name": "RED AUDIENCE cell",
+   "state": "B",
+   "up": false,
+   "opening_center_sdk_cluster_origin": [
+    20.62,
+    -12.74,
+    36.74
+   ],
+   "opening_outward_normal": [
+    0.87,
+    0.0,
+    -0.5
+   ],
+   "tag_face_normal": [
+    -0.5,
+    0.0,
+    -0.87
+   ],
+   "opening_floor_edge_center": [
+    17.79,
+    -12.74,
+    31.86
+   ],
+   "opening_apex": [
+    24.92,
+    -12.74,
+    44.15
+   ],
+   "tags": {
+    "34": [
+     11.58,
+     -19.24,
+     35.48
+    ],
+    "35": [
+     11.58,
+     -15.49,
+     35.48
+    ],
+    "36": [
+     11.58,
+     -9.99,
+     35.48
+    ],
+    "37": [
+     11.58,
+     -6.24,
+     35.48
+    ]
+   }
+  },
+  "red2|B": {
+   "name": "RED SCORING (far cell)",
+   "state": "B",
+   "up": true,
+   "opening_center_sdk_cluster_origin": [
+    -16.48,
+    -12.74,
+    58.31
+   ],
+   "opening_outward_normal": [
+    -0.87,
+    0.0,
+    0.5
+   ],
+   "tag_face_normal": [
+    -0.5,
+    0.0,
+    -0.87
+   ],
+   "opening_floor_edge_center": [
+    -19.31,
+    -12.74,
+    53.43
+   ],
+   "opening_apex": [
+    -12.18,
+    -12.74,
+    65.72
+   ],
+   "tags": {
+    "30": [
+     -13.08,
+     -6.24,
+     49.84
+    ],
+    "31": [
+     -13.08,
+     -9.99,
+     49.84
+    ],
+    "32": [
+     -13.08,
+     -15.49,
+     49.84
+    ],
+    "33": [
+     -13.08,
+     -19.24,
+     49.84
+    ]
+   }
+  }
+ },
+ "sdk": {
+  "library": "AprilTagGameDatabase.getBioBuzzTagLibrary() (= getCurrentGameTagLibrary() in SDK 12.0)",
+  "cluster_names": {
+   "RED SCORING": [
+    30,
+    31,
+    32,
+    33
+   ],
+   "RED AUDIENCE": [
+    34,
+    35,
+    36,
+    37
+   ],
+   "BLUE AUDIENCE": [
+    38,
+    39,
+    40,
+    41
+   ],
+   "BLUE SCORING": [
+    42,
+    43,
+    44,
+    45
+   ]
+  },
+  "member_positions_in_cluster_frame_in": {
+   "+0": [
+    -6.5,
+    7.1874,
+    -5.622
+   ],
+   "+1": [
+    -2.75,
+    7.1874,
+    -5.622
+   ],
+   "+2": [
+    2.75,
+    7.1874,
+    -5.622
+   ],
+   "+3": [
+    6.5,
+    7.1874,
+    -5.622
+   ]
+  },
+  "tag_size_in": 3.25,
+  "cluster_frame": "x = tag-image right, y = tag-image down, z = into tag (AprilTag convention); origin = center of CELL opening (outer face of front goal rib)",
+  "quaternion_convention": "q(w,x,y,z) = rotation taking cluster/tag axes to field axes (same as SDK addTag fieldOrientation)"
+ },
+ "hive_frame": {
+  "footprint_X": [
+   -19.47,
+   19.47
+  ],
+  "footprint_Y": [
+   -24.73,
+   24.73
+  ],
+  "feet_boxes_XY_Zmax2.13": [
+   [
+    [
+     17.2,
+     19.48
+    ],
+    [
+     -24.64,
+     -22.77
+    ]
+   ],
+   [
+    [
+     -19.48,
+     -17.2
+    ],
+    [
+     -24.65,
+     -22.77
+    ]
+   ],
+   [
+    [
+     17.2,
+     19.48
+    ],
+    [
+     22.79,
+     24.65
+    ]
+   ],
+   [
+    [
+     -19.48,
+     -17.2
+    ],
+    [
+     22.79,
+     24.65
+    ]
+   ]
+  ],
+  "foot_bars": "flat 0.07 in sheet metal, X -19.47..19.47, |Y| 22.75..24.73",
+  "legs_centerline_approx": [
+   [
+    [
+     18.4,
+     -23.6,
+     0.7
+    ],
+    [
+     0.7,
+     -12.9,
+     41.0
+    ]
+   ],
+   [
+    [
+     -18.4,
+     -23.6,
+     0.7
+    ],
+    [
+     -0.7,
+     -12.9,
+     41.0
+    ]
+   ],
+   [
+    [
+     18.4,
+     23.6,
+     0.7
+    ],
+    [
+     0.7,
+     12.9,
+     41.0
+    ]
+   ],
+   [
+    [
+     -18.4,
+     23.6,
+     0.7
+    ],
+    [
+     -0.7,
+     12.9,
+     41.0
+    ]
+   ]
+  ],
+  "top_bar": {
+   "X": [
+    -0.5,
+    0.5
+   ],
+   "Y": [
+    -12.0,
+    12.0
+   ],
+   "Z": [
+    40.95,
+    41.95
+   ]
+  },
+  "acm_panels": {
+   "X": [
+    [
+     -4.28,
+     -1.55
+    ],
+    [
+     1.55,
+     4.28
+    ]
+   ],
+   "Y": [
+    -15.06,
+    15.07
+   ],
+   "Z": [
+    34.07,
+    40.02
+   ]
+  },
+  "min_clearance_under_down_cell": 30.6
+ },
+ "coordinate_frame": "FTC field frame for BIOBUZZ: origin field center on tile top; +X toward AUDIENCE wall; +Y toward BLUE wall; +Z up; heading CCW from +X (deg). Units: inches."
+}

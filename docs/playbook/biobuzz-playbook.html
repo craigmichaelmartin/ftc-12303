@@ -1,0 +1,836 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!-- Local copy of the playbook page. The live version (with rendered diagrams) is the claude.ai artifact. -->
+<title>12303 BIOBUZZ Playbook</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=Source+Sans+3:ital,wght@0,400;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a field-side playbook — narrow reading column, wide figures, sticky section bar. */
+:root {
+  --bg: #f2f4f6;
+  --surface: #ffffff;
+  --surface-2: #e8ecf0;
+  --ink: #151a21;
+  --ink-2: #4b5664;
+  --line: #d2d8df;
+  --pollen: #e2a80e;
+  --pollen-ink: #7f5c00;
+  --pollen-wash: #fbf0cf;
+  --red: #c7333a;
+  --red-wash: #f8dedf;
+  --blue: #2b62c4;
+  --blue-wash: #dce6f7;
+  --field: #dde2e7;
+  --tile: #c3cad2;
+  --good: #23824f;
+  --warn: #a8640a;
+  --font-display: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  --font-body: "Source Sans 3", "Segoe UI", Roboto, Arial, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f1216; --surface: #161a20; --surface-2: #1d232a; --ink: #e6eaee; --ink-2: #9ba6b2; --line: #2a323b;
+    --pollen: #f0bf35; --pollen-ink: #f0bf35; --pollen-wash: #3a3018; --red: #ee5d63; --red-wash: #3b1f22;
+    --blue: #6292ee; --blue-wash: #1c2840; --field: #20262d; --tile: #313a44; --good: #4cc286; --warn: #e3a344;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f1216; --surface: #161a20; --surface-2: #1d232a; --ink: #e6eaee; --ink-2: #9ba6b2; --line: #2a323b;
+  --pollen: #f0bf35; --pollen-ink: #f0bf35; --pollen-wash: #3a3018; --red: #ee5d63; --red-wash: #3b1f22;
+  --blue: #6292ee; --blue-wash: #1c2840; --field: #20262d; --tile: #313a44; --good: #4cc286; --warn: #e3a344;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 17px; line-height: 1.55; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--surface); }
+.wrap { max-width: 1080px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+h1, h2, h3 { font-family: var(--font-display); text-wrap: balance; line-height: 1.15; margin: 0; }
+h1 { font-size: clamp(2rem, 5vw, 3.1rem); font-weight: 800; letter-spacing: -0.01em; }
+h2 { font-size: clamp(1.5rem, 3.2vw, 2rem); font-weight: 800; }
+h3 { font-size: 1.15rem; font-weight: 700; }
+p { margin: 0; }
+a { color: var(--blue); }
+a:focus-visible, button:focus-visible { outline: 3px solid var(--pollen); outline-offset: 2px; }
+.mono, .num { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+.eyebrow { font-family: var(--font-mono); font-size: 0.78rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-2); }
+.prose { max-width: 68ch; display: grid; gap: 0.8rem; }
+.muted { color: var(--ink-2); }
+
+/* top bar */
+.topbar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 9; background: var(--surface); border-bottom: 1px solid var(--line); }
+.topbar .wrap { display: flex; gap: 1rem; align-items: center; padding-block: 0.55rem; overflow-x: auto; scrollbar-width: none; }
+.topbar .brand { font-family: var(--font-display); font-weight: 800; white-space: nowrap; display: flex; align-items: center; gap: 0.5rem; }
+.hexdot { width: 14px; height: 16px; background: var(--pollen); clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%); flex: none; }
+.topbar nav { display: flex; gap: 0.2rem; }
+.topbar nav a { color: var(--ink-2); text-decoration: none; font-size: 0.92rem; padding: 0.25rem 0.55rem; border-radius: 6px; white-space: nowrap; }
+.topbar nav a:hover { background: var(--surface-2); color: var(--ink); }
+
+/* hero */
+header.hero { padding-block: 2.6rem 1.6rem; }
+header.hero .wrap { display: grid; gap: 1.1rem; }
+.hero .lede { font-size: 1.2rem; max-width: 62ch; color: var(--ink-2); }
+.meta { display: flex; flex-wrap: wrap; gap: 0.5rem 1.2rem; font-size: 0.9rem; color: var(--ink-2); }
+
+.facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; margin-top: 0.6rem; }
+.fact { background: var(--surface); padding: 1rem 1.1rem; display: grid; gap: 0.25rem; align-content: start; }
+.fact .big { font-family: var(--font-display); font-weight: 800; font-size: 2rem; line-height: 1; }
+.fact .big.y { color: var(--pollen-ink); }
+.fact .lbl { font-size: 0.92rem; color: var(--ink-2); }
+
+section { padding-block: 2.4rem; border-top: 1px solid var(--line); }
+section > .wrap { display: grid; gap: 1.3rem; }
+.sechead { display: grid; gap: 0.35rem; }
+
+/* plan at a glance */
+.phases { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1rem; }
+.phase { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 1.1rem 1.2rem; display: grid; gap: 0.6rem; align-content: start; min-width: 0; }
+.phase .clock { font-family: var(--font-mono); font-size: 0.85rem; color: var(--ink-2); }
+.phase ul { margin: 0; padding-left: 1.1rem; display: grid; gap: 0.35rem; }
+
+/* field map */
+.mapgrid { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 1.3rem; align-items: start; }
+@media (max-width: 860px) { .mapgrid { grid-template-columns: 1fr; } }
+.mapbox { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 0.8rem; min-width: 0; }
+.mapbox svg { width: 100%; height: auto; display: block; max-width: 640px; margin: 0 auto; }
+.controls { display: flex; flex-wrap: wrap; gap: 0.5rem 1rem; margin-bottom: 0.7rem; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+.seg button { font: inherit; font-size: 0.88rem; background: var(--surface); color: var(--ink-2); border: 0; padding: 0.35rem 0.7rem; cursor: pointer; border-right: 1px solid var(--line); }
+.seg button:last-child { border-right: 0; }
+.seg button[aria-pressed="true"] { background: var(--ink); color: var(--surface); }
+.seg button.r[aria-pressed="true"] { background: var(--red); color: #fff; }
+.seg button.b[aria-pressed="true"] { background: var(--blue); color: #fff; }
+.legend { display: flex; flex-wrap: wrap; gap: 0.4rem 1rem; font-size: 0.85rem; color: var(--ink-2); margin-top: 0.6rem; }
+.legend span { display: inline-flex; align-items: center; gap: 0.35rem; }
+.sw { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+.steps { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 1rem 1.1rem; display: grid; gap: 0.7rem; min-width: 0; }
+.steps ol { margin: 0; padding-left: 0; list-style: none; display: grid; gap: 0.55rem; }
+.steps li { display: grid; grid-template-columns: 4.2rem 1fr; gap: 0.6rem; align-items: baseline; }
+.steps li .t { font-family: var(--font-mono); font-size: 0.85rem; color: var(--pollen-ink); font-weight: 500; }
+.steps .tot { font-size: 0.92rem; color: var(--ink-2); border-top: 1px dashed var(--line); padding-top: 0.6rem; }
+
+/* svg field styling */
+.f-bg { fill: var(--field); }
+.f-tile { fill: none; stroke: var(--tile); stroke-width: 0.35; }
+.f-wall { fill: none; stroke: var(--ink); stroke-width: 1.2; }
+.f-lbl { font-family: var(--font-mono); font-size: 3.2px; fill: var(--ink-2); }
+.f-lbl-b { font-family: var(--font-display); font-weight: 700; font-size: 3.6px; fill: var(--ink); }
+.f-red { fill: var(--red); }
+.f-blue { fill: var(--blue); }
+.f-redz { fill: var(--red-wash); stroke: var(--red); stroke-width: 0.5; }
+.f-bluez { fill: var(--blue-wash); stroke: var(--blue); stroke-width: 0.5; }
+.f-foot { fill: var(--ink-2); }
+.f-flower { fill: var(--surface); stroke: var(--good); stroke-width: 0.8; }
+.f-pollen { fill: var(--pollen); stroke: var(--pollen-ink); stroke-width: 0.25; }
+.cell-up { stroke-width: 0.8; }
+.cell-down { stroke-width: 0.5; stroke-dasharray: 1.2 1; fill-opacity: 0.25; }
+.cone { fill: var(--pollen); fill-opacity: 0.18; stroke: var(--pollen-ink); stroke-width: 0.4; stroke-dasharray: 1.5 1; }
+.spill { fill: none; stroke: var(--warn); stroke-width: 0.6; stroke-dasharray: 1 0.8; }
+.route { fill: none; stroke: var(--ink); stroke-width: 1; stroke-linejoin: round; stroke-linecap: round; }
+.route.alt { stroke-dasharray: 2 1.4; }
+.robot { fill: var(--surface); stroke: var(--ink); stroke-width: 0.7; }
+.robot.ghost { fill-opacity: 0.4; stroke-dasharray: 1.2 0.8; }
+.wp { fill: var(--ink); }
+
+/* tables */
+.tablewrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; font-size: 0.95rem; }
+th, td { text-align: left; padding: 0.55rem 0.8rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-family: var(--font-mono); font-size: 0.75rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-2); font-weight: 500; background: var(--surface-2); }
+tr:last-child td { border-bottom: 0; }
+td.n { font-family: var(--font-mono); font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+/* ladder */
+.ladder { display: grid; gap: 0.8rem; }
+.rung { display: grid; grid-template-columns: 4.5rem minmax(0, 1fr) auto; gap: 1rem; align-items: start; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 1rem 1.1rem; }
+.rung .tag { font-family: var(--font-display); font-weight: 800; font-size: 1.6rem; line-height: 1; }
+.rung .pts { font-family: var(--font-mono); font-size: 0.95rem; text-align: right; white-space: nowrap; }
+.rung .pts b { font-family: var(--font-display); font-size: 1.5rem; display: block; color: var(--pollen-ink); }
+.rung .desc { display: grid; gap: 0.35rem; min-width: 0; }
+@media (max-width: 560px) { .rung { grid-template-columns: 1fr; } .rung .pts { text-align: left; } }
+.pill { display: inline-block; font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.04em; padding: 0.1rem 0.45rem; border-radius: 999px; border: 1px solid var(--line); color: var(--ink-2); vertical-align: 2px; }
+.pill.must { border-color: var(--red); color: var(--red); }
+.pill.tune { border-color: var(--pollen-ink); color: var(--pollen-ink); }
+.pill.opt { border-color: var(--ink-2); }
+.pill.stretch { border-color: var(--blue); color: var(--blue); }
+
+/* timeline bars */
+.tl { display: grid; gap: 0.4rem; }
+.tlrow { display: grid; grid-template-columns: 7.5rem minmax(0, 1fr); gap: 0.6rem; align-items: center; font-size: 0.88rem; }
+.tlbar { position: relative; height: 22px; background: var(--surface-2); border-radius: 5px; overflow: hidden; }
+.tlbar span { position: absolute; top: 0; bottom: 0; display: flex; align-items: center; padding-left: 4px; font-size: 0.72rem; font-family: var(--font-mono); color: var(--ink); white-space: nowrap; overflow: hidden; border-right: 1px solid var(--surface); }
+.s-shoot { background: var(--pollen); }
+.s-wait { background: var(--tile); }
+.s-drive { background: var(--blue-wash); }
+.s-intake { background: var(--red-wash); }
+.s-park { background: var(--good); color: #fff !important; }
+.tlaxis { display: grid; grid-template-columns: 7.5rem minmax(0, 1fr); gap: 0.6rem; font-family: var(--font-mono); font-size: 0.72rem; color: var(--ink-2); }
+.tlaxis div:last-child { display: flex; justify-content: space-between; }
+
+/* chart */
+.chart svg { width: 100%; height: auto; max-width: 560px; display: block; }
+.c-bar { fill: var(--pollen); }
+.c-axis { stroke: var(--line); stroke-width: 1; }
+.c-txt { font-family: var(--font-mono); font-size: 11px; fill: var(--ink-2); }
+.c-val { font-family: var(--font-mono); font-size: 12px; fill: var(--ink); font-weight: 500; }
+
+.two { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.2rem; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 1rem 1.15rem; display: grid; gap: 0.6rem; align-content: start; min-width: 0; }
+.card ul, .card ol { margin: 0; padding-left: 1.15rem; display: grid; gap: 0.35rem; }
+.callout { border-left: 4px solid var(--pollen); background: var(--pollen-wash); padding: 0.85rem 1rem; border-radius: 0 8px 8px 0; max-width: 78ch; }
+.callout.red { border-color: var(--red); background: var(--red-wash); }
+kbd { font-family: var(--font-mono); font-size: 0.8rem; border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 4px; padding: 0 0.3rem; background: var(--surface-2); white-space: nowrap; }
+.week { display: grid; grid-template-columns: 3.2rem minmax(0, 1fr); gap: 0.8rem; padding-block: 0.6rem; border-bottom: 1px dashed var(--line); }
+.week:last-child { border-bottom: 0; }
+.week b { font-family: var(--font-display); font-size: 1.1rem; }
+pre.mermaid { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 1rem; overflow-x: auto; }
+footer { padding-block: 2rem 3rem; border-top: 1px solid var(--line); color: var(--ink-2); font-size: 0.9rem; }
+footer .wrap { display: grid; gap: 0.8rem; }
+footer ul { margin: 0; padding-left: 1.1rem; display: grid; gap: 0.25rem; }
+@media (prefers-reduced-motion: no-preference) { .route { transition: opacity 0.2s; } }
+</style>
+
+<div class="topbar">
+  <div class="wrap">
+    <div class="brand"><span class="hexdot" aria-hidden="true"></span>12303 · BIOBUZZ</div>
+    <nav aria-label="Sections">
+      <a href="#plan">Plan</a><a href="#field">Field</a><a href="#auto">Auto</a><a href="#teleop">TeleOp</a><a href="#endgame">Endgame</a><a href="#robot">Robot</a><a href="#software">Software</a><a href="#testing">Testing</a><a href="#rules">Rules</a><a href="#sources">Sources</a>
+    </nav>
+  </div>
+</div>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="eyebrow">FTC 12303 · 2026–27 BIOBUZZ presented by RTX · playbook v1, Oct 20 2026</div>
+    <h1>Tip the HIVE early, tip it often, then park.</h1>
+    <p class="lede">Our robot is a turret pollen shooter, which suits a game decided by HIVE TIPS. This page lays out how to play it in AUTO, TELEOP and the last minute, which parts of the robot to tune, and what to test first. It's grounded in the TU05 manual, the official field setup guide, the Q&amp;A board and early-season match data.</p>
+    <div class="meta"><span>Field frame: +X toward audience, +Y toward blue, inches</span><span>Red shown; blue = rotate 180°</span><span>Robot design: keep it, tune it</span></div>
+    <div class="facts" role="list">
+      <div class="fact" role="listitem"><span class="big y num">3</span><span class="lbl">POLLEN tip the starting cell, because it already holds 3 NECTAR</span></div>
+      <div class="fact" role="listitem"><span class="big y num">8</span><span class="lbl">POLLEN tip every cell after that (or 3 NECTAR + 3 POLLEN)</span></div>
+      <div class="fact" role="listitem"><span class="big num">20</span><span class="lbl">points per TIP, in AUTO or TELEOP; a MAJOR foul costs the same</span></div>
+      <div class="fact" role="listitem"><span class="big num">98%</span><span class="lbl">of early matches were won by the alliance with more TIPS (102 of 104)</span></div>
+    </div>
+  </div>
+</header>
+
+<section id="plan">
+  <div class="wrap">
+    <div class="sechead"><div class="eyebrow">The plan on one screen</div><h2>Three phases, one job each</h2></div>
+    <div class="phases">
+      <div class="phase">
+        <div class="clock">AUTO · 2:30 → 2:00</div>
+        <h3>Fire the preloads, tip once, leave, park</h3>
+        <ul>
+          <li>Start on the audience wall, square in front of our up cell (pose S1).</li>
+          <li>Fire all 4 preloads. Three tip it; the fourth makes the tip happen sooner.</li>
+          <li>Stay clear while the spill lands, then end inside our LOADING ZONE and off the wall.</li>
+          <li>28 points for us. With a partner that leaves and parks: 36 and the SWARM RP.</li>
+        </ul>
+      </div>
+      <div class="phase">
+        <div class="clock">TELEOP · 2:00 → 1:00</div>
+        <h3>Run the two-zone loop</h3>
+        <ul>
+          <li>The up cell faces its own end wall, so only one half of the field can score it.</li>
+          <li>After every TIP, the target swaps ends and the spill lands where we just were.</li>
+          <li>Loop: shoot → sweep the spill → cross → shoot. Two loads of 4 make one TIP.</li>
+          <li>Goal: a load every 15–20 s and 2–3 TELEOP TIPS from us per match.</li>
+        </ul>
+      </div>
+      <div class="phase">
+        <div class="clock">LAST MINUTE · 1:00 → 0:00</div>
+        <h3>Keep tipping, dump the load, both robots park</h3>
+        <ul>
+          <li>The human player drops all remaining NECTAR into our LOADING ZONE at the 1:00 chime.</li>
+          <li>Plan the last cycle to end on the far side, 3 s from the LOADING ZONE.</li>
+          <li>At about 0:12, fire whatever is on board (2 points per ball left in the up cell), then park.</li>
+          <li>Flowers are a phase-3 option, only if NECTAR placement works.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="callout"><b>Why this plan.</b> Early events are low scoring: the median alliance scored 35 points with 0.9 TIPS. At the Saline preview in Michigan, the winning alliance averaged about 3.7 TIPS and over 100 points. One reliable AUTO TIP plus two or three TELEOP TIPS from our robot puts us with the top Michigan teams.</div>
+  </div>
+</section>
+
+<section id="field">
+  <div class="wrap">
+    <div class="sechead"><div class="eyebrow">Interactive field map</div><h2>Where the up cell faces decides where we stand</h2>
+      <p class="muted prose">The cell opening is the outer end of a tilted box. It faces its own end wall and leans back 30°, so a robot has to be in front of it, within about 40° of head-on. The field is really 141.3 in between walls. Use the buttons to switch alliance, HIVE state and route.</p></div>
+    <div class="mapgrid">
+      <div class="mapbox">
+        <div class="controls">
+          <div class="seg" role="group" aria-label="Alliance">
+            <button id="al-red" class="r" aria-pressed="true">Red</button><button id="al-blue" class="b" aria-pressed="false">Blue</button>
+          </div>
+          <div class="seg" role="group" aria-label="HIVE state">
+            <button id="st-a" aria-pressed="true">State A (start)</button><button id="st-b" aria-pressed="false">State B (after 1 tip)</button>
+          </div>
+        </div>
+        <div class="controls">
+          <div class="seg" role="group" aria-label="Overlay">
+            <button id="ov-zones" aria-pressed="true">Zones</button><button id="ov-A1" aria-pressed="false">A1</button><button id="ov-A2" aria-pressed="false">A2</button><button id="ov-A3" aria-pressed="false">A3</button><button id="ov-loop" aria-pressed="false">TeleOp loop</button>
+          </div>
+        </div>
+        <svg id="fieldsvg" viewBox="-6 -6 153.34 153.34" role="img" aria-labelledby="fieldtitle">
+          <title id="fieldtitle">Top view of the BIOBUZZ field, audience at the bottom, red alliance on the left</title>
+        </svg>
+        <div class="legend">
+          <span><i class="sw" style="background:var(--pollen);opacity:.5"></i>Scoring cone (±40°)</span>
+          <span><i class="sw" style="border:1px dashed var(--warn)"></i>Spill landing box</span>
+          <span><i class="sw" style="background:var(--surface);border:1px solid var(--good)"></i>Flower</span>
+          <span><i class="sw" style="background:var(--pollen)"></i>Garden POLLEN</span>
+          <span><i class="sw" style="border:1px solid var(--ink)"></i>Robot pose (18 in)</span>
+        </div>
+      </div>
+      <div class="steps" id="steps" aria-live="polite"></div>
+    </div>
+  </div>
+</section>
+
+<section id="auto">
+  <div class="wrap">
+    <div class="sechead"><div class="eyebrow">Autonomous · 30 s</div><h2>The AUTO ladder</h2>
+      <p class="muted prose">Build these in order. A rung goes to competition only after it works in 8 of 10 practice runs. The robot picks alliance, start pose, routine and start delay from a gamepad menu during INIT.</p></div>
+    <div class="ladder">
+      <div class="rung"><div class="tag">A0</div><div class="desc"><h3>Safe <span class="pill">any start</span></h3><p>Drive off the wall into the LOADING ZONE. Fallback when the shooter is down or a partner needs our start spot.</p></div><div class="pts"><b>8</b>LEAVE 3 + PARK 5</div></div>
+      <div class="rung"><div class="tag">A1</div><div class="desc"><h3>Tip &amp; Park <span class="pill must">primary</span></h3><p>From S1, spin up and aim with odometry, refined by AprilTags. Fire 4 preloads and wait about 3 s for the spill to land. Then take the corridor at Y −40 to the LOADING ZONE and stop off the wall.</p></div><div class="pts"><b>28</b>TIP 20 + 3 + 5</div></div>
+      <div class="rung"><div class="tag">A2</div><div class="desc"><h3>Tip, Reload, Volley <span class="pill stretch">stretch</span></h3><p>After A1's volley, sweep the 4 red GARDEN POLLEN along the audience wall. Cross to Zone B and fire them into the now-empty far cell, then park. Alone that's 4 of the 8 needed for TIP 2.</p></div><div class="pts"><b>28+</b>4 balls toward TIP 2</div></div>
+      <div class="rung"><div class="tag">A3</div><div class="desc"><h3>Alliance double-tip <span class="pill stretch">needs a shooter partner</span></h3><p>Robot 1 runs A2. Robot 2 starts at S6 on the far wall, waits for TIP 1, then fires its 4 preloads into the far cell. Robot 1's 4 garden POLLEN complete the 8, for TIP 2 in AUTO. No US alliance had two AUTO TIPS as of Oct 20. We need OpModes for both roles.</p></div><div class="pts"><b>56</b>alliance: 2 TIPS + 16</div></div>
+    </div>
+
+    <div class="card">
+      <h3>Timing budget (estimates to beat in practice)</h3>
+      <div class="tl" id="timelines"></div>
+      <div class="tlaxis"><div></div><div><span>0 s</span><span>10</span><span>20</span><span>30</span></div></div>
+      <p class="muted" style="font-size:.9rem">The HIVE can sit 0.25–3.4 s after the threshold ball before it swings, then takes about 0.75 s to swing. That was measured at the Saline preview. Overloading the cell shortens the wait, which is why A1 fires all four.</p>
+    </div>
+
+    <div class="two">
+      <div class="card"><h3>Partner script (say it at the field)</h3>
+        <ol>
+          <li>"We start at the audience wall and tip our cell with preloads in the first 5 seconds."</li>
+          <li>"Can you LEAVE and end in the LOADING ZONE, off the wall? That makes 16 and the SWARM RP." Park poses: (−27, −56) and (−51, −56). Both are partly in the zone, about 6 in off the wall and 6 in apart.</li>
+          <li>If they shoot: "Start on the far wall. After our tip, fire your 4 into the far cell and we'll bring 4 more" (A3).</li>
+          <li>If they don't move in AUTO: "We'll run A1. Please don't start in front of the audience-wall spot."</li>
+        </ol></div>
+      <div class="card"><h3>AUTO traps</h3>
+        <ul>
+          <li><b>Touching any wall at the end of AUTO loses LEAVE</b>, even inside the LOADING ZONE (Q&amp;A 21).</li>
+          <li>Stay on our half (columns A–C) in AUTO; interfering with the other side is a MAJOR foul (G402).</li>
+          <li>Don't stand in the spill box for 3–6 s after the threshold ball. Any deflection of a falling ball counts (G409, Q&amp;A 17).</li>
+          <li>The ball count starts at 4 (the preloads). The intake must stop at 4 (G407, no momentary exception per Q&amp;A 3 and 23).</li>
+          <li>The human player may enter the NECTAR unlocked by an AUTO TIP during AUTO (Q&amp;A 11).</li>
+        </ul></div>
+    </div>
+  </div>
+</section>
+
+<section id="teleop">
+  <div class="wrap">
+    <div class="sechead"><div class="eyebrow">TELEOP · 2:00 → 1:00</div><h2>The two-zone loop</h2>
+      <p class="muted prose">An empty cell needs 8 POLLEN, but a robot may hold only 4. So every TIP after the first takes two loads, from us, our partner, or both. The spill from a TIP lands in the zone we shot from, and the next up cell faces the other way. That makes the loop: shoot, sweep the spill, cross, shoot.</p></div>
+    <pre class="mermaid">
+flowchart LR
+  A["Zone A: fire 4 into the up cell"] --> T{"8 in? HIVE tipping"}
+  T -- "not yet" --> R["Reload: loose balls, garden, flower bottoms"] --> A
+  T -- "tipping" --> W["Hold fire. Stay out of the spill box 3-6 s"]
+  W --> S["Sweep the spill (up to 4)"] --> C["Cross via corridor y = -40"]
+  C --> B["Zone B: fire 4 into the new up cell"]
+  B --> T2{"8 in? HIVE tipping"}
+  T2 -- "tipping" --> W2["Hold fire, sweep spill in Zone B"] --> C2["Cross back"] --> A
+  T2 -- "not yet" --> R2["Reload near Zone B / loading zone"] --> B
+    </pre>
+    <div class="two">
+      <div class="card"><h3>Where the ammo comes from, in order</h3>
+        <ol>
+          <li><b>Our own spill.</b> It's predictable and lands in our zone about 3 s after the threshold ball.</li>
+          <li><b>Loose balls in our zone,</b> from misses and partner spills.</li>
+          <li><b>GARDEN POLLEN.</b> Either garden is fair game in TELEOP (1 pt each if left, worth much more as ammo).</li>
+          <li><b>Flower bottoms.</b> 16 of the 24 non-preload POLLEN start inside flowers. Test whether our roller can pull through the 3.55 in retrieval opening.</li>
+          <li><b>The opponent's spill,</b> without herding or taking their NECTAR (G408, G411).</li>
+        </ol></div>
+      <div class="card"><h3>Pace and call-outs</h3>
+        <ul>
+          <li>Target: one 4-ball load every 15–20 s. That's a TIP every 30–40 s alone, or about 20 s with a shooting partner.</li>
+          <li>Call it out loud: <i>"Four in. Eight, it's going."</i> The second robot stops firing until the swing finishes. Launching at a moving HIVE can spoil the TIP.</li>
+          <li>Defense: blocking shots is legal (Q&amp;A 2). Keep moving inside the ±40° cone, and use the turret to shoot from another spot. Never pin longer than 3 s (G421).</li>
+          <li>Never control 5 balls or any opponent NECTAR. There is no momentary allowance. The robot auto-stops the intake at 4 and reverses on blue NECTAR at the mouth.</li>
+        </ul></div>
+    </div>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Control</th><th>Driver · gamepad 1</th><th>Operator · gamepad 2</th></tr></thead>
+        <tbody>
+          <tr><td>Sticks</td><td>Field-centric drive (left = move, right = turn)</td><td>Right stick X: manual turret (when auto-aim is off)</td></tr>
+          <tr><td>Triggers</td><td><kbd>RT</kbd> intake in (stops at 4) · <kbd>LT</kbd> intake out</td><td>—</td></tr>
+          <tr><td>Bumpers</td><td><kbd>LB</kbd> hold: slow mode · <kbd>RB</kbd> hold: aim-assist, which turns the chassis to center the turret</td><td><kbd>RB</kbd> fire volley (each ball only when at speed and aimed) · <kbd>LB</kbd> hold: eject</td></tr>
+          <tr><td>Face buttons</td><td><kbd>LB</kbd>+<kbd>Y</kbd> "robot is at S1" relocalize</td><td><kbd>A</kbd> shooting mode on/off · <kbd>X</kbd> fire one · <kbd>B</kbd> stop firing · <kbd>Y</kbd> "HIVE tipped" (flip target)</td></tr>
+          <tr><td>D-pad</td><td>—</td><td><kbd>↑</kbd>/<kbd>↓</kbd> RPM trim ±50 · <kbd>←</kbd>/<kbd>→</kbd> turret trim</td></tr>
+          <tr><td>Back / stick click</td><td><kbd>Back</kbd> reset heading (robot facing away from the driver)</td><td><kbd>Back</kbd> ball count −1 · left-stick click +1</td></tr>
+          <tr><td>Rumble / lights</td><td colspan="2">Rumble on: 4 loaded, flywheel at speed, the 1:00 chime and 0:20. Telemetry shows ball count, RPM vs target, aim error, HIVE state and distance.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="muted" style="font-size:.9rem">The exact mapping lives in the starter code, <span class="mono">TeleOpMain</span> and <span class="mono">README-12303.md</span>. Drivers should practice with the code's mapping and change it there if they prefer another layout.</p>
+  </div>
+</section>
+
+<section id="endgame">
+  <div class="wrap">
+    <div class="sechead"><div class="eyebrow">Last minute · 1:00 → 0:00</div><h2>Keep tipping, then park both robots</h2></div>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Field timer</th><th>Robot</th><th>Human player</th></tr></thead>
+        <tbody>
+          <tr><td class="n">1:00</td><td>Keep cycling. Flowers unlock now, but a pollen-only robot ignores them.</td><td>Drop all remaining NECTAR into our LOADING ZONE. It must touch the zone's tile first, and may then roll toward a robot (Q&amp;A 6, 7).</td></tr>
+          <tr><td class="n">~0:25</td><td>Start the last cycle on the far side for red, 44 in from the zone.</td><td>Watch the clock and call out "fifteen".</td></tr>
+          <tr><td class="n">~0:12</td><td>Fire everything on board into the up cell. Each ball left there is 2 pts if it doesn't tip.</td><td>Call "park".</td></tr>
+          <tr><td class="n">~0:06</td><td>Drive into the LOADING ZONE. Make it obvious: well inside, not just touching the tape.</td><td>—</td></tr>
+          <tr><td class="n">0:00</td><td>Stop. No powered movement after the buzzer (G404).</td><td>Hands off.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="two">
+      <div class="card"><h3>Phase-3 options, only if NECTAR tests pass</h3>
+        <ul>
+          <li><b>NECTAR as tip accelerant:</b> 3 NECTAR + 3 POLLEN tips an empty cell, 6 balls instead of 8. Our own 3 NECTAR come back out with every spill of our first cell.</li>
+          <li><b>Flowers:</b> the first NECTAR in a flower gets +5. The top-most NECTAR owns the flower at 2 pts per element inside. A flower still holding its staged POLLEN is worth 13–15 pts for one NECTAR. About 40% of flowers still do at match end, and almost nobody scores them yet.</li>
+          <li>The cost: the hood gap is set for 2.8 in POLLEN, and NECTAR is 3.6 in. Test before committing.</li>
+        </ul></div>
+      <div class="card"><h3>Point check for one full match (our robot)</h3>
+        <ul>
+          <li>AUTO: TIP 20 + LEAVE 3 + PARK 5 = <b class="num">28</b></li>
+          <li>TELEOP: 2–3 TIPS together with our partner ≈ <b class="num">40–60</b> as an alliance share</li>
+          <li>End: PARK 5, plus balls left in the up cell (2 each)</li>
+          <li>Ranking points: WIN 3, SWARM 1 (16 LEAVE+PARK pts), POLLINATOR 1 at 4 alliance TIPS, POLLINATOR 2 at 7</li>
+        </ul></div>
+    </div>
+  </div>
+</section>
+
+<section id="robot">
+  <div class="wrap">
+    <div class="sechead"><div class="eyebrow">Robot · keep the design, tune it</div><h2>Refinements, in priority order</h2>
+      <p class="muted prose">The robot's direction is right: turret shooter, full-width intake, hollow turret center. The list below is about making it legal, consistent and countable. Anything larger is marked optional.</p></div>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Priority</th><th>Change</th><th>Why</th></tr></thead>
+        <tbody>
+          <tr><td><span class="pill must">must</span></td><td>Confirm the camera is a <b>Limelight 3A</b></td><td>The only legal programmable vision coprocessor. The 3G is explicitly prohibited (R702).</td></tr>
+          <tr><td><span class="pill must">must</span></td><td>Main power switch, robot signs, grounding strap</td><td>Inspection blockers (R603, R4xx), and ESD protection for the Limelight.</td></tr>
+          <tr><td><span class="pill must">must</span></td><td>Ball sensors: color/distance at the intake mouth, a "slot 4 full" sensor, a beam-break at the feed</td><td>Count to 4 and stop the intake; refuse opponent NECTAR. G407 and G408 have no momentary exception.</td></tr>
+          <tr><td><span class="pill tune">tune</span></td><td>Flywheel velocity control, and feed only when back to speed (gate ±2–3% with a short dwell)</td><td>Each shot slows the 72 mm wheel by about 18–19%. The 28-count encoder reads speed coarsely.</td></tr>
+          <tr><td><span class="pill tune">tune</span></td><td>Add the goBILDA <b>60 mm steel flywheel</b> (551 g·cm², made for the 72 mm Hogback)</td><td>More stored energy means less speed drop per ball, so 4-ball volleys land the same.</td></tr>
+          <tr><td><span class="pill tune">tune</span></td><td>Set the hood for a <b>~64° actual exit angle</b>; fight bounce-outs</td><td>A fixed hood covers lip distances of about 27–90 in. One team measured 44% bounce-outs with a solid fixed hood, so test foam or compliant surfaces and spin.</td></tr>
+          <tr><td><span class="pill tune">tune</span></td><td>Turret: a goBILDA <b>5-turn Dual Mode Servo</b> in the same mount, or a REV Through Bore Encoder; add a zero reference and hard stops</td><td>As built, the 300° servo through the ring gives only about 55–75° of turret travel and no feedback.</td></tr>
+          <tr><td><span class="pill tune">tune</span></td><td>Power servos at 6 V (REV Servo Hub or goBILDA Servo Power Injector)</td><td>Hub servo ports are 5 V and share 2 A per pair, and a stalled servo draws 2–2.5 A.</td></tr>
+          <tr><td><span class="pill tune">tune</span></td><td>Mount Pinpoint + 2 pods. Put the Limelight on the turret, pitched ~35–40° up</td><td>The HIVE tags face down from about 50 in high, and they move when the HIVE tips, so they're for aiming, not for finding the robot's position.</td></tr>
+          <tr><td><span class="pill tune">tune</span></td><td>Protect the hubs and wiring, cradle the battery, guard the turret's open center and the flywheel</td><td>Defense is "everywhere in TELEOP" in Michigan. A ball landing on the robot near a spill risks G409.</td></tr>
+          <tr><td><span class="pill opt">optional</span></td><td>Move the intake to a spare DC motor (5203, 1150 rpm), keeping the same roller</td><td>A servo makes about 2–3 W against about 22 W for a motor. If pickup is the bottleneck, this is the fix.</td></tr>
+          <tr><td><span class="pill opt">optional</span></td><td>NECTAR path: a compliant or adjustable hood gap</td><td>Only after POLLEN cycles are reliable.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="card">
+      <h3>Starting RPM table (to tune from, 72 mm wheel, 64–65° hood)</h3>
+      <p class="muted" style="font-size:.92rem">This is a physics estimate that assumes ball exit speed = 0.40 × wheel surface speed. Measure the real ratio first and scale the whole table, then refine each row by test. Lip distance is measured from the cell opening's bottom edge.</p>
+      <div class="tablewrap"><table>
+        <thead><tr><th>Lip distance</th><th>Exit speed</th><th>Window</th><th>72 mm rpm</th><th>Ticks/s</th></tr></thead>
+        <tbody>
+          <tr><td class="n">30 in</td><td class="n">5.44 m/s</td><td class="n">±5.3%</td><td class="n">3,608</td><td class="n">1,684</td></tr>
+          <tr><td class="n">36 in</td><td class="n">5.31 m/s</td><td class="n">±5.4%</td><td class="n">3,525</td><td class="n">1,645</td></tr>
+          <tr><td class="n">42 in</td><td class="n">5.35 m/s</td><td class="n">±4.9%</td><td class="n">3,551</td><td class="n">1,657</td></tr>
+          <tr><td class="n">48 in</td><td class="n">5.46 m/s</td><td class="n">±4.5%</td><td class="n">3,624</td><td class="n">1,691</td></tr>
+          <tr><td class="n">60 in</td><td class="n">5.77 m/s</td><td class="n">±3.6%</td><td class="n">3,826</td><td class="n">1,786</td></tr>
+          <tr><td class="n">72 in</td><td class="n">6.12 m/s</td><td class="n">±3.1%</td><td class="n">4,058</td><td class="n">1,894</td></tr>
+          <tr><td class="n">84 in</td><td class="n">6.48 m/s</td><td class="n">±2.8%</td><td class="n">4,297</td><td class="n">2,005</td></tr>
+        </tbody>
+      </table></div>
+    </div>
+  </div>
+</section>
+
+<section id="software">
+  <div class="wrap">
+    <div class="sechead"><div class="eyebrow">Software · Android Studio, SDK 12.0</div><h2>One update loop, small state machines</h2>
+      <p class="muted prose">The starter project lives in <span class="mono">~/projects/ftc-12303</span> on branch <span class="mono">12303-biobuzz</span>. Plan documents are in <span class="mono">docs/plan/</span>, and setup and tuning order are in <span class="mono">TeamCode/…/README-12303.md</span>.</p></div>
+    <pre class="mermaid">
+flowchart TB
+  P["Pinpoint odometry: robot pose"] --> AIM["Fused aim: bearing to the active cell + Limelight bias"]
+  LL["Limelight 3A: own-alliance tags only"] --> AIM
+  LL --> HT["HiveTracker: which cell is up"]
+  OP["Operator: tipped / override"] --> HT
+  HT --> AIM
+  AIM --> TUR["Turret: angle, soft limits"]
+  AIM --> SH["Shooter: distance to RPM table, at-speed gate"]
+  IDX["Indexer: count starts at 4, stop at 4, reject opponent NECTAR"] --> FEED["Feed one ball when at speed"]
+  SH --> FEED
+  PED["Pedro Pathing 3: AUTO paths"] --> P
+    </pre>
+    <div class="two">
+      <div class="card"><h3>Decisions</h3>
+        <ul>
+          <li><b>Pinpoint for position, AprilTags for aim.</b> SDK 12.0 says BIOBUZZ tags move and are "not suitable for absolute Field Localization". Each tag cluster's origin is the center of the cell opening, which is exactly what we aim at.</li>
+          <li><b>Pedro Pathing 3</b> for AUTO paths. Its AutoTune is the fastest route to reliable paths once the odometry pods are on.</li>
+          <li><b>Flywheel:</b> start with the hub's <span class="mono">setVelocity</span> PIDF (F = 32767 / max ticks/s, P = 0.1·F, I = 0.1·P). Call it "ready" only after 3+ loops in tolerance.</li>
+          <li><b>Which cell is up:</b> red starts with the audience cell up, blue with the far cell up. The robot flips its target on a confirmed TIP, from vision or the operator's button.</li>
+        </ul></div>
+      <div class="card"><h3>Competition hygiene</h3>
+        <ul>
+          <li>Panels and FTC Dashboard must be <b>disabled at events</b>. Wi-Fi streaming is banned anywhere in the venue, pits included (R704.D, Q&amp;A 26). Deploy code over USB.</li>
+          <li>TeleOp INIT must not move anything during the 8 s transition (G403).</li>
+          <li>AUTO OpModes preselect the TeleOp, so the drive team can't forget it.</li>
+          <li>Pose hands off from AUTO to TELEOP, so field-centric drive and aiming start correct.</li>
+        </ul></div>
+    </div>
+  </div>
+</section>
+
+<section id="testing">
+  <div class="wrap">
+    <div class="sechead"><div class="eyebrow">Testing &amp; practice · 6 weeks, 4–8 h per week</div><h2>Measure first, then tune</h2></div>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>#</th><th>Experiment (use our HIVE)</th><th>What we learn</th></tr></thead>
+        <tbody>
+          <tr><td class="n">1</td><td>Count POLLEN to tip, both placed and launched: from the 3-NECTAR start and from empty. 5 runs each; time the wait before it swings.</td><td>Whether our HIVE matches the official 3 / 8 calibration. If not, recalibrate it per the field setup guide §12.3.</td></tr>
+          <tr><td class="n">2</td><td>Film 10 shots at 3 RPMs, perpendicular, at 240 fps</td><td>The real exit-speed ratio and shot-to-shot spread. Targets: speed within 2–3%, angle within 1–1.5°.</td></tr>
+          <tr><td class="n">3</td><td>Shot map: lip distance 30–72 in, head-on and at 30°/45°, 10 shots per spot. Record made / bounce-out / miss.</td><td>The distance-to-RPM table and the shooting cone we can trust.</td></tr>
+          <tr><td class="n">4</td><td>RPM trace of a 4-ball volley, with and without the steel flywheel</td><td>Feed interval and the gate tolerance.</td></tr>
+          <tr><td class="n">5</td><td>Drive the roller into a flower's retrieval opening</td><td>Whether flower POLLEN, 16 of the 24 non-preload balls, becomes ammo for us.</td></tr>
+          <tr><td class="n">6</td><td>NECTAR through intake, indexer and hood</td><td>Go/no-go for phase 3.</td></tr>
+          <tr><td class="n">7</td><td>10 runs of each AUTO rung</td><td>Promote a rung at 8 of 10.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="two">
+      <div class="card"><h3>Six-week timeline</h3>
+        <div class="week"><b>W1</b><div>Inspection blockers, sensors, flywheel control and gating, experiments 1–3, Pinpoint mounted, starter code running.</div></div>
+        <div class="week"><b>W2</b><div>Turret range and feedback, Limelight mounted and aiming, A0 and A1 reliable, Pedro tuning.</div></div>
+        <div class="week"><b>W3</b><div>TELEOP automation (auto-aim, one-button volley, stop at 4), driver drills, bounce-out fixes.</div></div>
+        <div class="week"><b>W4</b><div>A2 and A3, NECTAR go/no-go, flower-bottom test.</div></div>
+        <div class="week"><b>W5</b><div>Full timed match practice, scouting sheet, reliability work, portfolio.</div></div>
+        <div class="week"><b>W6</b><div>Freeze the code. Practice, checklists, spares.</div></div>
+      </div>
+      <div class="card chart"><h3>Win rate by alliance TIPS (early events)</h3>
+        <svg id="winchart" viewBox="0 0 520 230" role="img" aria-label="Win rate: 0 tips 28%, 1 tip 49%, 2 tips 78%, 3 tips 90%, 4 or more 100%"></svg>
+        <p class="muted" style="font-size:.88rem">176 matches at 11 US events, Sept 19 – Oct 17, 2026. Two TIPS already win most matches.</p>
+      </div>
+    </div>
+    <div class="callout red"><b>Calendar check.</b> Metro Detroit league meets run Oct 24 – Nov 19, with the League Tournament on Dec 4–5 and the FiM State SE championship on Dec 11–13. FTC Events lists 12303 for 2026 but with no events assigned yet. <b>FiM round-3 registration opens Wed Oct 21 at 7 am</b>, so confirm the team's league or qualifier placement with FiM. <b>If we're in a league, the meets count:</b> League Tournament rankings add each team's best 10 League Meet matches, and missing matches count as zero (manual §14, p.167). A meet is only 5–6 matches, so plan on at least two meets, for example Nov 11 and Nov 19. A robot that only runs A0 and parks still banks points and SWARM RPs.</div>
+  </div>
+</section>
+
+<section id="rules">
+  <div class="wrap">
+    <div class="sechead"><div class="eyebrow">Rules that bite</div><h2>The fouls and rulings to drill</h2></div>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Rule</th><th>What it means for us</th><th>Penalty</th></tr></thead>
+        <tbody>
+          <tr><td class="n">G407</td><td>Never control more than 4 elements. There is no momentary exception (Q&amp;A 3, 23), and pushing a pile with a flat face counts.</td><td>Verbal warning; MAJOR + yellow card if strategic</td></tr>
+          <tr><td class="n">G408</td><td>Never control opponent NECTAR. A built-in "grab then reject" is likely judged strategic (TU05).</td><td>Verbal warning; yellow card if strategic</td></tr>
+          <tr><td class="n">G409</td><td>Don't catch or deflect balls falling out of a tipping HIVE until they touch something else (Q&amp;A 17).</td><td>Verbal warning; yellow card if strategic</td></tr>
+          <tr><td class="n">G417</td><td>Only launching into the up cell may tip a HIVE. Don't ram the frame, and don't shoot at the opponent's HIVE to stop their tip.</td><td>Verbal warning; MAJOR + yellow card if strategic</td></tr>
+          <tr><td class="n">G410</td><td>NECTAR goes into flowers only in the last 60 s.</td><td>MAJOR per NECTAR</td></tr>
+          <tr><td class="n">G402</td><td>In AUTO, stay on our side (columns A–C for red).</td><td>MAJOR per match</td></tr>
+          <tr><td class="n">G403/404</td><td>No powered motion during the transition or after the buzzer, and that includes TeleOp INIT.</td><td>Verbal warning; MAJOR + yellow card if strategic</td></tr>
+          <tr><td class="n">G421</td><td>Pin count is 3 s. Back off 2 ft.</td><td>MAJOR + MAJOR every 3 s</td></tr>
+          <tr><td class="n">G426/427</td><td>The human enters 1 NECTAR per own TIP (AUTO TIPS count), or all of it at 1:00. Drop it so it hits the LOADING ZONE tile first.</td><td>MINOR per NECTAR</td></tr>
+          <tr><td class="n">Q&amp;A 21</td><td>LEAVE is judged at the end of AUTO. Touching any wall then means no LEAVE.</td><td>−3 pts, and maybe the SWARM RP</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="muted" style="font-size:.9rem">Pending Q&amp;A to watch: 34 (wide intake with balls underneath), 35 (waiting with the intake on beside the AUTO spill), 36 (NECTAR re-entry timing), 37 (deflecting shots out of the field), 38 (blocking access without contact).</p>
+  </div>
+</section>
+
+<footer id="sources">
+  <div class="wrap">
+    <h3>Sources</h3>
+    <ul>
+      <li>BIOBUZZ Competition Manual, TU05 (Oct 15, 2026): <a href="https://ftc-resources.firstinspires.org/ftc/game/manual" target="_blank" rel="noopener">ftc-resources.firstinspires.org/ftc/game/manual</a></li>
+      <li>Official Q&amp;A board: <a href="https://game-qa.firstinspires.org/boards/2027/FTC/QA" target="_blank" rel="noopener">game-qa.firstinspires.org/boards/2027/FTC/QA</a>. Tip calibration comes from the Event Field Setup Guide §12 on FIRST's Playing Field Resources page.</li>
+      <li>FTC SDK v12.0 release notes (AprilTag clusters, BIOBUZZ tag library): <a href="https://github.com/FIRST-Tech-Challenge/FtcRobotController/releases" target="_blank" rel="noopener">github.com/FIRST-Tech-Challenge/FtcRobotController</a></li>
+      <li>Early-season data: FTCScout and FTC Events, e.g. <a href="https://ftc-events.firstinspires.org/2026/USMISAS/rankings" target="_blank" rel="noopener">Saline Preview rankings</a> and the <a href="https://ftc-events.firstinspires.org/2026/region/USMI/league/MD" target="_blank" rel="noopener">Metro Detroit league page</a>. FiM events: <a href="https://firstinmichigan.us/FTC/events/" target="_blank" rel="noopener">firstinmichigan.us/FTC/events</a></li>
+      <li>Field coordinates come from the official field CAD. Launch numbers are physics estimates with drag, to be checked by experiments 2–3.</li>
+    </ul>
+    <p>Prepared Oct 20, 2026 for the 12303 drive team and coaches. Detailed plans live in <span class="mono">docs/plan/</span> in the team repo.</p>
+  </div>
+</footer>
+
+<script>
+(function () {
+  const NS = "http://www.w3.org/2000/svg";
+  const W = 70.67; // half field, inches
+  const svg = document.getElementById("fieldsvg");
+  // Field frame: +X toward audience (down on screen), +Y toward blue (right on screen).
+  const P = (x, y) => [y + W, x + W];
+  const el = (tag, attrs, parent) => {
+    const e = document.createElementNS(NS, tag);
+    for (const k in attrs) e.setAttribute(k, attrs[k]);
+    (parent || svg).appendChild(e);
+    return e;
+  };
+  const rect = (x0, x1, y0, y1, cls, parent) => {
+    const [sx0, sy0] = P(Math.min(x0, x1), Math.min(y0, y1));
+    return el("rect", { x: sx0, y: sy0, width: Math.abs(y1 - y0), height: Math.abs(x1 - x0), class: cls }, parent);
+  };
+  const text = (x, y, s, cls, parent, anchor) => {
+    const [sx, sy] = P(x, y);
+    const t = el("text", { x: sx, y: sy, class: cls, "text-anchor": anchor || "middle", "dominant-baseline": "middle" }, parent);
+    t.textContent = s;
+    return t;
+  };
+
+  // ---- static field ----
+  const base = el("g", {});
+  el("rect", { x: 0, y: 0, width: 2 * W, height: 2 * W, class: "f-bg" }, base);
+  for (let i = -2; i <= 2; i++) {
+    const c = i * 23.5;
+    el("line", { x1: c + W, y1: 0, x2: c + W, y2: 2 * W, class: "f-tile" }, base);
+    el("line", { x1: 0, y1: c + W, x2: 2 * W, y2: c + W, class: "f-tile" }, base);
+  }
+  // alliance areas outside walls
+  el("rect", { x: -6, y: W - 48.4, width: 5, height: 96.8, class: "f-redz" }, base);
+  el("rect", { x: 2 * W + 1, y: W - 48.4, width: 5, height: 96.8, class: "f-bluez" }, base);
+  // loading zones & gardens
+  rect(-46.60, -23.91, -70.67, -59.10, "f-redz", base);
+  text(-35.25, -64.9, "LZ", "f-lbl-b", base);
+  rect(23.91, 46.60, 59.10, 70.67, "f-bluez", base);
+  text(35.25, 64.9, "LZ", "f-lbl-b", base);
+  rect(68.10, 70.67, -70.10, -47.41, "f-redz", base);
+  rect(-70.67, -68.10, 47.41, 70.10, "f-bluez", base);
+  [-69.3, -66.4, -63.5, -60.6].forEach((y) => { const [sx, sy] = P(69.3, y); el("circle", { cx: sx, cy: sy, r: 1.4, class: "f-pollen" }, base); });
+  [69.3, 66.4, 63.5, 60.6].forEach((y) => { const [sx, sy] = P(-69.3, y); el("circle", { cx: sx, cy: sy, r: 1.4, class: "f-pollen" }, base); });
+  text(62.5, -60, "GARDEN", "f-lbl", base);
+  text(-62.5, 60, "GARDEN", "f-lbl", base);
+  // flowers
+  [[-68.04, -23.39], [23.39, -68.04], [68.04, 23.39], [-23.39, 68.04]].forEach(([x, y]) => {
+    const [sx, sy] = P(x, y);
+    el("circle", { cx: sx, cy: sy, r: 2.6, class: "f-flower" }, base);
+  });
+  // HIVE frame feet
+  [[18.3, 23.7], [18.3, -23.7], [-18.3, 23.7], [-18.3, -23.7]].forEach(([x, y]) => {
+    const [sx, sy] = P(x, y);
+    el("rect", { x: sx - 1, y: sy - 1.1, width: 2, height: 2.2, class: "f-foot" }, base);
+  });
+  // walls
+  el("rect", { x: 0, y: 0, width: 2 * W, height: 2 * W, class: "f-wall" }, base);
+  text(W + 3.6, 0, "AUDIENCE", "f-lbl", base);
+  text(-W - 3.6, 0, "FAR WALL", "f-lbl", base);
+  const tR = el("text", { x: -2.6, y: W, class: "f-lbl", "text-anchor": "middle", transform: `rotate(-90 -2.6 ${W})` }, base); tR.textContent = "RED ALLIANCE";
+  const tB = el("text", { x: 2 * W + 2.6, y: W, class: "f-lbl", "text-anchor": "middle", transform: `rotate(90 ${2 * W + 2.6} ${W})` }, base); tB.textContent = "BLUE ALLIANCE";
+
+  // ---- dynamic layers ----
+  const hiveG = el("g", {});
+  const overlay = el("g", {});
+  const state = { alliance: "red", hive: "A", ov: "zones" };
+
+  function drawHive() {
+    hiveG.replaceChildren();
+    // red hive at y=-12.75, blue at +12.75. Cells span |x| 8.2..18.6 in plan, y ±10 around the hive axis.
+    const hives = [{ y: -12.75, cls: "f-red", tags: ["30–33", "34–37"] }, { y: 12.75, cls: "f-blue", tags: ["42–45", "38–41"] }];
+    hives.forEach((h, i) => {
+      // up end: red starts audience (+X) up; blue starts far (-X) up. Flip the selected alliance's hive in state B.
+      let upSign = i === 0 ? 1 : -1;
+      const sel = (state.alliance === "red" && i === 0) || (state.alliance === "blue" && i === 1);
+      if (sel && state.hive === "B") upSign = -upSign;
+      [1, -1].forEach((sgn) => {
+        const up = sgn === upSign;
+        const r = rect(sgn * 8.2, sgn * 18.6, h.y - 10, h.y + 10, h.cls + (up ? " cell-up" : " cell-down"), hiveG);
+        r.setAttribute("fill-opacity", up ? 0.85 : 0.25);
+        r.setAttribute("stroke", "var(--ink)");
+        if (up) {
+          const [ax, ay] = P(sgn * 18.6, h.y);
+          const [bx, by] = P(sgn * 25, h.y);
+          el("line", { x1: ax, y1: ay, x2: bx, y2: by, stroke: "var(--ink)", "stroke-width": 0.9 }, hiveG);
+          el("polygon", { points: `${bx},${by + sgn * 1.6} ${bx - 1.3},${by} ${bx + 1.3},${by}`, fill: "var(--ink)" }, hiveG);
+        }
+        text(sgn * 13.4, h.y, sgn > 0 ? h.tags[1] : h.tags[0], "f-lbl", hiveG).setAttribute("fill", up ? "#fff" : "var(--ink-2)");
+      });
+    });
+    const [px, py] = P(0, -12.75); el("circle", { cx: px, cy: py, r: 0.9, fill: "var(--ink)" }, hiveG);
+    const [qx, qy] = P(0, 12.75); el("circle", { cx: qx, cy: qy, r: 0.9, fill: "var(--ink)" }, hiveG);
+  }
+
+  // helpers in RED frame; Q() rotates them 180° for blue so labels stay upright
+  let flip = 1;
+  const Q = (x, y) => P(flip * x, flip * y);
+  function cone(ax, ay, dir) {
+    const pts = [];
+    const r0 = 30, r1 = 92;
+    for (let a = -40; a <= 40; a += 5) { const t = (a * Math.PI) / 180; pts.push(Q(ax + dir * r1 * Math.cos(t), ay + r1 * Math.sin(t))); }
+    for (let a = 40; a >= -40; a -= 5) { const t = (a * Math.PI) / 180; pts.push(Q(ax + dir * r0 * Math.cos(t), ay + r0 * Math.sin(t))); }
+    // clip to field
+    const c = pts.map(([sx, sy]) => [Math.max(0, Math.min(2 * W, sx)), Math.max(0, Math.min(2 * W, sy))]);
+    el("polygon", { points: c.map((p) => p.join(",")).join(" "), class: "cone" }, overlay);
+  }
+  function robot(x, y, label, ghost) {
+    const [sx, sy] = Q(x, y);
+    el("rect", { x: sx - 9, y: sy - 9, width: 18, height: 18, rx: 1.5, class: "robot" + (ghost ? " ghost" : "") }, overlay);
+    const t = el("text", { x: sx, y: sy, class: "f-lbl-b", "text-anchor": "middle", "dominant-baseline": "middle" }, overlay);
+    t.textContent = label;
+  }
+  function route(pts, alt) {
+    const d = pts.map(([x, y], i) => { const [sx, sy] = Q(x, y); return (i ? "L" : "M") + sx.toFixed(2) + " " + sy.toFixed(2); }).join(" ");
+    el("path", { d, class: "route" + (alt ? " alt" : "") }, overlay);
+    pts.forEach(([x, y]) => { const [sx, sy] = Q(x, y); el("circle", { cx: sx, cy: sy, r: 0.8, class: "wp" }, overlay); });
+  }
+  function spill(x0, x1) { rect(flip * x0, flip * x1, flip * -28, flip * 2, "spill", overlay); }
+
+  const STEPS = {
+    zones: {
+      title: "Zones (state-dependent)",
+      items: [
+        ["A", "Our up cell faces the audience wall. Score from the yellow cone in front of it, 30–92 in from the aim point and within ±40° of head-on."],
+        ["B", "After a TIP our far cell is up and faces the far wall. The cone moves to the far half, next to our LOADING ZONE."],
+        ["Spill", "A TIP pours the cell's balls toward the wall it faced. They first touch the floor about 24–42 in from center, usually about 3 s after the threshold ball, but allow up to 6 s."],
+        ["Lane", "The corridor at Y ≈ −40 crosses between zones and stays on our side. The under-HIVE lane is TELEOP only and risky (G409, G417)."]
+      ],
+      tot: "Aim point when the audience cell is up: (+16.5, −12.7, 58.3 in). Far cell: (−16.5, −12.7, 58.3 in)."
+    },
+    A1: {
+      title: "A1 · Tip & Park (28 pts)",
+      items: [
+        ["0.0 s", "Start at S1 (61.7, −12.8), facing the HIVE. The flywheel spins up at START."],
+        ["~2.5 s", "First ball out. Fire 4 at 0.15–0.25 s spacing, gated on flywheel speed."],
+        ["~3.5–7 s", "The HIVE waits 0.25–3.4 s, then swings in about 0.75 s. Hold position; the spill lands in front."],
+        ["~7–11 s", "Drive (30, −40) → (−30, −40) → park (−27, −56): inside the LOADING ZONE, off the wall."],
+        ["30 s", "Scored: TIP 20 + LEAVE 3 + PARK 5. About 18 s of slack is left for A2."]
+      ],
+      tot: "Promote to competition at 8 of 10 practice runs."
+    },
+    A2: {
+      title: "A2 · Tip, Reload, Volley",
+      items: [
+        ["0–4 s", "Same as A1: four shots from S1."],
+        ["4–7 s", "Drive to (61, −45), facing −Y along the audience wall. This stays out of the spill box."],
+        ["7–11 s", "Sweep the 4 GARDEN POLLEN against the wall (69.3, −60.6…−69.3). The intake stops at 4."],
+        ["11–16 s", "Corridor to the Zone B spot (−52, −30), turned to about 26° so it faces the far cell. By now the far cell is up, and this spot is just outside its spill box."],
+        ["16–18 s", "Fire 4 into the far cell (4 of the 8 needed)."],
+        ["18–22 s", "Park at (−27, −56), about 36 in away."]
+      ],
+      tot: "Alone this sets up TIP 2 for TELEOP. With a partner's 4 it becomes A3."
+    },
+    A3: {
+      title: "A3 · Alliance double-tip (needs a shooter partner)",
+      items: [
+        ["R1", "Robot 1 runs A2: TIP 1 from S1, then the garden reload."],
+        ["R2 · 0–8 s", "Robot 2 starts at S6 (−61.7, −10.1) on the far wall, facing the HIVE. It spins up and waits for TIP 1 (tags or the clock)."],
+        ["R2 · 8–14 s", "Robot 2 fires its 4 preloads into the far cell. It leaves S6 straight along +X to (−50, −10.1) to clear the far-wall flower, then parks at (−51, −56)."],
+        ["R1 · 16–18 s", "Robot 1 adds the 4 garden POLLEN: 8 in, so TIP 2."],
+        ["22–30 s", "Both robots end inside the LOADING ZONE and off the wall. That's 16 LEAVE+PARK points and the SWARM RP."]
+      ],
+      tot: "Two AUTO TIPS = 40 pts of TIPS. As of Oct 20, no US alliance had done it."
+    },
+    loop: {
+      title: "TeleOp loop",
+      items: [
+        ["1", "Shoot from the cone in front of the up cell. Two loads of 4 make one TIP."],
+        ["2", "Threshold ball in: stop firing and stay out of the spill box for about 3 s."],
+        ["3", "Sweep the spill, which lands in the zone we just shot from."],
+        ["4", "Cross through the corridor to the other zone and shoot into the new up cell."],
+        ["5", "Repeat. On red, finish the last cycle on the far side, 44 in from the LOADING ZONE."]
+      ],
+      tot: "Target pace: one 4-ball load every 15–20 s."
+    }
+  };
+
+  function drawOverlay() {
+    overlay.replaceChildren();
+    flip = state.alliance === "blue" ? -1 : 1;
+    const B = state.hive === "B";
+    if (state.ov === "zones") {
+      if (!B) { cone(16.5, -12.74, 1); spill(24, 42); } else { cone(-16.5, -12.74, -1); spill(-42, -24); }
+      route([[30, -40], [-30, -40]], true);
+      robot(61.67, -12.75, "S1", !(!B)); robot(-61.67, -10.1, "S6", !B);
+      robot(61.67, -37.5, "S2", true);
+    } else if (state.ov === "A1") {
+      cone(16.5, -12.74, 1); spill(24, 42);
+      route([[61.67, -12.75], [30, -40], [-30, -40], [-27, -56]]);
+      robot(61.67, -12.75, "S1"); robot(-27, -56, "P", true);
+    } else if (state.ov === "A2") {
+      cone(-16.5, -12.74, -1); spill(24, 42);
+      route([[61.67, -12.75], [61, -45], [61, -63], [30, -40], [-30, -40], [-52, -30], [-40, -45], [-27, -56]]);
+      robot(61.67, -12.75, "S1"); robot(-52, -30, "B", true); robot(-27, -56, "P", true);
+    } else if (state.ov === "A3") {
+      cone(-16.5, -12.74, -1);
+      route([[61.67, -12.75], [61, -45], [61, -63], [30, -40], [-30, -40], [-52, -30], [-40, -45], [-27, -56]]);
+      route([[-61.67, -10.1], [-50, -10.1], [-51, -56]], true);
+      robot(61.67, -12.75, "R1"); robot(-61.67, -10.1, "R2"); robot(-27, -56, "P1", true); robot(-51, -56, "P2", true);
+    } else if (state.ov === "loop") {
+      cone(16.5, -12.74, 1); cone(-16.5, -12.74, -1); spill(24, 42); spill(-42, -24);
+      route([[52, -12.75], [40, -40], [-40, -40], [-52, -12.75]]);
+      robot(52, -12.75, "A", true); robot(-52, -12.75, "B", true);
+    }
+    const s = STEPS[state.ov];
+    const box = document.getElementById("steps");
+    box.replaceChildren();
+    const h = document.createElement("h3"); h.textContent = s.title; box.appendChild(h);
+    const sub = document.createElement("p"); sub.className = "muted"; sub.style.fontSize = ".88rem";
+    sub.textContent = (state.alliance === "red" ? "Red" : "Blue (red rotated 180°)") + " · HIVE " + (state.hive === "A" ? "state A (start)" : "state B (after 1 tip)");
+    box.appendChild(sub);
+    const ol = document.createElement("ol");
+    s.items.forEach(([t, d]) => { const li = document.createElement("li"); const a = document.createElement("span"); a.className = "t"; a.textContent = t; const b = document.createElement("span"); b.textContent = d; li.append(a, b); ol.appendChild(li); });
+    box.appendChild(ol);
+    const tot = document.createElement("p"); tot.className = "tot"; tot.textContent = s.tot; box.appendChild(tot);
+  }
+  function render() { drawHive(); drawOverlay(); }
+
+  const press = (ids, on) => ids.forEach((id) => document.getElementById(id).setAttribute("aria-pressed", String(id === on)));
+  document.getElementById("al-red").onclick = () => { state.alliance = "red"; press(["al-red", "al-blue"], "al-red"); render(); };
+  document.getElementById("al-blue").onclick = () => { state.alliance = "blue"; press(["al-red", "al-blue"], "al-blue"); render(); };
+  document.getElementById("st-a").onclick = () => { state.hive = "A"; press(["st-a", "st-b"], "st-a"); render(); };
+  document.getElementById("st-b").onclick = () => { state.hive = "B"; press(["st-a", "st-b"], "st-b"); render(); };
+  ["zones", "A1", "A2", "A3", "loop"].forEach((k) => {
+    document.getElementById("ov-" + k).onclick = () => {
+      state.ov = k;
+      if (k === "A1") state.hive = "A";
+      if (k === "A2" || k === "A3") state.hive = "B";
+      press(["st-a", "st-b"], state.hive === "A" ? "st-a" : "st-b");
+      press(["ov-zones", "ov-A1", "ov-A2", "ov-A3", "ov-loop"], "ov-" + k);
+      render();
+    };
+  });
+  render();
+
+  // ---- AUTO timelines ----
+  const TL = [
+    ["A1 · Tip & Park", [[0, 2.5, "s-wait", "spin"], [2.5, 3.6, "s-shoot", "fire 4"], [3.6, 7, "s-wait", "tip + spill"], [7, 11, "s-drive", "corridor"], [11, 30, "s-park", "parked (slack)"]]],
+    ["A2 · Reload", [[0, 3.6, "s-shoot", "fire 4"], [3.6, 7, "s-drive", "to garden"], [7, 11, "s-intake", "sweep 4"], [11, 16, "s-drive", "to zone B"], [16, 18, "s-shoot", "fire 4"], [18, 22, "s-drive", "park"], [22, 30, "s-park", ""]]],
+    ["A3 · Robot 2", [[0, 8, "s-wait", "wait for TIP 1"], [8, 11, "s-shoot", "fire 4"], [11, 14, "s-drive", "park"], [14, 30, "s-park", "TIP 2 ≈ 18–22 s"]]]
+  ];
+  const tl = document.getElementById("timelines");
+  TL.forEach(([name, segs]) => {
+    const row = document.createElement("div"); row.className = "tlrow";
+    const lab = document.createElement("div"); lab.textContent = name;
+    const bar = document.createElement("div"); bar.className = "tlbar";
+    segs.forEach(([a, b, cls, label]) => { const s = document.createElement("span"); s.className = cls; s.style.left = (a / 30 * 100) + "%"; s.style.width = ((b - a) / 30 * 100) + "%"; s.textContent = label; s.title = `${a}–${b} s: ${label}`; bar.appendChild(s); });
+    row.append(lab, bar); tl.appendChild(row);
+  });
+
+  // ---- win-rate chart (to scale) ----
+  const ch = document.getElementById("winchart");
+  const data = [["0", 28], ["1", 49], ["2", 78], ["3", 90], ["4+", 100]];
+  const x0 = 46, y0 = 190, h = 160, bw = 62, gap = 30;
+  [0, 50, 100].forEach((v) => {
+    const y = y0 - (v / 100) * h;
+    const l = document.createElementNS(NS, "line"); l.setAttribute("x1", x0 - 6); l.setAttribute("x2", 510); l.setAttribute("y1", y); l.setAttribute("y2", y); l.setAttribute("class", "c-axis"); ch.appendChild(l);
+    const t = document.createElementNS(NS, "text"); t.setAttribute("x", x0 - 10); t.setAttribute("y", y + 4); t.setAttribute("text-anchor", "end"); t.setAttribute("class", "c-txt"); t.textContent = v + "%"; ch.appendChild(t);
+  });
+  data.forEach(([k, v], i) => {
+    const x = x0 + 10 + i * (bw + gap), bh = (v / 100) * h;
+    const r = document.createElementNS(NS, "rect"); r.setAttribute("x", x); r.setAttribute("y", y0 - bh); r.setAttribute("width", bw); r.setAttribute("height", bh); r.setAttribute("rx", 3); r.setAttribute("class", "c-bar"); ch.appendChild(r);
+    const t = document.createElementNS(NS, "text"); t.setAttribute("x", x + bw / 2); t.setAttribute("y", y0 - bh - 6); t.setAttribute("text-anchor", "middle"); t.setAttribute("class", "c-val"); t.textContent = v + "%"; ch.appendChild(t);
+    const u = document.createElementNS(NS, "text"); u.setAttribute("x", x + bw / 2); u.setAttribute("y", y0 + 18); u.setAttribute("text-anchor", "middle"); u.setAttribute("class", "c-txt"); u.textContent = k + (k === "1" ? " tip" : " tips"); ch.appendChild(u);
+  });
+})();
+</script>
