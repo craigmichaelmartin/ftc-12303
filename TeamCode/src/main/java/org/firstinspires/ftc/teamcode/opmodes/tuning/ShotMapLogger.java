@@ -9,6 +9,7 @@ import org.firstinspires.ftc.teamcode.Robot;
 import org.firstinspires.ftc.teamcode.config.FieldConstants;
 import org.firstinspires.ftc.teamcode.config.RobotConfig;
 import org.firstinspires.ftc.teamcode.util.Alliance;
+import org.firstinspires.ftc.teamcode.util.CompetitionCheck;
 import org.firstinspires.ftc.teamcode.util.CsvLogger;
 
 import java.util.ArrayList;
@@ -26,9 +27,11 @@ import java.util.TreeMap;
  *
  *   A           flywheel on/off at the chosen RPM
  *   dpad up/dn  RPM +-50                  dpad left/right  distance override -+3 in (only without odometry)
- *   RB          fire ONE ball
+ *   RB          fire ONE ball (ignored until the previous shot is scored)
  *   then score that ball:  X = MADE,  B = BOUNCED OUT,  LB = MISSED
- *   back        delete the last row       Y  flip target cell (HIVE state)
+ *   back        delete the last row from the screen table (the CSV keeps it and gets a
+ *               DELETED_PREVIOUS marker row - skip marked rows when you analyse the file)
+ *   Y           flip target cell (HIVE state)
  *   sticks      drive slowly (field-centric, red driver view) to the next test spot
  *
  * The table on screen groups rows by distance (3 in buckets) and RPM. The suggested SHOT_TABLE row per
@@ -59,6 +62,8 @@ public class ShotMapLogger extends LinearOpMode {
         robot = new Robot(hardwareMap, Alliance.RED);
         robot.drive.setPose(FieldConstants.startPose(Alliance.RED, FieldConstants.StartSpot.S1));
         telemetry.addLine("Shot map logger (RED). Robot assumed on S1 at START - or drive it to a spot.");
+        String competition = CompetitionCheck.warning();
+        if (competition != null) telemetry.addLine(competition);
         robot.addWarnings(telemetry);
         telemetry.update();
         waitForStart();
@@ -87,7 +92,7 @@ public class ShotMapLogger extends LinearOpMode {
             if (left) manualDistanceIn -= 3;
             if (right) manualDistanceIn += 3;
             if (y) robot.hive.operatorToggle();
-            if (rb) {
+            if (rb && pending == null) {      // score the last shot first
                 spinning = true;
                 robot.indexer.requestSingleShot();
                 pending = snapshot();
@@ -97,7 +102,11 @@ public class ShotMapLogger extends LinearOpMode {
                 record(pending);
                 pending = null;
             }
-            if (back && !shots.isEmpty()) shots.remove(shots.size() - 1);
+            if (back && !shots.isEmpty()) {
+                Shot removed = shots.remove(shots.size() - 1);
+                log.row(removed.distanceIn, removed.offAxisDeg, removed.targetRpm, removed.measuredRpm, removed.volts,
+                        "DELETED_PREVIOUS");
+            }
 
             rpm = Math.max(0, Math.min(RobotConfig.FLYWHEEL_MAX_RPM, rpm));
             robot.setManualRpm(spinning ? rpm : 0.0);
@@ -136,8 +145,8 @@ public class ShotMapLogger extends LinearOpMode {
                 rpm, spinning ? "ON" : "off", robot.shooter.measuredRpm(), distanceIn(),
                 robot.drive.hasLocalizer() ? "(odometry)" : "(MANUAL - dpad L/R)",
                 FieldConstants.offAxisDeg(Alliance.RED, robot.targetCell(), robot.drive.pose().x(), robot.drive.pose().y())));
-        telemetry.addLine(pending != null ? ">>> score the last shot: X made, B bounced out, LB missed"
-                : "RB = fire one | A = flywheel | back = delete last row | Y = flip target cell");
+        telemetry.addLine(pending != null ? ">>> score the last shot: X made, B bounced out, LB missed (RB waits for this)"
+                : "RB = fire one | A = flywheel | back = delete last row (CSV marks it) | Y = flip target cell");
         telemetry.addLine(String.format(Locale.US, "feed %s %s | balls %d | target cell %s | turret %+.1f %s",
                 robot.indexer.feedState(), robot.indexer.blockedBy(), robot.indexer.count(), robot.targetCell(),
                 robot.turret.currentOffsetDeg(), robot.aim().reachable ? "" : "(OUT OF RANGE: rotate robot)"));

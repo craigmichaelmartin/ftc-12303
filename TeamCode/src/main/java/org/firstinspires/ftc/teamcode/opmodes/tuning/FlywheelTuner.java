@@ -9,6 +9,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import org.firstinspires.ftc.teamcode.Robot;
 import org.firstinspires.ftc.teamcode.config.RobotConfig;
 import org.firstinspires.ftc.teamcode.util.Alliance;
+import org.firstinspires.ftc.teamcode.util.CompetitionCheck;
 import org.firstinspires.ftc.teamcode.util.CsvLogger;
 
 import java.util.Locale;
@@ -23,7 +24,9 @@ import java.util.Locale;
  *  3. Y cycles what dpad up/down edits: RPM, P/F, I/F. Raise P until recovery is quick without
  *     oscillation; small I removes a steady offset. Copy the final numbers into RobotConfig.
  *  4. B = feed ONE ball (needs balls loaded and the gate tuned): look at "last shot: drop / recovery".
- *     Repeat with 4 balls to time a volley. Compare with and without the steel flywheel mass.
+ *     The feed waits only for the flywheel (manual aim). If "drop" never updates, the shot dip is not
+ *     detected: lower FLYWHEEL_SHOT_DIP_FRACTION (or fit the feed beam). Repeat with 4 balls to time a
+ *     volley. Compare with and without the steel flywheel mass.
  * dpad left/right = RPM +-25 (fine). Every loop while spinning is logged to /sdcard/FIRST/data.
  */
 @TeleOp(name = "Tune: Flywheel", group = "12303 Tuning")
@@ -43,6 +46,8 @@ public class FlywheelTuner extends LinearOpMode {
         telemetry.setMsTransmissionInterval(50);
         robot = new Robot(hardwareMap, Alliance.RED);
         telemetry.addLine("Flywheel tuner ready. X = max speed test, A = spin, B = feed one ball.");
+        String competition = CompetitionCheck.warning();
+        if (competition != null) telemetry.addLine(competition);
         robot.addWarnings(telemetry);
         telemetry.update();
         waitForStart();

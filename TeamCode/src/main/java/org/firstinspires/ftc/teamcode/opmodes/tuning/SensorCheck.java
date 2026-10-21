@@ -6,11 +6,13 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.teamcode.Robot;
 import org.firstinspires.ftc.teamcode.config.RobotConfig;
 import org.firstinspires.ftc.teamcode.util.Alliance;
+import org.firstinspires.ftc.teamcode.util.CompetitionCheck;
 import org.firstinspires.ftc.teamcode.util.OptionalHardware;
 
 import java.util.Locale;
@@ -23,12 +25,20 @@ import java.util.Locale;
  * windows, MIN_SATURATION and MOUTH_BALL_PRESENT_CM in RobotConfig section 10 so each ball shows the
  * right class with a margin. Do it again under the brightest and darkest light you expect.
  *
+ * BALL TIME AT THE MOUTH (G407 last-ball rule): after START press RB (resets "longest"), then hold A and
+ * let the roller pull 10 single POLLEN in, one at a time, none touching another (drive into them the way
+ * the drivers do). Set MOUTH_ONE_BALL_MAX_MS to "longest" + 30% (the line shows the suggestion).
+ *
  * DIRECTION TESTS (after START, hold the button; each must make the robot do the described thing):
  *   dpad up = front-left wheel, dpad right = front-right, dpad left = back-left, dpad down = back-right
  *             -> each wheel alone must roll the robot FORWARD. If not, flip its *_DIRECTION.
  *   A = intake IN (balls go in)        B = spinners FORWARD (balls go up toward the gate)
  *   X = feeder gate OPEN position      Y = flywheel 1500 rpm (ball must go OUT)
  * Nothing moves during INIT.
+ *
+ * PINPOINT CHECK: the pose is zeroed to (0, 0, heading 0) at INIT (gamepad1 back zeroes it again), so
+ * "push the robot FORWARD: x grows; push it LEFT: y grows" is valid. (The Pinpoint otherwise keeps the
+ * pose of the last OpMode - after AUTO from S1 the robot faces 180 and x would shrink.)
  */
 @TeleOp(name = "Check: Sensors", group = "12303 Tuning")
 public class SensorCheck extends LinearOpMode {
@@ -42,18 +52,23 @@ public class SensorCheck extends LinearOpMode {
         DcMotorEx fr = OptionalHardware.getQuiet(hardwareMap, DcMotorEx.class, RobotConfig.FRONT_RIGHT);
         DcMotorEx bl = OptionalHardware.getQuiet(hardwareMap, DcMotorEx.class, RobotConfig.BACK_LEFT);
         DcMotorEx br = OptionalHardware.getQuiet(hardwareMap, DcMotorEx.class, RobotConfig.BACK_RIGHT);
-        CRServo intake = OptionalHardware.getQuiet(hardwareMap, CRServo.class, RobotConfig.INTAKE);
+        DcMotorSimple intake = OptionalHardware.getQuiet(hardwareMap, DcMotorSimple.class, RobotConfig.INTAKE);   // CR servo or motor
         CRServo spinner = OptionalHardware.getQuiet(hardwareMap, CRServo.class, RobotConfig.INDEXER);
         Servo feeder = OptionalHardware.getQuiet(hardwareMap, Servo.class, RobotConfig.FEEDER);
         boolean shooterArmed = false;
+        robot.drive.setPose(new Pose(0, 0, 0));   // direction check needs heading 0 (moves nothing)
 
         while (opModeInInit()) {
+            if (gamepad1.backWasPressed()) robot.drive.setPose(new Pose(0, 0, 0));
+            if (gamepad1.rightBumperWasPressed()) robot.indexer.resetLongestMouthPresence();
             robot.update();               // nothing is armed: reads only
             show(robot, pinpoint, false);
         }
         if (isStopRequested()) return;
 
         while (opModeIsActive()) {
+            if (gamepad1.backWasPressed()) robot.drive.setPose(new Pose(0, 0, 0));
+            if (gamepad1.rightBumperWasPressed()) robot.indexer.resetLongestMouthPresence();
             // Direction tests: raw outputs, one device at a time, only while the button is held.
             power(fl, gamepad1.dpad_up ? 0.3 : 0.0);
             power(fr, gamepad1.dpad_right ? 0.3 : 0.0);
@@ -80,11 +95,18 @@ public class SensorCheck extends LinearOpMode {
     }
 
     private void show(Robot robot, GoBildaPinpointDriver pinpoint, boolean started) {
-        telemetry.addLine(started ? "HOLD: dpad = one wheel (must roll FORWARD), A intake, B spinners, X gate, Y flywheel"
+        String competition = CompetitionCheck.warning();
+        if (competition != null) telemetry.addLine(competition);
+        telemetry.addLine(started ? "HOLD: dpad = one wheel (must roll FORWARD), A intake, B spinners, X gate, Y flywheel | RB = reset 'longest'"
                 : "INIT: read-only. Press START for the direction tests.");
         telemetry.addLine(String.format(Locale.US, "MOUTH: %s | hue %.0f sat %.2f | dist %.1f cm (ball if < %.1f)",
                 robot.indexer.mouthBall(), robot.indexer.mouthHue(), robot.indexer.mouthSaturation(),
                 robot.indexer.mouthDistanceCm(), RobotConfig.MOUTH_BALL_PRESENT_CM));
+        long last = robot.indexer.lastMouthPresenceMs();
+        long longest = robot.indexer.longestMouthPresenceMs();
+        telemetry.addLine(String.format(Locale.US, "  ball in view: last %s, longest %s -> MOUTH_ONE_BALL_MAX_MS ~ %s (now %d)",
+                last < 0 ? "-" : last + " ms", longest < 0 ? "-" : longest + " ms",
+                longest < 0 ? "-" : String.valueOf(Math.round(longest * 1.3)), RobotConfig.MOUTH_ONE_BALL_MAX_MS));
         telemetry.addLine(String.format(Locale.US, "  windows: POLLEN %.0f-%.0f, RED <%.0f or >%.0f, BLUE %.0f-%.0f, min sat %.2f",
                 RobotConfig.POLLEN_HUE_MIN, RobotConfig.POLLEN_HUE_MAX, RobotConfig.RED_HUE_MAX, RobotConfig.RED_HUE_MIN_WRAP,
                 RobotConfig.BLUE_HUE_MIN, RobotConfig.BLUE_HUE_MAX, RobotConfig.MIN_SATURATION));
@@ -98,7 +120,7 @@ public class SensorCheck extends LinearOpMode {
             Pose p = robot.drive.pose();
             telemetry.addLine(String.format(Locale.US, "PINPOINT %s | x %.1f y %.1f h %.1f deg | %.0f Hz",
                     pinpoint.getDeviceStatus(), p.x(), p.y(), Math.toDegrees(p.heading()), pinpoint.getFrequency()));
-            telemetry.addLine("  push the robot FORWARD: x must grow (heading 0); push LEFT: y must grow");
+            telemetry.addLine("  pose zeroed at INIT (back = zero again): push the robot FORWARD: x must grow; push LEFT: y must grow");
         } else {
             telemetry.addLine("PINPOINT: not found (name '" + RobotConfig.PINPOINT + "', I2C bus 1-3, not 0)");
         }

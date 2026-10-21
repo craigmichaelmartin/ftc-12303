@@ -20,16 +20,16 @@ Written 2026-10-20 from the team's strategy brief. **The strategy decisions are 
 - Fix the inspection blockers.
 - Add possession sensors.
 - Tune the flywheel and hood.
-- Give the turret more range and a known zero.
+- Give the turret more range (5-turn servo) and a calibrated zero.
 - Power the servos at 6 V.
 
 Anything bigger is **OPTIONAL**.
 
 | Phase | What we do | Points |
 |---|---|---|
-| **AUTO** | **A1 Tip & Park** from S1: fire all 4 preloads, tip the start CELL, wait out the spill, park off the wall. Stretch: A2 (garden reload) and A3 (alliance double tip) | **28**; **36 + SWARM RP** with a partner that LEAVEs and PARKs |
-| **TELEOP** | **Two-zone loop**: shoot from the zone the up CELL faces · two loads = one tip · after the threshold ball stop, wait ~3 s, sweep the spill, cross, fire | One 4-ball load every 15–20 s per robot |
-| **ENDGAME** | Keep tipping; final volley at ~0:12 (Zone B) or ~0:15 (Zone A); human enters NECTAR at 1:00; both robots park | 10 (+ SWARM) |
+| **AUTO** | **A1 Tip & Park** from S1: fire all 4 preloads, tip the start CELL, hold until the spill has landed, park off the wall in our LOADING ZONE slot. Stretch, for a tuned robot only: A2 (garden reload) and A3 (alliance double tip) | **28**; **36 + SWARM RP** with a partner that LEAVEs and PARKs |
+| **TELEOP** | **Two-zone loop**: shoot from the zone the up CELL faces · two loads = one tip · after the threshold ball stop; the operator presses Y on the human player's "TIP!"; wait until the spill has landed (usually ~3 s, up to ~6 s), sweep it, cross, fire | One 4-ball load every 15–20 s per robot |
+| **ENDGAME** | Keep tipping; final volley at ~0:12 (Zone B, the half next to our LZ) or ~0:15 (Zone A); human enters NECTAR at 1:00 on the field timer; both robots park | 10 (+ SWARM) |
 | **Phase 3** (only if NECTAR tests pass) | NECTAR to speed up tips (6 balls instead of 8); FLOWERS (~13 pts each) | |
 
 **Goal by the League Tournament (12/4–5): 1 AUTO tip + 2–3 TELEOP tips contributed per match.**
@@ -43,7 +43,7 @@ Anything bigger is **OPTIONAL**.
 | [01-game-and-scoring.md](01-game-and-scoring.md) | Points, RP math, tip thresholds, why tips win, field coordinates, which way CELLS face, spill behaviour |
 | [02-autonomous.md](02-autonomous.md) | AUTO ladder A0–A3 with exact poses and timelines, partner scripts, blue rotation, failure handling, ≥ 8/10 promotion rule |
 | [03-teleop.md](03-teleop.md) | Two-zone loop, shooting spots, ammo sources, call-outs, control map, defence, possession rules |
-| [04-endgame.md](04-endgame.md) | 1:00 and 0:20 scripts, parking, human-player script, phase-3 NECTAR/FLOWER math |
+| [04-endgame.md](04-endgame.md) | 1:00 and 0:25 scripts (the coach's clock calls), parking, human-player script, phase-3 NECTAR/FLOWER math |
 | [05-robot-tuning.md](05-robot-tuning.md) | Inspection blockers and MUST / TUNE / OPTIONAL refinements with part numbers and prices |
 | [06-software.md](06-software.md) | Software architecture and competition rules for code. Pointer to `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/README-12303.md` |
 | [07-testing-and-practice.md](07-testing-and-practice.md) | Experiments with data sheets; driver drills with targets; weekly time budget |
@@ -81,18 +81,18 @@ Owners left blank on purpose: fill them in at the next team meeting. Robot time 
 
 ### Week 1 · 10/20–10/26: blockers, sensors, flywheel, first tests
 - [ ] Register and confirm league placement with FiM (Round 3 opens 10/21, 7 am). Owner: ____
-- [ ] Inspection blockers: Limelight is a 3A? main power switch, signs, grounding strap ([05 §1](05-robot-tuning.md#1-inspection-blockers-fix-these-in-week-1)). Owner: ____
+- [ ] Inspection blockers: Limelight is a 3A? main power switch, signs (a grounding strap is recommended, not required) ([05 §1](05-robot-tuning.md#1-inspection-blockers-fix-these-in-week-1)). Owner: ____
 - [ ] Possession sensors (mouth, slot 4, feed beam) + software auto-stop at 4 ([05 §2](05-robot-tuning.md#2-must-rules-and-inspection)). Owner: ____
 - [ ] Flywheel velocity control + "ready" gate ([06 §5](06-software.md#5-flywheel-control-and-the-distance--rpm-table)). Owner: ____
 - [ ] Set-up checks and HIVE calibration; Exp 1 tip threshold; Exp 2a hood angle; start Exp 2b shot map ([07](07-testing-and-practice.md)). Owner: ____
-- [ ] Pinpoint + 2 pods mounted; starter code on the robot; test OpMode passes. Owner: ____
+- [ ] Pinpoint + 2 pods mounted; starter code on the robot; **Check: Sensors** passes; laptop tests pass ([06 §9](06-software.md#9-tests-tuning-and-logging)). Owner: ____
 - [ ] Order parts ([05 §6](05-robot-tuning.md#6-shopping-list)); some are out of stock. Owner: ____
-- [ ] Answer the robot questions ([05 §7](05-robot-tuning.md#7-questions-only-the-robot-can-answer-measure-in-week-1)). Owner: ____
+- [ ] Answer the robot questions ([05 §7](05-robot-tuning.md#7-questions-only-the-robot-can-answer-measure-in-week-1)): the "measure on robot" rows in the [07 set-up checks](07-testing-and-practice.md#set-up-checks-week-1-before-any-experiment) (ring and pinion teeth, flywheel drive ratio, hood contact surface, intake layout, 60 mm flywheel fit). Owner: ____
 
 ### Week 2 · 10/27–11/2: turret, Limelight, A0/A1, Pedro
-- [ ] Turret: 5-turn servo **or** Through Bore Encoder, plus home switch, hard stops and calibration ([05 §3.5](05-robot-tuning.md#35-turret-range-and-a-known-zero)). Owner: ____
-- [ ] Limelight on the turret (35–40° up), pipeline set, vision bias working. Owner: ____
-- [ ] Pedro tuning at home, then **AutoTune switched off** ([06 §8](06-software.md#8-competition-rules-for-software-checklist)). Owner: ____
+- [ ] Turret: 5-turn servo (optional Through Bore Encoder on an idler gear, feedback only), plus hard stops and Tune: Turret Calibrator zero/ratio calibration ([05 §3.5](05-robot-tuning.md#35-turret-range-and-a-known-zero)). Owner: ____
+- [ ] Limelight on the turret (35–40° up), one pipeline set over USB (ID filter 30–45, 82.55 mm, Full 3D), vision bias working. Owner: ____
+- [ ] Pedro tuning at home (remove the 0.5 speed cap once tuned), then **AutoTune compiled out again** (`PEDRO_AUTOTUNE = false`, re-deploy; [06 §8](06-software.md#8-competition-rules-for-software-checklist)). Owner: ____
 - [ ] **A0 10/10 and A1 ≥ 8/10** ([02](02-autonomous.md), Exp 7). Owner: ____
 - [ ] Exp 2b/2c shot map and bounce-outs; Exp 3 flywheel recovery with and without the 60 mm steel flywheel. Owner: ____
 - [ ] Drills DR8 (human player) and DR9 (transition). Owner: ____
@@ -104,7 +104,7 @@ Owners left blank on purpose: fill them in at the next team meeting. Robot time 
 - [ ] Servos on 6 V power ([05 §3.6](05-robot-tuning.md#36-intake-power-keep-the-servo-give-it-6-v)). Owner: ____
 
 ### Week 4 · 11/10–11/16: stretch AUTOs and NECTAR decision
-- [ ] A2, A3-R1, A3-R2 OpModes; promote only at ≥ 8/10. Owner: ____
+- [ ] A2, A3 role 1, A3 role 2 routines (12303 Auto): only with a tuned follower; promote only at ≥ 8/10; A3 also needs a rehearsal with the partner. Owner: ____
 - [ ] Exp 5 FLOWER extraction, Exp 6 NECTAR go/no-go, Exp 8 intake speed. Owner: ____
 - [ ] Decide on OPTIONAL changes (DC-motor intake, extractor) from the data. Owner: ____
 - [ ] Drills DR6 (endgame) and DR7 (defence). Owner: ____
@@ -156,13 +156,13 @@ Owners left blank on purpose: fill them in at the next team meeting. Robot time 
 | 3 | The indexer isn't finished | A1 needs the robot to hold and feed 4 balls | Build it first (W1–W2) | |
 | 4 | Inconsistent shots, bounce-outs (44% in one team's test, CD-14343) | Tips need balls to stay in | Speed-gated feeding, 60 mm flywheel, compliant hood, Exp 2–3 | |
 | 5 | G407/G408 fouls from the full-width roller (no momentary exception; QA34 pending) | MAJOR fouls and cards | Sensors + auto-stop + DR4 | |
-| 6 | Turret has only ~50–75° of travel and no feedback | Lost aim after a hit | 5-turn servo or encoder + home switch; chassis-aim fallback | |
+| 6 | Turret has only ~50–75° of travel and no feedback | Aim offset if the pinion skips a tooth after a hit | 5-turn servo (+ optional encoder feedback); re-check the zero after hits; chassis-aim fallback (`TURRET_PINNED`) | |
 | 7 | Slow servo intake | Too few loads per match | 6 V power, Exp 8, OPTIONAL DC-motor intake | |
 | 8 | Our HIVE differs from event HIVEs (variation; dwell 0.25–3.4 s) | Wrong ball counts and timing | Calibrate to EFSG §12.3; fire full volleys; the coach keeps the count | |
-| 9 | Wi-Fi streaming at the venue (Dashboard, Panels, Pedro AutoTune) | Rule violation (R704.D, QA26) | `PEDRO_AUTOTUNE = false` before events; INIT warning line ([06 §8](06-software.md#8-competition-rules-for-software-checklist)) | |
+| 9 | Wi-Fi streaming at the venue (Dashboard, Panels, Pedro AutoTune) | Rule violation (R704.D, QA26) | `PEDRO_AUTOTUNE = false` and re-deploy before events; every 12303 OpMode shows an INIT warning line ([06 §8](06-software.md#8-competition-rules-for-software-checklist)) | |
 | 10 | Parts out of stock (Brushland sensor, Limelight 3A, 312 rpm motor) | Delays | Order alternatives now ([05 §6](05-robot-tuning.md#6-shopping-list)) | |
 | 11 | Only 4–8 h of robot time per week | The plan slips | Follow the time budget ([07](07-testing-and-practice.md#suggested-use-of-robot-time-48-h-per-week-est)); freeze in W6 | |
-| 12 | Plan and code drift apart (poses, buttons) | Confusion at events | The code README is the final word; update these docs when the code changes | |
+| 12 | Plan and code drift apart (poses, buttons) | Confusion at events | The code README is the final word; update these docs when the code changes; the laptop route test checks every AUTO leg | |
 
 ---
 
@@ -175,10 +175,13 @@ Owners left blank on purpose: fill them in at the next team meeting. Robot time 
 | TIP | The HIVE swings to its other side (the damper touches the frame): 20 points |
 | Threshold ball | The ball that makes a CELL tip |
 | Spill / landing box | The balls a tip dumps out / where they first hit the floor |
-| Zone A / Zone B | Where we shoot while our starting CELL / our other CELL is up |
+| Start CELL / second CELL | Our CELL that is up at the start (red: audience CELL, tags 34–37; blue: far CELL, 42–45) / our other CELL, up after TIP 1 (red 30–33, blue 38–41) |
+| Our start wall | The end wall behind S1 (red: audience wall; blue: far wall) |
+| Zone A / Zone B | Where we shoot while our start CELL / our second CELL is up. Zone B is the half next to our LZ |
 | POLLEN / NECTAR | Small yellow ball (2.8 in) / large alliance-coloured ball (3.6 in). We may never control the opponent's NECTAR |
 | FLOWER / GARDEN | Tubes on the walls (NECTAR scoring in the last minute) / taped strips on the walls (1 point per ball) |
 | LOADING ZONE (LZ) | Our 23 × 11 in taped box on our alliance wall: where we PARK and where NECTAR comes in |
+| Corner / inner slot, solo | The two-robot park spots in our LZ (the corner slot is the end nearer the field corner; the first robot to arrive takes it) / the one-robot pose in the middle |
 | LEAVE / PARK | Off every wall at the end of AUTO (3) / at least partly in our LZ (5, at the end of AUTO and of the match) |
 | RP, SWARM, POLLINATOR | Ranking points. SWARM = LEAVE + PARK ≥ 16. POLLINATOR = ≥ 4 / ≥ 7 tips |
 | CONTROL | Holding or herding a ball (G407/G408). We may control at most 4 |

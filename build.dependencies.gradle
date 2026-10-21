@@ -18,7 +18,8 @@ repositories {
 //   * BEFORE EVERY EVENT:            PEDRO_AUTOTUNE = false, rebuild, re-deploy (over USB).
 //
 // When false, the AutoTune library AND the files in TeamCode/src/autotune/java are left out of the
-// build (see TeamCode/build.gradle). The 12303 OpModes print a warning in INIT if AutoTune is present.
+// build (see TeamCode/build.gradle). Every 12303 OpMode (Auto, TeleOp and the six Tune/Check/Test
+// OpModes) prints a warning in INIT if AutoTune (or FTC Dashboard / Panels) is in the app.
 // Command-line override (no file edit):  ./gradlew :TeamCode:assembleDebug -PpedroAutoTune=true
 // -------------------------------------------------------------------------------------------------
 def PEDRO_AUTOTUNE = false

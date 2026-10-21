@@ -31,14 +31,18 @@ import java.util.List;
  *  - Aim correction ("vision bias"): for each visible tag of the cell we are aiming at, compare the
  *    bearing the camera MEASURES with the bearing odometry PREDICTS (we know where each tag is from
  *    the CAD). The low-passed difference is added to the turret aim. This fixes small odometry,
- *    turret and field-tolerance errors. It is only updated while the turret and chassis are still,
- *    so camera latency does not matter.
+ *    turret and field-tolerance errors. It is only updated while the turret is settled and the chassis
+ *    is neither turning nor driving, so camera latency does not matter.
  *  - Which cell is up: up-cell tags are ~49.8 in above the floor, down-cell tags ~35.5 in (R2 7.3).
  *    We estimate each tag's height from the camera angle and give HiveTracker an opinion (A or B).
+ *    After a TIP all our tags face the OTHER half of the field, so the camera confirms a TIP only from
+ *    the zone the new up cell faces (never our own TIP from the zone we fired from).
  *
- * OWN ALLIANCE ONLY: red 30-37, blue 38-45. Opponent tags are ignored - launching at the opponent's
- * HIVE to stop its TIP is STRATEGIC (G417.D). Also set the Limelight pipeline's ID filter to the
- * same 8 ids (and use 640x480, ~50 fps).
+ * OWN ALLIANCE ONLY: red 30-37, blue 38-45. Opponent tags are ignored here - launching at the opponent's
+ * HIVE to stop its TIP is STRATEGIC (G417.D). The code uses ONE Limelight pipeline for both alliances,
+ * so set that pipeline's ID filter to 30-45 (never to one alliance's 8 ids: on the other alliance the
+ * robot would then see none of its own tags). Also: 640x480, ~50 fps, marker size 82.55 mm (3.25 in),
+ * Full 3D ON (heights then come from the 3-D tag position; "3D" shows y in Check: Limelight).
  *
  * SIGN CONVENTIONS (Limelight docs): tx > 0 = target RIGHT of the crosshair, ty > 0 = target ABOVE.
  * Camera space: X right, Y down, Z out of the lens (the SDK reports metres; we convert to inches).
@@ -85,6 +89,9 @@ public class Vision {
     private double lastLatencyMs = 0.0;
     private long lastUpdateNs = 0;
     private int ownTagsSeen = 0;
+    private int outlierRun = 0;
+    private double outlierRunSum = 0.0;
+    private double outlierRunFirst = 0.0;
 
     public Vision(HardwareMap hw, Alliance alliance, List<String> warnings) {
         this.alliance = alliance;
@@ -124,7 +131,7 @@ public class Vision {
      * @param robotPose        robot pose from the Pinpoint (field frame)
      * @param turretRobotDeg   where the turret points relative to the robot front (deg), for a turret camera
      * @param targetCell       the cell we are aiming at (its tags feed the aim bias)
-     * @param stableForBias    true when the turret is settled and the chassis is not turning
+     * @param stableForBias    true when the turret is settled and the chassis is not turning or driving
      */
     public void update(Pose robotPose, double turretRobotDeg, HiveState targetCell, boolean stableForBias) {
         long now = System.nanoTime();
@@ -280,8 +287,26 @@ public class Vision {
         double measuredBias = sum / n;
         if (Math.abs(measuredBias - aimBiasDeg) > RobotConfig.VISION_BIAS_OUTLIER_DEG
                 && Math.abs(aimBiasDeg) > 0.5) {
-            return;   // wild jump: wrong tag, partner robot in the way, motion blur... ignore this frame
+            // Wild jump: wrong tag, partner robot in the way, motion blur... ignore this frame - unless the
+            // "outliers" keep agreeing with each other: then the error is real (e.g. odometry pods slipped
+            // after contact) and we jump to it.
+            if (outlierRun > 0 && Math.abs(measuredBias - outlierRunFirst) > RobotConfig.VISION_BIAS_OUTLIER_AGREE_DEG) {
+                outlierRun = 0;
+                outlierRunSum = 0.0;
+            }
+            if (outlierRun == 0) outlierRunFirst = measuredBias;
+            outlierRun++;
+            outlierRunSum += measuredBias;
+            if (outlierRun >= RobotConfig.VISION_BIAS_OUTLIER_ACCEPT_FRAMES) {
+                aimBiasDeg = MathUtil.clamp(outlierRunSum / outlierRun,
+                        -RobotConfig.VISION_BIAS_MAX_DEG, RobotConfig.VISION_BIAS_MAX_DEG);
+                outlierRun = 0;
+                outlierRunSum = 0.0;
+            }
+            return;
         }
+        outlierRun = 0;
+        outlierRunSum = 0.0;
         aimBiasDeg += RobotConfig.VISION_BIAS_GAIN * (measuredBias - aimBiasDeg);
         aimBiasDeg = MathUtil.clamp(aimBiasDeg, -RobotConfig.VISION_BIAS_MAX_DEG, RobotConfig.VISION_BIAS_MAX_DEG);
     }
@@ -293,6 +318,8 @@ public class Vision {
     /** Forget the aim correction (call after a TIP: we now aim at a different cell). */
     public void resetBias() {
         aimBiasDeg = 0.0;
+        outlierRun = 0;
+        outlierRunSum = 0.0;
     }
 
     // ---------------------------------------------------------------------------------------------

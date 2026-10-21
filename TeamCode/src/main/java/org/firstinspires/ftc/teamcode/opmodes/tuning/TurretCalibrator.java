@@ -7,6 +7,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.config.RobotConfig;
 import org.firstinspires.ftc.teamcode.subsystems.Turret;
+import org.firstinspires.ftc.teamcode.util.CompetitionCheck;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -28,7 +29,9 @@ import java.util.Locale;
  *   RB                slew test: jumps +-20 deg around centre (time it with slow-mo video, or the
  *                     encoder if installed) -> TURRET_SLEW_DEG_PER_SEC
  * Copy the printed lines into RobotConfig section 7. Move SLOWLY near the hard stops: the servo can
- * strip the pinion if you drive it into a stop.
+ * strip the pinion if you drive it into a stop. The servo must be in POSITIONAL mode. With the optional
+ * Through Bore Encoder (on an idler gear meshing with the ring) set TURRET_USE_ENCODER = true first, so
+ * the X mark also prints TURRET_ENCODER_TICKS_PER_DEG - paste it before using the encoder in a match.
  */
 @TeleOp(name = "Tune: Turret Calibrator", group = "12303 Tuning")
 public class TurretCalibrator extends LinearOpMode {
@@ -49,6 +52,8 @@ public class TurretCalibrator extends LinearOpMode {
         Turret turret = new Turret(hardwareMap, warnings);
         position = RobotConfig.TURRET_SERVO_CENTER;
         telemetry.addLine("Turret calibrator: press START, then follow the instructions.");
+        String competition = CompetitionCheck.warning();
+        if (competition != null) telemetry.addLine(competition);
         for (String w : warnings) telemetry.addLine("WARN: " + w);
         telemetry.update();
         waitForStart();

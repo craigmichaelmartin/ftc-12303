@@ -37,16 +37,21 @@ public final class RobotConfig {
     public static final String BACK_RIGHT = "br";
     /** goBILDA 5203 6000 rpm 1:1 flywheel motor (with its encoder cable plugged in!). */
     public static final String FLYWHEEL = "flywheel";
-    /** Turret pinion servo (positional goBILDA Dual Mode servo, or the 5-turn version). */
+    /**
+     * Turret pinion servo: a POSITIONAL goBILDA Dual Mode servo, or the 5-turn version. Never put it in
+     * continuous mode: Turret.java only sends positions, so a continuous-rotation turret would keep
+     * spinning into its stops (a continuous turret needs new closed-loop code).
+     */
     public static final String TURRET_SERVO = "turret";
     /**
-     * OPTIONAL REV Through Bore Encoder on the turret. It plugs into the ENCODER port of a motor port,
-     * so configure that motor port as any DC motor with this name (no motor needs to be attached).
-     * Use motor port 0 or 3: those encoder inputs are decoded in hardware (ports 1/2 are software
-     * decoded and can miss counts from an 8192 CPR encoder - ftc-docs hub tech tips).
+     * OPTIONAL REV Through Bore Encoder for turret FEEDBACK (the servo stays positional). The ring centre
+     * is the ball path, so the encoder sits on an idler gear meshing with the ring (or on the pinion shaft).
+     * It plugs into the ENCODER port of a motor port, so configure that motor port as any DC motor with
+     * this name (no motor needs to be attached). Use motor port 0 or 3: those encoder inputs are decoded
+     * in hardware (ports 1/2 are software decoded and can miss counts from an 8192 CPR encoder).
      */
     public static final String TURRET_ENCODER = "turretEncoder";
-    /** Intake roller: continuous-rotation servo. */
+    /** Intake roller: a continuous-rotation servo OR a DC motor - configure "intake" as either one. */
     public static final String INTAKE = "intake";
     /** "Internal spinners" that carry balls up through the turret centre: continuous-rotation servo. */
     public static final String INDEXER = "indexer";
@@ -60,7 +65,11 @@ public final class RobotConfig {
     public static final String PINPOINT = "pinpoint";
     /** Limelight 3A (only the 3A is legal - the 3G is prohibited by R702). */
     public static final String LIMELIGHT = "limelight";
-    /** REV Color Sensor V3 / Brushland Color Rangefinder (I2C mode) at the intake mouth. */
+    /**
+     * REV Color Sensor V3, or a Brushland Color Rangefinder in I2C mode (its digital outputs are NOT read
+     * by this code), at the intake mouth. Mount it where every ball passes within MOUTH_BALL_PRESENT_CM
+     * before the roller commits it - including garden balls taken with the edge of the roller.
+     */
     public static final String MOUTH_COLOR = "mouthColor";
     /** Colour/distance sensor that sees the 4th storage slot ("we are full"). */
     public static final String SLOT4_COLOR = "slot4";
@@ -119,8 +128,13 @@ public final class RobotConfig {
     // =============================================================================================
     /** Must spin so the ball leaves the robot. TODO-MEASURE (FlywheelTuner: spin at 1000 rpm and look). */
     public static DcMotorSimple.Direction FLYWHEEL_DIRECTION = DcMotorSimple.Direction.FORWARD;    // TODO-MEASURE
-    /** 28 encoder counts per output revolution (goBILDA 5203 1:1 spec). Not a guess. */
-    public static double FLYWHEEL_TICKS_PER_REV = 28.0;
+    /**
+     * Encoder counts per FLYWHEEL revolution = 28 counts per motor revolution (goBILDA 5203 1:1) x motor
+     * turns per wheel turn. The photos suggest the motor drives the wheel through a right-angle bevel/miter
+     * pair: if that pair is not 1:1, multiply 28 by the ratio. TODO-MEASURE (mark the wheel, count motor
+     * turns per wheel turn). Every "rpm" the code shows is wheel rpm only when this is right.
+     */
+    public static double FLYWHEEL_TICKS_PER_REV = 28.0;                                           // TODO-MEASURE (ratio)
     /**
      * Free speed in encoder ticks/s at full power on a FULL battery (6000 rpm = 2800 t/s on paper).
      * TODO-MEASURE: FlywheelTuner "X = max speed test". The PIDF below is computed from this.
@@ -142,9 +156,17 @@ public final class RobotConfig {
     public static double FLYWHEEL_READY_TOLERANCE_MIN_RPM = 60.0;
     /** Must be inside the window this many loops in a row before we call it "ready" (debounce). */
     public static int FLYWHEEL_READY_LOOPS = 3;
-    /** A sudden drop bigger than this fraction of the target means "a ball just went through". TODO-MEASURE */
+    /**
+     * A speed drop below target x (1 - this) during one excursion out of the at-speed window = "a ball went
+     * through" (one shot dip per excursion). TODO-MEASURE with FlywheelTuner B (watch "last shot: drop").
+     */
     public static double FLYWHEEL_SHOT_DIP_FRACTION = 0.05;
-    /** Hard cap: keep ~75% of free speed at 11.5 V for recovery torque (R3 6.3). */
+    /** Ignore speed drops this soon after a target change of more than 2% (it is a new target, not a ball). */
+    public static long FLYWHEEL_DIP_IGNORE_AFTER_TARGET_CHANGE_MS = 100;
+    /**
+     * Hard safety cap (~83% of the 6000 rpm free speed). R3 6.3: above ~4,300 rpm (75% of free speed at
+     * 11.5 V) recovery between shots suffers - if the tuned table needs more, consider the 96 mm wheel.
+     */
     public static double FLYWHEEL_MAX_RPM = 5000.0;
     /** Operator dpad up/down changes the RPM trim by this much. */
     public static double FLYWHEEL_TRIM_STEP_RPM = 50.0;
@@ -175,9 +197,12 @@ public final class RobotConfig {
      * k = 0.35 -> scale 1.14. TODO-MEASURE (slow-motion video, R3 section 11 experiment 1).
      */
     public static double SHOT_TABLE_RPM_SCALE = 1.0;
-    /** Outside this distance band shots are unreliable (R3 recommendation: ~27-90 in). Telemetry warns. */
-    public static double SHOT_MIN_DISTANCE_IN = 27.0;
-    public static double SHOT_MAX_DISTANCE_IN = 90.0;
+    /**
+     * Reliable shot band in OPENING-CENTRE distance (what aim.distanceIn measures): R3's ~27-90 in LIP
+     * distance + ~2.8 in = ~30-92 in (same band as the playbook cone). Telemetry warns outside it.
+     */
+    public static double SHOT_MIN_DISTANCE_IN = 30.0;
+    public static double SHOT_MAX_DISTANCE_IN = 92.0;
 
     // =============================================================================================
     // 6. HOOD (optional servo)
@@ -195,7 +220,7 @@ public final class RobotConfig {
     public static double TURRET_SERVO_RANGE_DEG = 300.0;
     public static double TURRET_PWM_MIN_US = 500.0;
     public static double TURRET_PWM_MAX_US = 2500.0;
-    /** Ring gear teeth / pinion teeth (~4.5-5.5 from the photos). TODO-MEASURE: count the teeth. */
+    /** Ring gear teeth / pinion teeth (~4-6 from the photos, rough). TODO-MEASURE: count the teeth. */
     public static double TURRET_GEAR_RATIO = 5.0;                                                  // TODO-MEASURE
     /** Servo position when the shooter points along TURRET_CENTER_DEG. TODO-MEASURE (TurretCalibrator A). */
     public static double TURRET_SERVO_CENTER = 0.50;                                               // TODO-MEASURE
@@ -208,7 +233,9 @@ public final class RobotConfig {
     public static double TURRET_CENTER_DEG = 0.0;                                                  // TODO-MEASURE
     /**
      * Soft limits, degrees from centre (+ = left/CCW). Keep 3-5 deg inside the hard stops.
-     * 300 deg servo / 5:1 ring = only 60 deg total, so +-28. With a 5-turn servo you can go to +-150.
+     * Standard 300 deg servo: travel = 300 / ratio, so limits = +-(150 / ratio - 3): +-28 at 5:1 (only valid
+     * up to a 5.36 ratio). 5-turn servo (1800 deg): +-(900 / ratio - 5). TurretCalibrator measures them.
+     * With +-28, S7 cannot shoot the second cell (31.1 deg off the turret centre): A3 role 2 needs S6.
      * NOTE (R105.B): size limits must be enforced mechanically, never by these software limits.
      */
     public static double TURRET_MIN_DEG = -28.0;                                                   // TODO-MEASURE
@@ -224,17 +251,39 @@ public final class RobotConfig {
     public static double TURRET_TRIM_STEP_DEG = 0.5;
     /** Operator right stick manual turret speed (deg/s at full stick) when auto-aim is OFF. */
     public static double TURRET_MANUAL_DEG_PER_SEC = 60.0;
-    /** Set true when the REV Through Bore Encoder is installed and configured as TURRET_ENCODER. */
+    /**
+     * Set true when the REV Through Bore Encoder is installed and configured as TURRET_ENCODER - but only
+     * AFTER TurretCalibrator has measured TURRET_ENCODER_TICKS_PER_DEG (a wrong scale makes the turret look
+     * unsettled; the code then re-zeroes the encoder and warns, see Turret).
+     */
     public static boolean TURRET_USE_ENCODER = false;
     /**
-     * Encoder ticks per TURRET degree. Through Bore = 8192 counts/rev. On the ring axis: 8192/360 = 22.76.
-     * On the pinion/servo axis: 8192/360 x gear ratio. TODO-MEASURE (TurretCalibrator shows it).
+     * Encoder ticks per TURRET degree. The encoder sits on an idler gear meshing with the ring (the ring
+     * centre is the ball path), so ticks/deg = 8192 / 360 x (ring teeth / idler teeth): about 114 for a
+     * 60T idler on a ~300T ring (the default below assumes ratio 5). Placeholder only: run
+     * TurretCalibrator (X mark) with TURRET_USE_ENCODER = true and paste its value BEFORE a match.
      */
-    public static double TURRET_ENCODER_TICKS_PER_DEG = 8192.0 / 360.0;                            // TODO-MEASURE
+    public static double TURRET_ENCODER_TICKS_PER_DEG = 8192.0 / 360.0 * 5.0;                      // TODO-MEASURE
     /** +1 if encoder ticks increase when the turret turns CCW, else -1. */
     public static double TURRET_ENCODER_DIRECTION = 1.0;                                           // TODO-MEASURE
     /** Below this speed (deg/s) the encoder says the turret is not moving. */
     public static double TURRET_SETTLED_DEG_PER_SEC = 8.0;
+    /**
+     * Encoder and command disagree by more than TURRET_AIM_TOLERANCE_DEG while both have been still this
+     * long: treat it as skipped teeth / a wrong encoder scale, re-zero the encoder to the command and warn
+     * (instead of blocking every shot for the rest of the OpMode).
+     */
+    public static long TURRET_ENCODER_REZERO_AFTER_MS = 500;
+    /**
+     * FALLBACK when the turret misbehaves: pin it mechanically at its centre and set this true. The servo
+     * is then held at TURRET_SERVO_CENTER, auto-aim checks the CHASSIS heading instead (|aim error| <=
+     * CHASSIS_AIM_TOLERANCE_DEG) - the driver's RB aim-assist turns the chassis in TeleOp, AUTO turns the
+     * robot itself before a volley. Same behaviour when no "turret" servo is configured.
+     * Never use TURRET_MIN_DEG = TURRET_MAX_DEG = 0 for this: nothing would ever fire.
+     */
+    public static boolean TURRET_PINNED = false;
+    /** Chassis aim tolerance used when the turret is pinned or missing. */
+    public static double CHASSIS_AIM_TOLERANCE_DEG = 3.0;
 
     // =============================================================================================
     // 8. FEEDER GATE + INDEXER ("internal spinners") + BALL COUNT
@@ -245,14 +294,23 @@ public final class RobotConfig {
     public static double FEEDER_OPEN_POSITION = 0.55;                                             // TODO-MEASURE
     /** How long the gate stays open: long enough for ONE ball, too short for two. TODO-MEASURE */
     public static long FEEDER_OPEN_MS = 180;
-    /** Wait this long for the beam-break / flywheel dip to confirm the ball left. */
+    /**
+     * Wait this long after the gate closes for the beam-break / flywheel dip to confirm the ball left.
+     * No confirmation = an "unconfirmed feed": telemetry counts it and the operator pad gives 4 blips.
+     */
     public static long SHOT_CONFIRM_TIMEOUT_MS = 400;
-    /** Minimum time between two balls (R3: 0.15-0.25 s; the flywheel must also be back at speed). */
+    /**
+     * Minimum gap from one ball's confirmation (or confirm timeout) to the next gate opening. The real
+     * floor between balls is FEEDER_OPEN_MS + this (0.33 s), plus the flywheel getting back into its
+     * window; an unconfirmed feed adds SHOT_CONFIRM_TIMEOUT_MS (0.73 s between gate openings).
+     */
     public static long MIN_SHOT_INTERVAL_MS = 150;
     /**
      * If neither the beam-break nor the flywheel dip confirms a shot, still count the ball as gone?
      * true  = the count may go too LOW after a jam, but the slot-4 sensor forces it back to 4 (G407 safe).
      * false = the count only drops on a confirmed shot (needs feedBeam or a tuned dip).
+     * There is NO automatic jam reverse/retry: clear jams with operator LB (eject), fix the count with
+     * operator back (-1) / left-stick click (+1).
      */
     public static boolean COUNT_UNCONFIRMED_SHOTS = true;
     public static DcMotorSimple.Direction INDEXER_DIRECTION = DcMotorSimple.Direction.FORWARD;     // TODO-MEASURE
@@ -274,10 +332,23 @@ public final class RobotConfig {
     public static double INTAKE_FACING_DEG = 0.0;                                                 // TODO-MEASURE
     public static double INTAKE_IN_POWER = 1.0;
     public static double INTAKE_OUT_POWER = -1.0;
-    /** When we reach 4 balls, spin the roller backward this long to push a 5th ball away (G407). */
+    /**
+     * When we reach 4 balls, spin the roller backward this long to push a 5th ball away (G407). Ball 4 is
+     * counted once it has passed the mouth sensor - or at once when a 5th ball shows up right behind it
+     * (MOUTH_ONE_BALL_MAX_MS) - so the pulse hits the 5th ball, not ball 4.
+     */
     public static long INTAKE_FULL_REVERSE_MS = 150;
-    /** Opponent NECTAR seen at the mouth: run the roller backward this long (G408). */
+    /**
+     * Refused NECTAR at the mouth (G408): the roller runs backward for as long as the refused ball is still
+     * at the mouth, and this much longer after it is gone.
+     */
     public static long INTAKE_REJECT_MS = 400;
+    /**
+     * Phase 1 (hood gapped for 2.8 in POLLEN): false = the mouth refuses ALL NECTAR (ours too), because a
+     * 3.6 in ball would jam the hood. Set true only after the NECTAR shot test (07 Exp 6) is GO; then only
+     * the opponent's NECTAR is refused (G408). Drivers still steer around NECTAR: the sensor reacts on contact.
+     */
+    public static boolean ACCEPT_OWN_NECTAR = false;
 
     // =============================================================================================
     // 10. COLOUR SENSORS (mouth + slot 4) and BREAK-BEAM
@@ -303,15 +374,30 @@ public final class RobotConfig {
     public static long MOUTH_SENSOR_PERIOD_MS = 20;
     public static long SLOT4_SENSOR_PERIOD_MS = 100;
     /**
-     * A ball must be out of the mouth sensor's view this long before the NEXT ball can be counted.
-     * Stops one ball that flickers in and out of view from counting twice. TODO-MEASURE (SensorCheck).
+     * A ball is counted when it LEAVES the mouth sensor's view inward (it has then passed the mouth) and has
+     * been out of view this long. Stops one ball that flickers in and out of view from counting twice.
+     * TODO-MEASURE (SensorCheck): shorter than the gap between two balls taken back to back.
      */
     public static long BALL_COUNT_DEBOUNCE_MS = 60;                                               // TODO-MEASURE
+    /**
+     * The LAST free slot (3 counted, G407): ball 4 must be drawn in, but a 5th ball right behind it must not
+     * follow. One mouth sensor cannot always tell two touching balls apart, so with 3 counted:
+     *  - anything back in view after ball 4 left it (even for one read, before BALL_COUNT_DEBOUNCE_MS) is a
+     *    5th ball: ball 4 is counted at once and the full pulse pushes the newcomer away;
+     *  - a ball still in view MOUTH_ONE_BALL_MAX_MS after the roller started pulling it is TWO balls touching
+     *    (no gap the sensor can see): ball 4 is counted then, and the full pulse pushes the 5th away.
+     * Set it to the LONGEST time one ball stays in the mouth sensor's view while the roller pulls it in, + 30%.
+     * Too short: a slow ball 4 is counted early and pushed back out (BALLS 4 with 3 inside - operator back = -1).
+     * Too long: a touching 5th ball gets in. TODO-MEASURE ("Check: Sensors": hold A, pull 10 single POLLEN
+     * through, read "longest"). The slot-4 sensor is read every MOUTH_SENSOR_PERIOD_MS while ball 4 comes in.
+     */
+    public static long MOUTH_ONE_BALL_MAX_MS = 300;                                               // TODO-MEASURE
     /** IR break-beam receivers usually pull the line LOW when the beam is broken. */
     public static boolean FEED_BEAM_BROKEN_IS_LOW = true;
 
     // =============================================================================================
-    // 11. LIMELIGHT 3A (on the turret, pitched up ~35-40 deg; AprilTag pipeline, own 8 tags, 640x480)
+    // 11. LIMELIGHT 3A (on the turret, pitched up ~35-40 deg). ONE AprilTag pipeline for both alliances:
+    //     ID filter 30-45 (the code keeps only our 8), marker size 82.55 mm, Full 3D ON, 640x480.
     // =============================================================================================
     public static int LIMELIGHT_APRILTAG_PIPELINE = 0;
     public static int LIMELIGHT_POLL_HZ = 100;
@@ -335,8 +421,11 @@ public final class RobotConfig {
     public static double VISION_BIAS_GAIN = 0.15;
     /** The bias may never exceed this (protects against a bad frame / wrong tag). */
     public static double VISION_BIAS_MAX_DEG = 8.0;
-    /** Ignore a frame whose correction differs from the current bias by more than this. */
+    /** Ignore a frame whose correction differs from the current bias by more than this... */
     public static double VISION_BIAS_OUTLIER_DEG = 6.0;
+    /** ...unless this many outlier frames in a row agree within VISION_BIAS_OUTLIER_AGREE_DEG: then accept them. */
+    public static int VISION_BIAS_OUTLIER_ACCEPT_FRAMES = 5;
+    public static double VISION_BIAS_OUTLIER_AGREE_DEG = 2.0;
     /** How fast the bias fades back to 0 when no tags are seen (fraction per second). */
     public static double VISION_BIAS_DECAY_PER_SEC = 0.1;
 
@@ -349,53 +438,118 @@ public final class RobotConfig {
     public static long HIVE_VISION_CONFIRM_MS = 500;
     /** At least this many own tags must be seen for vision evidence to count. */
     public static int HIVE_VISION_MIN_TAGS = 1;
-    /** After the operator presses "HIVE tipped", vision may not override for this long. */
-    public static long HIVE_OPERATOR_PRIORITY_MS = 5000;
     /**
-     * Pause launching after a TIP is detected. Manual 10.5.1 note: launching at a HIVE while it is
-     * tipping "may disrupt its movement" and the TIP might not count.
+     * After the operator presses Y ("HIVE tipped"), vision may not override for this long. After that,
+     * 0.5 s of disagreeing vision can switch it back (set HIVE_VISION_AUTO_SWITCH = false if it keeps
+     * flipping wrongly).
+     */
+    public static long HIVE_OPERATOR_PRIORITY_MS = 5000;
+    /** A Y press this soon after a CAMERA switch confirms that switch instead of flipping back. */
+    public static long HIVE_Y_CONFIRMS_VISION_MS = 3000;
+    /**
+     * Pause launching this long after the target cell changes (operator Y or vision) while the turret and
+     * flywheel retarget; any requested volley is cancelled (press RB again). It starts after the HIVE has
+     * moved (or late in its swing), so it is NOT the manual 10.5.1 "don't launch at a tipping HIVE"
+     * protection - the drive team handles that (03).
      */
     public static long TIP_PAUSE_MS = 1000;
-    /** AUTO: the start cell already holds 3 own NECTAR, so ~3 POLLEN tip it (EFSG section 12). */
+    /**
+     * AUTO: the start cell already holds 3 own NECTAR, so ~3 POLLEN tip it (EFSG section 12). With a feed
+     * beam fitted only CONFIRMED shots count toward this.
+     */
     public static int AUTO_ASSUME_TIP_AFTER_BALLS = 3;
+    /** AUTO assumes the tip after volley 1; vision may not undo that for this long (dwell + swing). */
+    public static long AUTO_TIP_ASSUME_PROTECT_MS = 5000;
 
     // =============================================================================================
     // 13. FIRING CONDITIONS (stop to shoot - R6 5.5, R3 recommendation)
     // =============================================================================================
     public static double FIRE_MAX_CHASSIS_SPEED_IN_PER_SEC = 6.0;
     public static double FIRE_MAX_CHASSIS_TURN_DEG_PER_SEC = 20.0;
+    /**
+     * Auto-aim never feeds a ball when the target cell's opening faces more than this far away from the
+     * robot (off-axis angle; R2 verify F23: ~47-59 in^2 of opening at 75 deg, ~0-31 from behind). That
+     * happens in the wrong zone or after an unnoticed TIP: telemetry says "TARGET CELL FACES AWAY" and the
+     * operator light turns RED. Manual aim is not gated.
+     */
+    public static double FIRE_MAX_OFF_AXIS_DEG = 75.0;
 
     // =============================================================================================
     // 14. MATCH CUES
     // =============================================================================================
     public static double TELEOP_LENGTH_SEC = 120.0;
-    /** 1:00 left = FLOWER ownership unlocked chime; human player enters remaining NECTAR (G426). */
+    /**
+     * 1:00 left: FLOWER ownership unlocked; the human player enters the remaining NECTAR at 1:00 on the
+     * FIELD TIMER (G426; the chime is a courtesy). This gamepad cue runs on our own TeleOp clock: a reminder only.
+     */
     public static double CUE_ONE_MINUTE_LEFT_SEC = 60.0;
-    /** 0:20 left = train whistle; finish the last cycle and head for the LOADING ZONE. */
+    /** 0:20 left = train whistle. Reminder only - the COACH calls the clock ("0:25", "0:12 last volley", "park"). */
     public static double CUE_TWENTY_SECONDS_LEFT_SEC = 20.0;
 
     // =============================================================================================
     // 15. AUTO
     // =============================================================================================
-    /** After this many seconds, whatever we are doing, drive to the LOADING ZONE (LEAVE 3 + PARK 5). */
+    /**
+     * At this time after START (whatever we are doing) drive to the LOADING ZONE (LEAVE 3 + PARK 5). One
+     * deadline for every routine. The slowest leg from here (Zone B / LZ side) is ~3-4 s at the 0.5 speed cap.
+     */
     public static double AUTO_PARK_DEADLINE_SEC = 23.0;                                           // TODO-MEASURE
-    /** Give up on a volley after this long (e.g. a jam) and move on. */
+    /**
+     * Give up on a volley after this long (flywheel never ready, jam, aim blocked) and move on with the
+     * balls that are left. The clock starts once the robot has stopped (at most AUTO_VOLLEY_MAX_SETTLE_SEC
+     * after the volley step begins), so a slow drive does not eat the volley time.
+     */
     public static double AUTO_VOLLEY_TIMEOUT_SEC = 5.0;
-    /** Give up on any single path after this long (robot blocked / pushed). */
-    public static double AUTO_PATH_TIMEOUT_SEC = 6.0;
-    /** A1 from S1: shoot from the start spot (true) or drive to the Zone A shoot spot first (false). */
-    public static boolean A1_FIRE_FROM_START = true;
+    public static double AUTO_VOLLEY_MAX_SETTLE_SEC = 1.5;
+    /**
+     * Path timeout = leg length / (this x expected cruise speed) + AUTO_PATH_TIMEOUT_MARGIN_SEC. The cruise
+     * speed comes from pedro/Constants (maxPathSpeed x the slower of maxAchievableForward/StrafeVelocity),
+     * so the shipped 0.5 speed cap gives proportionally longer timeouts (a 125 in leg: ~9.5 s at the cap,
+     * ~5.5 s tuned at full speed). A timed-out path stops: the robot holds where it is.
+     */
+    public static double AUTO_PATH_TIMEOUT_SPEED_FACTOR = 0.6;
+    public static double AUTO_PATH_TIMEOUT_MARGIN_SEC = 1.5;
     /** Garden sweep speed as a fraction of full path speed (slow so the servo intake keeps up). */
     public static double AUTO_SWEEP_SPEED = 0.30;                                                 // TODO-MEASURE
     /** Keep the intake running this long after the sweep path ends. */
     public static double AUTO_SWEEP_DWELL_SEC = 0.6;
     /**
-     * A3 role 2: wait at most this long for the partner's TIP before giving up and parking. Keep it short
-     * enough that role 2 has left the far half before role 1 arrives in Zone B (~12 s). TODO-MEASURE
-     * (rehearse both robots together).
+     * After the garden sweep, VOLLEY 2 cycles the gate at least this many times even if the ball count is
+     * lower (garden balls taken with the roller edge can miss the mouth sensor). Empty cycles are harmless;
+     * with a feed beam fitted it stops after 2 unconfirmed (empty) cycles in a row. 0 = off.
+     */
+    public static int AUTO_VOLLEY2_MIN_GATE_CYCLES = 4;
+    /**
+     * A1 only: after volley 1, hold at the firing pose (outside the tip-1 landing box) until the spill has
+     * landed: leave once the start-cell tags were seen up and have then been gone A1_SPILL_TAGS_GONE_SEC,
+     * or A1_SPILL_HOLD_MAX_SEC after the last shot, whichever comes first (G409). TODO-MEASURE (07 Exp 1).
+     */
+    public static double A1_SPILL_HOLD_MAX_SEC = 6.0;
+    public static double A1_SPILL_TAGS_GONE_SEC = 1.0;
+    /**
+     * VOLLEY 2 (A2 / A3 role 1): if the HIVE tracker does not say the second cell is up when the robot
+     * arrives, wait up to this long for vision to see it before skipping the volley.
+     */
+    public static double AUTO_VOLLEY2_WAIT_FOR_B_SEC = 1.0;
+    /**
+     * A3 timing gates, measured from START (a start delay does not move them). Budget (RouteSweepTest and
+     * AutoTimingTest check it): role 2 fires only if the TIP is confirmed by A3_ROLE2_LATEST_FIRE_SEC = 9.0 s;
+     * + 1.0 s TIP_PAUSE_MS + 0.3 s staging + 4 feeds (the 4th gate opens by ~12.5 s even when no shot is
+     * confirmed). Whatever happens (stalled volley, start delay), role 2 leaves for the CORNER slot at
+     * A3_ROLE2_LEAVE_BY_SEC = 13.0 s at the latest - balls not fired by then stay inside. The park drive
+     * (57.6 in) takes <= ~2.9 s at the shipped 0.5 speed cap (~1.4 s tuned): role 2 is parked by ~16 s, before
+     * role 1 may leave the corridor end at A3_ROLE1_ZONE_B_NOT_BEFORE_SEC = 17.0 s. TODO-MEASURE (rehearse
+     * both robots). The one park deadline for every routine stays AUTO_PARK_DEADLINE_SEC.
+     */
+    public static double A3_ROLE2_LATEST_FIRE_SEC = 9.0;
+    public static double A3_ROLE2_LEAVE_BY_SEC = 13.0;
+    public static double A3_ROLE1_ZONE_B_NOT_BEFORE_SEC = 17.0;
+    /**
+     * A3 role 2: stop waiting for the partner's TIP this long after START. A TIP confirmed after
+     * A3_ROLE2_LATEST_FIRE_SEC is recorded for TeleOp (HIVE state B) but role 2 keeps its preloads.
      */
     public static double A3_ROLE2_TIP_WAIT_TIMEOUT_SEC = 10.0;
-    /** A3 role 2: fire anyway at the timeout even if vision never saw the far cell come up. */
+    /** A3 role 2: fire anyway at A3_ROLE2_LATEST_FIRE_SEC even if vision never saw the second cell come up. */
     public static boolean A3_ROLE2_FIRE_WITHOUT_TIP_CONFIRM = false;
 
     // =============================================================================================

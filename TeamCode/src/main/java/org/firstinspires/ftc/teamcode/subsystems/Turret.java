@@ -16,7 +16,9 @@ import org.firstinspires.ftc.teamcode.util.OptionalHardware;
 import java.util.List;
 
 /**
- * Turret: a positional servo turns a 60T pinion that drives a large ring gear.
+ * Turret: a POSITIONAL servo turns a 60T pinion that drives a large ring gear. This class only ever
+ * sends positions - never put the turret servo in continuous mode (a continuous-rotation turret would
+ * need new closed-loop code; with this code it would spin into its stops).
  *
  * ANGLES: "offset" = turret angle in degrees from its centre position, + = counter-clockwise (left,
  * seen from above). At offset 0 the shooter points TURRET_CENTER_DEG from the robot front.
@@ -30,10 +32,17 @@ import java.util.List;
  * aim-assist; AUTO picks shooting poses that face the target so the turret only fine-tunes.
  *
  * WHERE IS IT NOW? A servo gives no feedback, so without an encoder we estimate the angle by moving
- * toward the command at TURRET_SLEW_DEG_PER_SEC. With the optional REV Through Bore Encoder we
- * measure it (the encoder is zeroed automatically the first time the turret settles after arm()).
+ * toward the command at TURRET_SLEW_DEG_PER_SEC. With the optional REV Through Bore Encoder (FEEDBACK
+ * only, on an idler gear meshing with the ring) we measure it: the encoder is zeroed automatically the
+ * first time the turret settles after arm(), and re-zeroed (with a warning) if it disagrees with a
+ * steady command for TURRET_ENCODER_REZERO_AFTER_MS - skipped teeth or a wrong ticks/deg scale must not
+ * block every shot for the rest of the match.
  *
- * G403: arm() is the first time the servo is commanded (TeleOp calls it at START, never in INIT).
+ * PINNED (RobotConfig.TURRET_PINNED): the servo is held at its centre and aimAt() only computes the
+ * solution; Robot then aims with the chassis (TeleOp: driver RB aim-assist; AUTO turns the robot).
+ *
+ * G403: arm() is the first time the servo is commanded (TeleOp: at START; AUTO: in INIT, holding the
+ * centre - a positional servo may hold the starting configuration, R103).
  */
 public class Turret {
 
@@ -47,7 +56,9 @@ public class Turret {
         /** Following aimAt() and the target is inside the soft limits. */
         TRACKING,
         /** Following aimAt() but the target is outside the soft limits: turn the chassis! */
-        AT_LIMIT
+        AT_LIMIT,
+        /** TURRET_PINNED: held at the centre, the chassis aims. */
+        PINNED
     }
 
     /** Result of an aim calculation. All angles in degrees. */
@@ -89,6 +100,10 @@ public class Turret {
     private double measuredSpeedDegPerSec = 0.0;
     private long armedAtNs = 0;
     private long stillSinceNs = 0;
+    private long commandStableSinceNs = 0;
+    private double lastCommandForStability = Double.NaN;
+    private int encoderRezeroCount = 0;
+    private double lastRezeroErrorDeg = 0.0;
 
     public Turret(HardwareMap hw, List<String> warnings) {
         Servo s = OptionalHardware.get(hw, Servo.class, RobotConfig.TURRET_SERVO, warnings);
@@ -107,12 +122,17 @@ public class Turret {
 
     /** First servo command: set the full PWM range and hold the centre (TeleOp START / AUTO INIT). */
     public void arm() {
-        if (servo == null) return;
+        if (servo == null || armed) return;     // arming twice (AUTO INIT, then START) changes nothing
         servo.setPwmRange(new PwmControl.PwmRange(RobotConfig.TURRET_PWM_MIN_US, RobotConfig.TURRET_PWM_MAX_US));
         armed = true;
         armedAtNs = System.nanoTime();
         encoderZeroed = false;
-        if (state == State.DISABLED) state = State.CENTERED;
+        if (state == State.DISABLED) state = RobotConfig.TURRET_PINNED ? State.PINNED : State.CENTERED;
+    }
+
+    /** True when the turret cannot aim by itself (pinned, or no servo): the chassis must aim. */
+    public boolean chassisMustAim() {
+        return RobotConfig.TURRET_PINNED || servo == null;
     }
 
     public boolean isPresent() {
@@ -175,20 +195,29 @@ public class Turret {
      */
     public AimSolution aimAt(FieldPoint target, Pose robotPose) {
         AimSolution s = solve(target, robotPose, trimDeg, visionBiasDeg);
+        lastAim = s;
+        if (RobotConfig.TURRET_PINNED) {
+            commandOffsetDeg = 0.0;           // held at the centre: s.chassisTurnDeg tells the chassis
+            state = State.PINNED;
+            return s;
+        }
         commandOffsetDeg = s.commandOffsetDeg;
         state = s.reachable ? State.TRACKING : State.AT_LIMIT;
-        lastAim = s;
         return s;
     }
 
     /** Hold the centre position. */
     public void center() {
         commandOffsetDeg = 0.0;
-        state = State.CENTERED;
+        state = RobotConfig.TURRET_PINNED ? State.PINNED : State.CENTERED;
     }
 
-    /** Manual control: go to this offset (clamped to the soft limits). */
+    /** Manual control: go to this offset (clamped to the soft limits). Ignored while pinned. */
     public void setManualOffset(double offsetDeg) {
+        if (RobotConfig.TURRET_PINNED) {
+            center();
+            return;
+        }
         commandOffsetDeg = MathUtil.clamp(offsetDeg, RobotConfig.TURRET_MIN_DEG, RobotConfig.TURRET_MAX_DEG);
         state = State.MANUAL;
     }
@@ -253,14 +282,43 @@ public class Turret {
 
         boolean still = Math.abs(measuredSpeedDegPerSec) < RobotConfig.TURRET_SETTLED_DEG_PER_SEC;
         if (!still) stillSinceNs = now;
+        if (Double.isNaN(lastCommandForStability) || Math.abs(commandOffsetDeg - lastCommandForStability) > 0.2) {
+            commandStableSinceNs = now;
+            lastCommandForStability = commandOffsetDeg;
+        }
         // Auto-zero: the first time the armed turret has been still for 0.3 s (and >= 0.5 s after arm),
         // assume the servo reached its command (a positional servo is absolute) and line the encoder up.
         if (armed && !encoderZeroed && now - armedAtNs > 500_000_000L && now - stillSinceNs > 300_000_000L) {
-            encoderZeroTicks = ticks - (int) Math.round(commandOffsetDeg * RobotConfig.TURRET_ENCODER_TICKS_PER_DEG
-                    * RobotConfig.TURRET_ENCODER_DIRECTION);
-            encoderZeroed = true;
-            measuredOffsetDeg = commandOffsetDeg;
+            zeroEncoderToCommand(ticks);
+            return;
         }
+        // Skipped teeth / wrong scale: encoder and a steady command disagree while nothing moves. Trust the
+        // (absolute) positional servo, re-zero and warn instead of blocking every shot.
+        long rezeroNs = RobotConfig.TURRET_ENCODER_REZERO_AFTER_MS * 1_000_000L;
+        double disagreement = commandOffsetDeg - measuredOffsetDeg;
+        if (armed && encoderZeroed && Math.abs(disagreement) > RobotConfig.TURRET_AIM_TOLERANCE_DEG
+                && now - stillSinceNs > rezeroNs && now - commandStableSinceNs > rezeroNs) {
+            lastRezeroErrorDeg = disagreement;
+            encoderRezeroCount++;
+            zeroEncoderToCommand(ticks);
+        }
+    }
+
+    private void zeroEncoderToCommand(int ticks) {
+        encoderZeroTicks = ticks - (int) Math.round(commandOffsetDeg * RobotConfig.TURRET_ENCODER_TICKS_PER_DEG
+                * RobotConfig.TURRET_ENCODER_DIRECTION);
+        encoderZeroed = true;
+        measuredOffsetDeg = commandOffsetDeg;
+    }
+
+    /** How many times the encoder was re-zeroed because it disagreed with the command (0 = healthy). */
+    public int encoderRezeroCount() {
+        return encoderRezeroCount;
+    }
+
+    /** Size of the last disagreement that caused a re-zero (deg). */
+    public double lastRezeroErrorDeg() {
+        return lastRezeroErrorDeg;
     }
 
     // ---------------------------------------------------------------------------------------------
@@ -299,7 +357,7 @@ public class Turret {
         return armed && servo != null && close;
     }
 
-    /** True when tracking a reachable target and settled on it: OK to fire. */
+    /** True when tracking a reachable target and settled on it: OK to fire (turret aiming only). */
     public boolean onTarget() {
         return state == State.TRACKING && isSettled();
     }

@@ -140,7 +140,7 @@ US match data, 11 events, 176 matches, 19 Sep – 17 Oct 2026 (FTCScout). These 
 | AUTO tip | 18% of alliance-matches; **no US alliance has tipped twice in AUTO** |
 | Best US alliance AUTO | **36** = 1 tip + 2 LEAVE + 2 AUTO PARK. Only ~7% of alliance-matches had both an AUTO tip and LEAVE+PARK ≥ 16 |
 | Robots that LEAVE / AUTO PARK / end PARK | 58% / 45% / 67% |
-| FLOWERS | Almost unused: 4 of 924 end-of-match FLOWER states had any NECTAR |
+| FLOWERS | Almost unused: 1 of 704 US end-of-match FLOWER states had any NECTAR (4 of 924 including Kazakhstan) |
 
 **Michigan.** At the Saline Preview Event (2–3 Oct, 28 mostly middle-school teams), the winning teams 13684 and 10644 averaged 3.8 and 3.6 tips per match and over 100 points. The median team averaged about 1.3 tips and 50 points (FTC Events, FTCScout). Michigan middle schools are already ahead of the US average.
 
@@ -172,7 +172,7 @@ We use the official FTC field frame for BIOBUZZ (FTC docs field-coordinate page;
       |          |  (F-far) |  (B2)    :          |          | GARDEN   |
       +----------+----------+----------:----------+----------+----------+
   5   | RED LZ   |   ZONE B (red, after an odd number of red tips)      @F
-      |  (park)  | corridor y=-40      :          |          | (F-blue) |
+      |  (park)  | corridor y≈-40      :          |          | (F-blue) |
       +----------+----------+----------:----------+----------+----------+
   4   |          |          | red FAR  : blue FAR |          |          |
       |          |          | cell     : cell UP  |          |          |
@@ -181,7 +181,7 @@ We use the official FTC field frame for BIOBUZZ (FTC docs field-coordinate page;
      @F (F-red)  |          | cell UP  : cell     |          |          |
       +----------+----------+----------:----------+----------+----------+
   2   |          |   ZONE A (red, start)          |          | BLUE LZ  |
-      |          | corridor y=-40      :          |          |          |
+      |          | corridor y≈-40      :          |          |          |
       +----------+----------+----------:----------+----------+----------+
   1   | red      | S2       |   S1     :          @F         |          |
       | GARDEN   |          |  (A2)    :          |  (F-aud) |          |
@@ -197,7 +197,7 @@ We use the official FTC field frame for BIOBUZZ (FTC docs field-coordinate page;
 |---|---|---|---|
 | Walls (inner face) | X and Y = ±70.67 | Field is **141.3 in** wall to wall, not 144 | CAD; M p.64 says "approximately 144" |
 | Tile seams | 0, ±23.5, ±47.0 | Columns A–F run along Y; rows 1–6 run along X | CAD; M p.67 |
-| Red side in AUTO | Y ≤ 0 (columns A–C) | | G402 (M p.106) |
+| Red side in AUTO | Y ≤ 0 (columns A–C) | Blue: Y ≥ 0 (columns D–F) | G402 (M p.106) |
 | Red HIVE pivot | (0, -12.74), 43.95 high | Blue pivot (0, +12.76) | CAD; M p.69 |
 | **Red audience CELL aim point** (up at start) | **(16.50, -12.74), 58.27 high** | Centre of the opening; same as the SDK cluster origin | CAD; SDK |
 | **Red far CELL aim point** (up after tip 1) | **(-16.48, -12.74), 58.31 high** | | CAD |
@@ -212,16 +212,17 @@ We use the official FTC field frame for BIOBUZZ (FTC docs field-coordinate page;
 | FLOWER F-blue (blue wall) | (-23.39, 68.04) | | CAD |
 | HIVE footprint | X ±19.47, Y ±24.73 | Real obstacles at robot height: 4 molded feet (2.1 in tall) at the corners. The foot bars are flat 0.07 in plates you can drive over | CAD |
 | Under-HIVE lane (TELEOP only) | robot centre between Y -9.5 and +9.5 | For an 18 in tall robot; narrower if taller (about ±6.6 at 29 in). Risky: G409/G417 | CAD (derived) |
-| **Start S1** | **(61.67, -12.75), heading 180°** | Back touching the audience wall, 45.2 in in front of the red audience opening | CAD (derived) |
-| Start S2 | (61.67, -37.5) | 51.5 in from the opening, 29° off-axis | CAD (derived) |
-| Start S5 | (-61.67, -61.67) | Far/red corner, 6 in from the LZ | CAD (derived) |
-| **Start S6** | **(-61.67, -10.1), heading 0°** | Same spot as S1 but for the far CELL. **Only 1.35 in from F-far** | CAD (derived) |
-| Start S7 | (-61.67, -40.0) | Backup for S6 | CAD (derived) |
-| Zone A centre "A2" | (48, -12.75) | Shooting zone while the red audience CELL is up | strategy brief |
-| Zone B centre "B2" | (-48, -12.75) | Shooting zone while the red far CELL is up; 44 in from the park pose | strategy brief |
-| Corridor between zones | y = -40 via (30, -40) and (-30, -40) | Clears the HIVE feet by about 6 in, and a partner parked in the far slot by 3 in. Leaving S1, go through (52, -40) first to stay out of the spill landing box | CAD (derived) |
-| **Park pose (one robot)** | **(-35.25, -55)** | 4.3–4.9 in inside the LZ, 6.7 in off the red wall: earns PARK **and** LEAVE | CAD (derived); QA21 |
-| Park slots (two robots) | far slot (-51, -56), near slot (-27, -56) | Robots 6 in apart, 5.7 in off the wall, each 5.3 in into the LZ from its edge. The first robot to park takes the far slot | derived ([02](02-autonomous.md#poses-red)) |
+| **Start S1** | **(61.67, -12.75), heading 180°** | Back touching our start wall (red: audience wall), 45.2 in in front of the red audience opening. Every start spot is square to its wall | CAD (derived) |
+| Start S2 | (61.67, -37.5), heading 180° | 51.5 in from the opening, 29° off-axis (151° is the aim bearing, not the placement heading). Shoot-first routines drive to the Zone A side spot (55, -37) before firing | CAD (derived); code |
+| Starts S3, S4 | (45, -61.67) and (0, -61.67), heading 90° | Back on the red wall. Shoot-first routines drive straight off the wall to y = -48, then to the side spot | code |
+| Start S5 | (-61.67, -61.67), heading 0° | Far/red corner, 6 in from the LZ (A0 only) | CAD (derived) |
+| **Start S6** | **(-61.67, -10.1), heading 0°** | Same spot as S1 but on the end wall opposite our start, for the second (far) CELL. **Only 1.35 in from F-far** | CAD (derived) |
+| Start S7 | (-61.67, -40.0), heading 0° | Backup for S6 only with > ±32° turret travel: from here the far CELL is 31.1° off the turret centre (as built ±28°) | CAD (derived); code |
+| Zone A centre "A2" | (48, -12.75) | Shooting zone while the red audience CELL is up. Its front edge is about 3 in inside the tip-1 landing box (TELEOP only; AUTO uses the side spot (55, -37)) | strategy brief; code |
+| Zone B centre "B2" | (-48, -12.75) | Shooting zone while the red far CELL is up; 44 in from the solo park pose. Its front edge is about 3 in inside the TIP-2 landing box | strategy brief; code |
+| Corridor between zones | (30, -42) → (-30, -40) | Clears the HIVE feet and legs by about 6 in at heading 180° (less for a robot still turning on it: ≥ 3.7 in for A2), and a robot parked in the corner slot by 3 in. Leaving S1, go through (52, -40) first to stay out of the spill landing box | CAD (derived); code route test |
+| **Solo park pose (one robot)** | **(-35.25, -55)** | 4.3–4.9 in inside the LZ, 6.7 in off the red wall: earns PARK **and** LEAVE. It touches both two-robot slots, so use it only when the partner does not park in AUTO | CAD (derived); QA21 |
+| Park slots (two robots) | corner slot (-51, -56), inner slot (-27, -56) | The corner slot is the LZ end nearer the field corner (red: far-wall end; blue (51, 56): audience end). Robots 6 in apart, 5.67 in off the wall, each 5.3 in into the LZ from its edge on an event field. The first robot to park takes the corner slot | derived ([02](02-autonomous.md#poses-red)) |
 
 ---
 
@@ -231,7 +232,7 @@ We use the official FTC field frame for BIOBUZZ (FTC docs field-coordinate page;
 - At the start, the **red audience CELL** is up. Its opening faces the **audience wall (+X)**, so red shoots from the **audience half** (Zone A). Blue's far CELL is up and faces the far wall, so blue shoots from the far half (M p.83).
 - **After every tip the other CELL comes up, facing the opposite end wall. Your shooting zone flips** (Zone A ↔ Zone B).
 - Good shots come from in front of the opening, within about **40° of head-on**. Steep lobs from wider angles can still go in, but the scorable area shrinks quickly (est.; CAD-based model). From behind, you hit the CELL's back or roof. Deliberately launching at the outside of a CELL can be a G417 violation (M p.111–112).
-- The 4 AprilTags of each CELL are on its **underside**. All 8 tags of a HIVE face down and toward the side you shoot from. **After your HIVE tips, its tags face the other half of the field**, so a robot that stays put loses sight of them.
+- The 4 AprilTags of each CELL are on its **underside**. All 8 tags of a HIVE face down and toward the side you shoot from. **After your HIVE tips, its tags face the other half of the field**, so a robot that stays put loses sight of them. Our camera therefore cannot see our own tip from the zone we fired from: in TELEOP the operator presses Y ("HIVE tipped") when the human player calls "TIP!" ([03](03-teleop.md#the-two-zone-loop)).
 - If your HIVE and the opponent's HIVE are in different states, **both alliances end up shooting from the same half**. Expect traffic and defence there.
 
 ---

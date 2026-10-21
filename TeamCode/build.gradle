@@ -24,7 +24,8 @@ android {
     }
 
     // FTC 12303: the Pedro AutoTune procedures (TeamCode/src/autotune/java) are compiled only when
-    // pedroAutoTune = true in build.dependencies.gradle. Keep it false for events (R704.D, Q&A 26).
+    // PEDRO_AUTOTUNE = true in build.dependencies.gradle (or ./gradlew ... -PpedroAutoTune=true).
+    // Keep it false for events (R704.D, Q&A 26).
     sourceSets {
         main {
             if (pedroAutoTune) {
@@ -32,8 +33,15 @@ android {
             }
         }
     }
+
+    // FTC 12303: laptop unit tests (TeamCode/src/test): route sweeps, ball handling, HIVE tracker.
+    // Run: ./gradlew :TeamCode:testDebugUnitTest   (nothing here goes into the robot app)
+    testOptions {
+        unitTests.returnDefaultValues = true
+    }
 }
 
 dependencies {
     implementation project(':FtcRobotController')
+    testImplementation 'junit:junit:4.13.2'
 }

@@ -8,14 +8,27 @@ import org.firstinspires.ftc.teamcode.util.MatchTimer;
 /**
  * Gamepad rumble + light-bar cues so the drivers never have to read telemetry mid-match.
  *
- *   Cue                         Who        Rumble                 Light bar (PS4/PS5 pads only)
- *   4 balls loaded (full)       driver     2 short blips          driver: RED while full
- *   flywheel reached speed      operator   1 short buzz           operator: GREEN = ready, YELLOW = spinning
- *   HIVE TIP / target switched  both       1 long buzz            -
- *   opponent NECTAR rejected    driver     1 short buzz           -
- *   1:00 left (FLOWER unlock)   both       3 blips                -
- *   0:20 left (go park)         both       1 s continuous         -
+ *   Cue                                     Who        Rumble
+ *   4 balls loaded (full)                   driver     2 short blips
+ *   NECTAR refused at the mouth             driver     1 short buzz (opponent's NECTAR always; ours
+ *                                                      too while ACCEPT_OWN_NECTAR = false)
+ *   flywheel reached speed                  operator   1 light short buzz (again after every shot)
+ *   operator Y switched the target cell     both       1 long buzz
+ *   CAMERA switched the target cell         both       2 long buzzes
+ *   Y confirmed the camera's switch         operator   1 strong short buzz (no change)
+ *   a feed was not confirmed (jam? count?)  operator   4 blips (every shot = dip detection untuned
+ *                                                      and no feed beam)
+ *   1:00 left (FLOWER unlock, NECTAR in)    both       3 blips
+ *   0:20 left                               both       1 s continuous
  *
+ *   Light bar (PS4/PS5 pads only):
+ *   driver:   RED = full (4), YELLOW = 1-3 balls, BLUE = empty
+ *   operator: BLUE = shooting mode off, RED = target cell faces away (wrong zone, or the HIVE tipped:
+ *             press Y), PURPLE = turret at its limit (turn the chassis), GREEN = ready to fire,
+ *             YELLOW = spinning up / aiming
+ *
+ * After a target switch shoot from the end the up cell faces (look at the HIVE, or the ">> ... <<"
+ * telemetry banner); if you are already there, stay.
  * Cues fire on CHANGES only, never every loop (the SDK rumble sample warns about flooding).
  * Logitech F310 pads cannot rumble at all; R904 requires WIRED gamepads.
  */
@@ -36,7 +49,7 @@ public class Feedback {
         this.operator = operator;
     }
 
-    /** Time cues from the TeleOp match timer. */
+    /** Time cues from the TeleOp match timer (reminders: the FIELD timer and the coach are the authority). */
     public void updateTimeCues(MatchTimer timer) {
         if (!timer.isStarted()) return;
         double left = timer.remainingSeconds();
@@ -57,15 +70,33 @@ public class Feedback {
         driver.rumbleBlips(2);
     }
 
-    /** The HIVE state changed (tip detected or operator toggle): go to the other zone. */
+    /** The operator's Y switched the target cell: shoot from the end the up cell faces. */
     public void onTip() {
         driver.rumble(0.6, 0.6, 600);
         operator.rumble(0.6, 0.6, 600);
     }
 
-    /** Opponent NECTAR was pushed away from the mouth. */
+    /** The CAMERA switched the target cell (it saw the other cell up). */
+    public void onVisionSwitch() {
+        Gamepad.RumbleEffect two = new Gamepad.RumbleEffect.Builder()
+                .addStep(0.8, 0.8, 400).addStep(0.0, 0.0, 200).addStep(0.8, 0.8, 400).build();
+        driver.runRumbleEffect(two);
+        operator.runRumbleEffect(two);
+    }
+
+    /** Y confirmed a camera switch (the target cell did not change). */
+    public void onConfirm() {
+        operator.rumble(1.0, 0.0, 300);
+    }
+
+    /** NECTAR was refused at the mouth (the roller reverses while it is there). */
     public void onReject() {
         if (!driver.isRumbling()) driver.rumble(0.0, 1.0, 200);
+    }
+
+    /** A feed was not confirmed by the beam or a flywheel dip (jam? check the balls and the count). */
+    public void onUnconfirmedFeed() {
+        if (!operator.isRumbling()) operator.rumbleBlips(4);
     }
 
     /** Call every loop: buzz the operator once each time the flywheel gets to speed. */
@@ -75,11 +106,13 @@ public class Feedback {
     }
 
     /** Light bars: driver shows ball state, operator shows shooter state. Only sent on change. */
-    public void updateLights(boolean full, int balls, boolean spinUpOn, boolean readyToFire, boolean targetReachable) {
+    public void updateLights(boolean full, int balls, boolean spinUpOn, boolean readyToFire, boolean targetReachable,
+                             boolean targetFacesAway) {
         Light d = full ? Light.RED : (balls > 0 ? Light.YELLOW : Light.BLUE);
         Light o;
         if (!spinUpOn) o = Light.BLUE;
-        else if (!targetReachable) o = Light.PURPLE;   // turret at its limit: turn the chassis
+        else if (targetFacesAway) o = Light.RED;          // wrong zone, or the HIVE tipped: press Y
+        else if (!targetReachable) o = Light.PURPLE;      // turret at its limit: turn the chassis
         else if (readyToFire) o = Light.GREEN;
         else o = Light.YELLOW;
         if (d != driverLight) {

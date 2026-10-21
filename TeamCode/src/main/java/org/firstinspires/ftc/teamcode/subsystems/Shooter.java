@@ -6,6 +6,7 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.teamcode.config.RobotConfig;
+import org.firstinspires.ftc.teamcode.util.Clock;
 import org.firstinspires.ftc.teamcode.util.InterpLUT;
 import org.firstinspires.ftc.teamcode.util.MathUtil;
 import org.firstinspires.ftc.teamcode.util.OptionalHardware;
@@ -23,8 +24,11 @@ import java.util.List;
  * "At speed" = within +-max(2.5%, 60 rpm) of the target for 3 loops in a row. The 28 CPR encoder only
  * resolves ~1-1.5%, so a tighter window would just be noise.
  *
- * A shot shows up as a sudden speed dip; we report it once (consumeShotDip) so the indexer can confirm
- * that a ball really left.
+ * A shot shows up as a speed dip. The hub's velocity reading is a ~50 ms moving average, so the drop
+ * arrives over several loops: ANY excursion below the window while AT_SPEED starts a RECOVERING episode,
+ * and the episode reports exactly one shot dip (consumeShotDip) as soon as the speed falls below
+ * target x (1 - FLYWHEEL_SHOT_DIP_FRACTION). A target change of more than 2% is not a dip (ignored for
+ * FLYWHEEL_DIP_IGNORE_AFTER_TARGET_CHANGE_MS).
  */
 public class Shooter {
 
@@ -37,7 +41,7 @@ public class Shooter {
         SPINNING_UP,
         /** Inside the speed window for READY_LOOPS loops: OK to feed a ball. */
         AT_SPEED,
-        /** Speed dropped after a shot; waiting to get back into the window. */
+        /** Speed dropped below the window (a shot); waiting to get back into the window. */
         RECOVERING
     }
 
@@ -54,6 +58,8 @@ public class Shooter {
     private double lastSentTicksPerSec = Double.NaN;
     private int loopsInWindow = 0;
     private boolean shotDipPending = false;
+    private boolean dipFlagged = false;
+    private long targetChangedMs = -100000;
     private long dipStartNs = 0;
     private double dipLowestRpm = 0.0;
     private double lastRecoveryMs = 0.0;
@@ -88,6 +94,11 @@ public class Shooter {
         if (hood != null) hood.setPosition(RobotConfig.HOOD_POSITION);
     }
 
+    /** AUTO INIT: set the hood (a positional servo may hold the starting configuration, R103); flywheel stays off. */
+    public void armHoodOnly() {
+        if (hood != null) hood.setPosition(RobotConfig.HOOD_POSITION);
+    }
+
     public boolean isPresent() {
         return motor != null;
     }
@@ -97,11 +108,9 @@ public class Shooter {
     // ---------------------------------------------------------------------------------------------
     /** Spin to this RPM (0 = coast to a stop). The operator trim is added. */
     public void setTargetRpm(double rpm) {
-        if (rpm <= 0) {
-            targetRpm = 0.0;
-            return;
-        }
-        targetRpm = MathUtil.clamp(rpm + trimRpm, 0.0, RobotConfig.FLYWHEEL_MAX_RPM);
+        double next = (rpm <= 0) ? 0.0 : MathUtil.clamp(rpm + trimRpm, 0.0, RobotConfig.FLYWHEEL_MAX_RPM);
+        if (Math.abs(next - targetRpm) > 0.02 * Math.max(targetRpm, 1.0)) targetChangedMs = Clock.nowMs();
+        targetRpm = next;
     }
 
     /** Spin to the shot-table RPM for this horizontal distance to the CELL opening (inches). */
@@ -116,7 +125,7 @@ public class Shooter {
     }
 
     public void stop() {
-        targetRpm = 0.0;
+        setTargetRpm(0.0);
     }
 
     public void adjustTrim(double deltaRpm) {
@@ -192,30 +201,49 @@ public class Shooter {
         loopsInWindow = inWindow ? loopsInWindow + 1 : 0;
         boolean ready = loopsInWindow >= RobotConfig.FLYWHEEL_READY_LOOPS;
         boolean dipped = measuredRpm < targetRpm * (1.0 - RobotConfig.FLYWHEEL_SHOT_DIP_FRACTION);
+        boolean targetJustChanged = Clock.nowMs() - targetChangedMs < RobotConfig.FLYWHEEL_DIP_IGNORE_AFTER_TARGET_CHANGE_MS;
 
         switch (state) {
             case AT_SPEED:
-                if (dipped) {
-                    // A ball (probably) just went through the wheel.
-                    state = State.RECOVERING;
-                    shotDipPending = true;
-                    dipStartNs = System.nanoTime();
-                    dipLowestRpm = measuredRpm;
-                } else if (!ready && !inWindow) {
-                    state = State.SPINNING_UP;   // target changed or slow drift
+                if (!inWindow) {
+                    if (measuredRpm < targetRpm && !targetJustChanged) {
+                        // Below the window: probably a ball going through (the averaged reading falls over
+                        // several loops). One RECOVERING episode = at most one shot dip.
+                        state = State.RECOVERING;
+                        dipStartNs = System.nanoTime();
+                        dipLowestRpm = measuredRpm;
+                        dipFlagged = false;
+                        flagDipIfDeep(dipped);
+                    } else {
+                        state = State.SPINNING_UP;   // new target, or reading high
+                    }
                 }
                 break;
             case RECOVERING:
                 dipLowestRpm = Math.min(dipLowestRpm, measuredRpm);
-                if (ready) {
-                    lastRecoveryMs = (System.nanoTime() - dipStartNs) / 1e6;
-                    lastDipRpm = targetRpm - dipLowestRpm;
-                    state = State.AT_SPEED;
+                if (targetJustChanged) {
+                    state = State.SPINNING_UP;       // the target moved: this is no longer a shot episode
+                } else {
+                    flagDipIfDeep(dipped);
+                    if (ready) {
+                        if (dipFlagged) {
+                            lastRecoveryMs = (System.nanoTime() - dipStartNs) / 1e6;
+                            lastDipRpm = targetRpm - dipLowestRpm;
+                        }
+                        state = State.AT_SPEED;
+                    }
                 }
                 break;
             default:
                 state = ready ? State.AT_SPEED : State.SPINNING_UP;
                 break;
+        }
+    }
+
+    private void flagDipIfDeep(boolean dipped) {
+        if (dipped && !dipFlagged) {
+            shotDipPending = true;       // a ball (probably) just went through the wheel
+            dipFlagged = true;
         }
     }
 

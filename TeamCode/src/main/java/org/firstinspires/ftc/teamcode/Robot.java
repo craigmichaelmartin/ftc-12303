@@ -32,11 +32,17 @@ import java.util.Locale;
  *      is read from the hubs in ONE message per hub per loop - SDK sample ConceptMotorBulkRead)
  *   2. drivetrain (reads the Pinpoint over I2C, drives the wheels)
  *   3. vision -> HIVE tracker (which cell is up?) -> turret aim + flywheel speed
- *   4. indexer (count, colour, feed) -> intake (obeys "full" and "reject")
+ *   4. indexer (count, colour, feed) -> intake (obeys "full" and refuses NECTAR at the mouth)
  *
  * The OpMode sets what it WANTS (drive sticks, auto-aim on/off, fire, intake) BEFORE calling update().
  *
- * G403: building a Robot never moves anything. Actuators move only after arm().
+ * FIRING GATES (Indexer feeds a ball only when all are OK):
+ *   flywheel at speed, and - with AUTO-AIM on - the target cell's opening faces the robot (off-axis <=
+ *   FIRE_MAX_OFF_AXIS_DEG), the turret is on target (or, with a pinned / missing turret, the CHASSIS
+ *   points at the target within CHASSIS_AIM_TOLERANCE_DEG), the chassis is still, and no TIP pause.
+ *   MANUAL aim (auto-aim off) is a deliberate operator override: only the flywheel speed gates it.
+ *
+ * G403: building a Robot never moves anything. Actuators move only after arm() (or armForAutoInit()).
  */
 public class Robot {
     public final Drivetrain drive;
@@ -65,7 +71,7 @@ public class Robot {
     private double loopMs = 0.0;
 
     // things that happened this loop (each true for exactly one loop)
-    private boolean tipEvent, fullEvent, rejectEvent, shotEvent;
+    private boolean tipEvent, confirmEvent, fullEvent, rejectEvent, shotEvent, unconfirmedEvent;
 
     public Robot(HardwareMap hw, Alliance alliance) {
         this.alliance = alliance;
@@ -85,9 +91,10 @@ public class Robot {
         hive = new HiveTracker(alliance);
         indexer = new Indexer(hw, alliance, warnings);
         intake = new Intake(hw, warnings);
+        if (RobotConfig.TURRET_PINNED) warnings.add("TURRET_PINNED: turret held at centre, the chassis aims (driver RB aim-assist)");
     }
 
-    /** Change alliance (AUTO selector). Updates every subsystem that cares. */
+    /** Change alliance (AUTO selector / TeleOp INIT). Updates every subsystem that cares. */
     public void setAlliance(Alliance alliance) {
         this.alliance = alliance;
         vision.setAlliance(alliance);
@@ -100,9 +107,8 @@ public class Robot {
     }
 
     /**
-     * Allow actuators to move. TeleOp: call right after START (never in INIT - G403).
-     * AUTO: may be called in INIT to set servos, as long as the robot is still before the match starts
-     * (G304.H "fully motionless following completion of OpMode initialization").
+     * Allow every actuator to move. TeleOp: call right after START (never in INIT - G403).
+     * AUTO: call at START (AUTO INIT uses armForAutoInit()).
      */
     public void arm() {
         armed = true;
@@ -113,6 +119,17 @@ public class Robot {
         intake.arm();
     }
 
+    /**
+     * AUTO INIT only: positional servos may hold the starting configuration (R103) - turret centre, gate
+     * closed, hood - but the continuous-rotation intake and spinners, the wheels and the flywheel stay
+     * unpowered until START, so the robot is fully motionless after INIT (G304.H).
+     */
+    public void armForAutoInit() {
+        turret.arm();
+        shooter.armHoodOnly();
+        indexer.armGateOnly();
+    }
+
     public boolean isArmed() {
         return armed;
     }
@@ -120,7 +137,7 @@ public class Robot {
     // ---------------------------------------------------------------------------------------------
     // What the OpMode wants
     // ---------------------------------------------------------------------------------------------
-    /** Turret follows the up cell (fused odometry + vision aim). */
+    /** Turret follows the up cell (fused odometry + vision aim). Off = manual aim. */
     public void setAutoAim(boolean on) {
         if (autoAim && !on) turret.center();
         autoAim = on;
@@ -139,7 +156,7 @@ public class Robot {
         return spinUp;
     }
 
-    /** Spin-up + auto-aim together (the operator's main toggle). */
+    /** Spin-up + auto-aim together (the operator's main toggle when manual aim is off). */
     public void setShootingMode(boolean on) {
         setAutoAim(on);
         setSpinUp(on);
@@ -156,7 +173,7 @@ public class Robot {
 
     /**
      * Aim at this cell no matter what the HIVE tracker says (null = follow the tracker).
-     * AUTO A3 role 2 uses it to pre-aim at the far cell while waiting for the partner's TIP.
+     * AUTO A3 role 2 uses it to pre-aim at the second cell while waiting for the partner's TIP.
      */
     public void setAimOverride(HiveState cell) {
         aimOverride = cell;
@@ -179,10 +196,12 @@ public class Robot {
         Pose pose = drive.pose();
 
         // Which cell is up, and how far off is our aim? (bias only learned while things are still)
-        boolean stable = turret.isSettled() && Math.abs(drive.turnRateDegPerSec()) < 15.0;
+        boolean stable = turret.isSettled() && Math.abs(drive.turnRateDegPerSec()) < 15.0
+                && drive.speedInPerSec() < RobotConfig.FIRE_MAX_CHASSIS_SPEED_IN_PER_SEC;
         vision.update(pose, turret.currentRobotFrameDeg(), targetCell(), stable);
         hive.update(vision);
         tipEvent = hive.consumeTipEvent();
+        confirmEvent = hive.consumeConfirmEvent();
         if (tipEvent) {
             indexer.pauseForTip();
             vision.resetBias();
@@ -204,14 +223,15 @@ public class Robot {
         shooter.update();
 
         // Balls
-        boolean aimReady = aimReady();
-        indexer.update(shooter.atSpeed(), aimReady, drive.isStill(), hive.tipPauseActive(),
-                shooter.consumeShotDip(), intake.isIntaking());
-        rejectEvent = indexer.consumeRejectEvent();
+        indexer.update(shooter.atSpeed(), aimReady(), stillEnoughToFire(), hive.tipPauseActive(),
+                shooter.consumeShotDip(), intake.isIntaking(), intake.isReversing());
         fullEvent = indexer.consumeFullEvent();
         shotEvent = indexer.consumeShotEvent();
+        unconfirmedEvent = indexer.consumeUnconfirmedEvent();
         if (shotEvent) hive.onBallLaunched();
-        intake.update(indexer.isFull(), rejectEvent);
+        // Level-triggered refusal (G408): the roller keeps reversing while a refused ball is at the mouth.
+        intake.update(indexer.isFull(), indexer.refusedBallAtMouth());
+        rejectEvent = intake.consumeRejectStarted();
     }
 
     /** Fresh sensor reads without running the subsystems (FlywheelTuner's raw max-speed test only). */
@@ -243,34 +263,75 @@ public class Robot {
         return aim;
     }
 
+    /** True when the turret cannot aim (TURRET_PINNED, or no turret servo): the chassis must aim. */
+    public boolean chassisMustAim() {
+        return turret.chassisMustAim();
+    }
+
     /**
-     * Aim OK for a shot? Auto-aim: the turret is on a reachable target. Manual: the turret has stopped
-     * moving. No turret servo configured: aim cannot be checked, so it never blocks a shot.
+     * True when the target cell's opening faces away from the robot (off-axis > FIRE_MAX_OFF_AXIS_DEG):
+     * wrong zone, or the HIVE tipped without us noticing. Needs odometry.
+     */
+    public boolean targetFacesAway() {
+        if (!drive.hasLocalizer()) return false;
+        return offAxisDeg() > RobotConfig.FIRE_MAX_OFF_AXIS_DEG;
+    }
+
+    /** How far off the target opening's axis the robot is (deg; 0 = straight in front). */
+    public double offAxisDeg() {
+        Pose p = drive.pose();
+        return FieldConstants.offAxisDeg(alliance, targetCell(), p.x(), p.y());
+    }
+
+    /**
+     * Aim OK for a shot? Manual aim (auto-aim off): always - a deliberate override. Auto-aim: the target
+     * must face us, and the turret must be on a reachable target - or, with a pinned / missing turret,
+     * the chassis must point at it within CHASSIS_AIM_TOLERANCE_DEG (no odometry: cannot be checked).
      */
     public boolean aimReady() {
-        if (!turret.isPresent()) return true;
-        return autoAim ? turret.onTarget() : turret.isSettled();
+        if (!autoAim) return true;
+        if (targetFacesAway()) return false;
+        if (turret.chassisMustAim()) {
+            return !drive.hasLocalizer() || Math.abs(aim.chassisTurnDeg) <= RobotConfig.CHASSIS_AIM_TOLERANCE_DEG;
+        }
+        return turret.onTarget();
+    }
+
+    /** Auto-aim shots need a still chassis (stop to shoot); manual aim is gated on flywheel speed only. */
+    private boolean stillEnoughToFire() {
+        return !autoAim || drive.isStill();
     }
 
     /** Everything ready for the next ball? (flywheel, aim, chassis still, no TIP pause) */
     public boolean readyToFire() {
-        return shooter.atSpeed() && aimReady() && drive.isStill() && !hive.tipPauseActive();
+        return shooter.atSpeed() && aimReady() && stillEnoughToFire() && !hive.tipPauseActive();
     }
 
     public boolean tipEventThisLoop() {
         return tipEvent;
     }
 
+    /** A Y press confirmed a recent camera switch this loop (no state change). */
+    public boolean confirmEventThisLoop() {
+        return confirmEvent;
+    }
+
     public boolean fullEventThisLoop() {
         return fullEvent;
     }
 
+    /** The roller started reversing to refuse NECTAR this loop. */
     public boolean rejectEventThisLoop() {
         return rejectEvent;
     }
 
     public boolean shotEventThisLoop() {
         return shotEvent;
+    }
+
+    /** A feed finished without beam or dip confirmation this loop (possible jam). */
+    public boolean unconfirmedFeedThisLoop() {
+        return unconfirmedEvent;
     }
 
     public double batteryVolts() {
@@ -294,8 +355,9 @@ public class Robot {
                 indexer.mouthBall(), indexer.slot4Occupied() ? "BALL" : "-", intake.state()));
         t.addLine(String.format(Locale.US, "FLYWHEEL %.0f / %.0f rpm %s (trim %+.0f)",
                 shooter.measuredRpm(), shooter.targetRpm(), shooter.state(), shooter.trimRpm()));
-        t.addLine(String.format(Locale.US, "AIM cell %s, %s %.1f in | turret %+.1f (cmd %+.1f) %s | bias %+.1f | %s",
-                targetCell(), hive.zoneText(), aim.distanceIn, turret.currentOffsetDeg(), turret.commandOffsetDeg(),
+        String aimMode = autoAim ? (turret.chassisMustAim() ? "CHASSIS AIM" : "auto") : "MANUAL AIM";
+        t.addLine(String.format(Locale.US, "AIM %s: cell %s, %s %.1f in | turret %+.1f (cmd %+.1f) %s | bias %+.1f | %s",
+                aimMode, targetCell(), hive.zoneText(), aim.distanceIn, turret.currentOffsetDeg(), turret.commandOffsetDeg(),
                 turret.state(), turret.visionBiasDeg(),
                 aim.reachable ? "reachable" : String.format(Locale.US, "TURN CHASSIS %+.0f deg", aim.chassisTurnDeg)));
         t.addLine(String.format(Locale.US, "HIVE state %s (by %s) | our balls at this cell %d | vision: %d tags, says %s",
@@ -306,10 +368,21 @@ public class Robot {
                 indexer.confirmedShots(), indexer.unconfirmedShots()));
         t.addLine(String.format(Locale.US, "POSE (%.1f, %.1f) %.0f deg %s | off-axis %.0f deg | loop %.0f ms | %.1f V",
                 p.x(), p.y(), Math.toDegrees(p.heading()), drive.hasLocalizer() ? "" : "(NO ODOMETRY)",
-                FieldConstants.offAxisDeg(alliance, targetCell(), p.x(), p.y()), loopMs, batteryVolts));
+                offAxisDeg(), loopMs, batteryVolts));
+        if (autoAim && targetFacesAway()) {
+            t.addLine(String.format(Locale.US, "!! TARGET CELL FACES AWAY - wrong zone, or the HIVE tipped: press Y (off-axis %.0f deg)",
+                    offAxisDeg()));
+        } else if (drive.hasLocalizer() && offAxisDeg() > FieldConstants.GOOD_SHOT_MAX_OFF_AXIS_DEG) {
+            t.addLine(String.format(Locale.US, "! off-axis %.0f deg (> %.0f): shots start to hit the cell's side wall - move toward the cell's front",
+                    offAxisDeg(), FieldConstants.GOOD_SHOT_MAX_OFF_AXIS_DEG));
+        }
         if (aim.distanceIn < RobotConfig.SHOT_MIN_DISTANCE_IN || aim.distanceIn > RobotConfig.SHOT_MAX_DISTANCE_IN) {
-            t.addLine(String.format(Locale.US, "!! distance %.0f in is outside the shot table range (%.0f-%.0f)",
+            t.addLine(String.format(Locale.US, "!! distance %.0f in is outside the reliable shot band (%.0f-%.0f in)",
                     aim.distanceIn, RobotConfig.SHOT_MIN_DISTANCE_IN, RobotConfig.SHOT_MAX_DISTANCE_IN));
+        }
+        if (turret.encoderRezeroCount() > 0) {
+            t.addLine(String.format(Locale.US, "!! turret encoder re-zeroed %d x (last %+.1f deg): skipped teeth or wrong TURRET_ENCODER_TICKS_PER_DEG",
+                    turret.encoderRezeroCount(), turret.lastRezeroErrorDeg()));
         }
     }
 

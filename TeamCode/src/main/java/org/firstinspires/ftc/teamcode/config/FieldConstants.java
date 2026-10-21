@@ -50,7 +50,7 @@ public final class FieldConstants {
     /**
      * Under-HIVE lane (robot <= 18 in tall): centre |y| <= ~9.5. TELEOP ONLY - a red robot in AUTO would
      * have to stay at y <= 0 with 0.25 in margin, and G409 (spill deflection) / G417 (HIVE contact) risks
-     * are high. AUTO paths below use the corridor at y = -40 instead.
+     * are high. AUTO paths below use the corridor (30, -42) -> (-30, -40) instead.
      */
     public static final double UNDER_HIVE_LANE_HALF_WIDTH = 9.5;
 
@@ -141,27 +141,44 @@ public final class FieldConstants {
     // =============================================================================================
     // Start spots (G304: fully on our side, touching a wall, not in the LOADING ZONE, not touching a
     // FLOWER, 4 POLLEN preloads). Centres of an 18 x 18 robot, RED. "facing" = the direction the
-    // SHOOTER (turret centre) points; the robot heading is facing - TURRET_CENTER_DEG.
+    // SHOOTER (turret centre) points; the robot heading is facing - TURRET_CENTER_DEG. Every spot is
+    // SQUARE to its wall (S2 180 deg, S7 0 deg red): the 151 / 31 deg values in older notes are aim
+    // bearings, not placement headings - an 18 in robot turned ~30 deg cannot touch the wall there.
+    // "Our start wall" = the end wall behind S1: red = AUDIENCE wall, blue = FAR wall.
     // =============================================================================================
     public enum StartSpot {
-        S1("Audience wall on red HIVE axis (col C) - shoots straight at the up cell", 61.67, -12.75, 180.0),
-        S2("Audience wall, col B - 2nd shooter, 29 deg off-axis", 61.67, -37.50, 180.0),
-        S3("Red wall, audience side (60 deg off-axis: hard shot)", 45.00, -61.67, 90.0),
-        S4("Red wall centre, beside the HIVE (cannot shoot)", 0.00, -61.67, 90.0),
-        S5("Far/red corner, next to the LOADING ZONE", -61.67, -61.67, 0.0),
-        S6("Far wall on red HIVE axis - A3 role 2 (only 1.35 in from F-far flower!)", -61.67, -10.10, 0.0),
-        S7("Far wall, col B", -61.67, -40.00, 0.0);
+        S1("Audience wall on red HIVE axis (col C) - shoots straight at the up cell",
+                "Far wall on blue HIVE axis (col D) - shoots straight at the up cell", 61.67, -12.75, 180.0),
+        S2("Audience wall, col B - shoot-first routines drive to the Zone A side spot to fire",
+                "Far wall, col E - shoot-first routines drive to the Zone A side spot to fire", 61.67, -37.50, 180.0),
+        S3("Red wall, audience side - shoot-first routines drive to the Zone A side spot",
+                "Blue wall, far side - shoot-first routines drive to the Zone A side spot", 45.00, -61.67, 90.0),
+        S4("Red wall centre, beside the HIVE - shoot-first routines drive to the Zone A side spot",
+                "Blue wall centre, beside the HIVE - shoot-first routines drive to the Zone A side spot", 0.00, -61.67, 90.0),
+        S5("Far/red corner, next to the LOADING ZONE - A0 only",
+                "Audience/blue corner, next to the LOADING ZONE - A0 only", -61.67, -61.67, 0.0),
+        S6("Far wall on red HIVE axis - A3 role 2 (only 1.35 in from the F-far FLOWER!)",
+                "Audience wall on blue HIVE axis - A3 role 2 (only 1.35 in from the F-aud FLOWER!)", -61.67, -10.10, 0.0),
+        S7("Far wall, col B - A0 (role 2 only with > +-32 deg turret travel)",
+                "Audience wall, col E - A0 (role 2 only with > +-32 deg turret travel)", -61.67, -40.00, 0.0);
 
-        public final String description;
+        private final String redText;
+        private final String blueText;
         public final double redX;
         public final double redY;
         public final double redShooterFacingDeg;
 
-        StartSpot(String description, double redX, double redY, double redShooterFacingDeg) {
-            this.description = description;
+        StartSpot(String redText, String blueText, double redX, double redY, double redShooterFacingDeg) {
+            this.redText = redText;
+            this.blueText = blueText;
             this.redX = redX;
             this.redY = redY;
             this.redShooterFacingDeg = redShooterFacingDeg;
+        }
+
+        /** Where the spot is, in words, for THIS alliance (walls, columns and flowers differ on blue). */
+        public String description(Alliance alliance) {
+            return alliance == Alliance.BLUE ? blueText : redText;
         }
     }
 
@@ -173,29 +190,63 @@ public final class FieldConstants {
 
     // =============================================================================================
     // Shooting spots (RED). Robot heading is chosen so the turret CENTRE points at the aim point,
-    // which leaves the most turret travel for correction.
+    // which leaves the most turret travel for correction. (Rotated-footprint clearances, 18 in robot.)
     // =============================================================================================
-    /** Zone A ("A2"): 31.5 in straight in front of the red audience-cell opening. */
-    public static final double ZONE_A_SHOOT_X = 48.0, ZONE_A_SHOOT_Y = -12.75;
-    /** Zone B ("B2"): straight in front of the red far-cell opening; 44 in from the LZ park pose. */
+    /**
+     * AUTO Zone A "side spot" for shoot-first routines that do not start on S1 (S2-S4): 45.5 in from the
+     * audience-cell opening, 32 deg off-axis, heading ~148 deg. Its footprint is 6.8 in outside the tip-1
+     * landing box (x 24..42, y -28..+2) and 2.9 in clear of a partner still standing on S1, 3.3 in off the
+     * audience wall. (The TeleOp spot A2 (48, -12.75) is 3 in INSIDE the landing box: not used in AUTO.)
+     */
+    public static final double ZONE_A_SIDE_SHOOT_X = 55.0, ZONE_A_SIDE_SHOOT_Y = -37.0;
+    /** Shoot-first starts on our alliance wall (S3, S4) first drive straight off it to this y. */
+    public static final double LEAVE_ALLIANCE_WALL_Y = -48.0;
+    /**
+     * Zone B ("B2", A2 volley 2): straight in front of the red far-cell opening, 31.5 in. Its front edge is
+     * ~3 in inside the TIP-2 landing box - fine for A2 (4 balls cannot tip the empty far cell), but a robot
+     * that fires a TIP-2 threshold ball here must move off after the volley.
+     */
     public static final double ZONE_B_SHOOT_X = -48.0, ZONE_B_SHOOT_Y = -12.75;
     /**
-     * Zone B spot for A3 role 1: 39.5 in from the far-cell opening, heading ~26 deg (turret centre on the
-     * aim point), ~26 deg off-axis. Clear of the partner at S6 (its shot line is y ~ -10) and of the
-     * TIP-2 spill landing box (x -42..-24, y -28..+2; +-10 in) - but still leave right after the
-     * threshold ball (G409). Agree on it with your partner.
+     * Zone B spot for A3 role 1: 39.5 in from the far-cell opening, heading ~25.9 deg (turret centre on the
+     * aim point), ~26 deg off-axis. With the robot turned 25.9 deg its corners reach 12.0 in: 0.87 in outside
+     * the TIP-2 landing box (x -42..-24, y -28..+2; +-10 in), 1.6 in from the F-far FLOWER, 1.1 in from a
+     * partner still at S6 and 5.0 in from the robot in the corner slot. A partner still at S7 would overlap
+     * this spot by ~8 in - another reason role 2 starts on S6 and is parked before 17 s.
      */
     public static final double ZONE_B_SHOOT_ROLE1_X = -52.0, ZONE_B_SHOOT_ROLE1_Y = -30.0;
     /**
-     * A3 role 1 lane point between the corridor and the role-1 spot / role-1 park slot. Keeps role 1 at
-     * least 2 in clear of the role-2 robot parked at (-51, -56) (straight lines would clip its corner).
+     * A3 role 1 waits here (square heading) until A3_ROLE1_ZONE_B_NOT_BEFORE_SEC: the end of the corridor,
+     * 2.3 in clear of the role-2 robot's park drive and 3 in from a robot in the corner slot.
      */
-    public static final double ROLE1_LANE_X = -29.0, ROLE1_LANE_Y = -35.0;
+    public static final double A3_ROLE1_WAIT_X = -30.0, A3_ROLE1_WAIT_Y = -40.0;
+    /**
+     * Lane point used by every drive from the far half into the INNER park slot, and by A3 role 1 on its way
+     * to its Zone B spot: keeps >= 2.4 in from a robot in the corner slot and 2.3-3.1 in from the HIVE foot.
+     * Straight lines from the far half would clip the corner-slot robot.
+     */
+    public static final double INNER_LANE_X = -31.0, INNER_LANE_Y = -35.5;
+    /**
+     * A3 role 1 exit after its volley (it fired the TIP-2 threshold ball): it turns square while dropping
+     * straight down, then runs east along the bottom edge of the TIP-2 landing box (the footprint skims the
+     * nominal box by 0.5 in instead of crossing it 7.7 in deep) and stays 1.5 in above the corner-slot robot.
+     */
+    public static final double ROLE1_EXIT_1_X = -51.5, ROLE1_EXIT_1_Y = -36.5;
+    public static final double ROLE1_EXIT_2_X = -31.0, ROLE1_EXIT_2_Y = -36.5;
 
-    /** Default shooting pose for a HIVE state (Zone A for state A, Zone B for state B). */
-    public static Pose zoneShootPose(Alliance alliance, HiveState state) {
-        if (state == HiveState.A) return shootPose(alliance, ZONE_A_SHOOT_X, ZONE_A_SHOOT_Y, HiveState.A);
+    /** AUTO Zone A side spot (shoot-first routines from S2 / S3 / S4). */
+    public static Pose zoneASideShootPose(Alliance alliance) {
+        return shootPose(alliance, ZONE_A_SIDE_SHOOT_X, ZONE_A_SIDE_SHOOT_Y, HiveState.A);
+    }
+
+    /** B2: A2's volley-2 pose. */
+    public static Pose zoneBShootPose(Alliance alliance) {
         return shootPose(alliance, ZONE_B_SHOOT_X, ZONE_B_SHOOT_Y, HiveState.B);
+    }
+
+    /** A3 role 1's volley-2 pose. */
+    public static Pose role1ShootPose(Alliance alliance) {
+        return shootPose(alliance, ZONE_B_SHOOT_ROLE1_X, ZONE_B_SHOOT_ROLE1_Y, HiveState.B);
     }
 
     /** A pose at the RED spot (redX, redY) facing so the turret centre points at the target cell. */
@@ -210,15 +261,22 @@ public final class FieldConstants {
     // =============================================================================================
     /** First waypoint after a Zone A volley: away from the spill landing box, toward the corridor. */
     public static final double SPILL_ESCAPE_X = 52.0, SPILL_ESCAPE_Y = -40.0;
-    public static final double CORRIDOR_A_X = 30.0, CORRIDOR_A_Y = -40.0;
+    /**
+     * Corridor between the zones. Point A is 2 in lower than B so robots that arrive still turned from S1 or
+     * the garden keep >= 2 in from the tip-1 landing box while they turn. From the Zone A side spot the margin
+     * is smaller (about 1.6 in while turning, 0.2 in on the leg before), which is why A1 holds for the spill first.
+     */
+    public static final double CORRIDOR_A_X = 30.0, CORRIDOR_A_Y = -42.0;
     public static final double CORRIDOR_B_X = -30.0, CORRIDOR_B_Y = -40.0;
     /**
-     * Leaving the far wall (S6 / S7 area): first drive STRAIGHT along +X to this x at the same y, then
-     * turn toward the park slot. A diagonal start from S6 (-61.67, -10.1) clips the F-far FLOWER, whose
-     * footprint is x -70.65..-65.63, y -26.34..-20.45 (the robot may only drop 1.35 in before its edge
-     * reaches the flower's y band, while it is still beside it).
+     * Leaving the far wall from S6: first drive STRAIGHT along +X to this x at the same y, then turn toward
+     * the park slot. A diagonal start from S6 (-61.67, -10.1) clips the F-far FLOWER, whose footprint is
+     * x -70.65..-65.63, y -26.34..-20.45 (the robot may only drop 1.35 in before its edge reaches the
+     * flower's y band, while it is still beside it). S7 (y = -40) never needs it.
      */
     public static final double FAR_WALL_ESCAPE_X = -50.0;
+    /** Only robots this close to the far wall (S6, x = -61.67) use the far-wall escape. */
+    public static final double FAR_WALL_ESCAPE_BEYOND_X = -56.0;
 
     // =============================================================================================
     // LOADING ZONE and PARK (RED)
@@ -227,23 +285,53 @@ public final class FieldConstants {
     public static final double RED_LZ_MIN_X = -46.60, RED_LZ_MAX_X = -23.91;
     public static final double RED_LZ_MIN_Y = -70.67, RED_LZ_MAX_Y = -59.10;
     /**
-     * Single-robot park: overlaps the LZ by ~4.9 in (PARK) while staying 6.7 in off the red wall.
+     * Where to park in the LOADING ZONE (AUTO INIT "Park" item; A3 role 1 always INNER, role 2 always CORNER).
+     * Two robots share the 22.7 in wide LZ: CORNER and INNER are 6 in apart, both 5.67 in off our alliance
+     * wall, overlapping the LZ by 4.6 x 5.9 in (CORNER) and 12.1 x 5.9 in (INNER); 5.3 in deep on an event
+     * field. SOLO is the middle (overlaps the LZ ~4.9 in, 6.7 in off the wall) and touches BOTH slots, so
+     * use it only when the partner does not park in AUTO. Rule: the first robot to arrive takes CORNER.
      * Q&A 21: touching ANY wall at the end of AUTO means no LEAVE, even when parked.
      */
-    public static final double PARK_X = -35.25, PARK_Y = -55.0;
-    /** A3: two robots share the 22.7 in wide LZ. Each overlaps it ~4.6-12 in, 6 in apart, 5.7 in off the wall. */
-    public static final double PARK_ROLE1_X = -27.0, PARK_ROLE1_Y = -56.0;
-    public static final double PARK_ROLE2_X = -51.0, PARK_ROLE2_Y = -56.0;
+    public enum ParkSlot {
+        /** LZ end away from the field corner: red (-27, -56), blue (27, 56). */
+        INNER(-27.0, -56.0),
+        /** LZ end nearer the field corner (red far-wall end, blue audience end): red (-51, -56), blue (51, 56). */
+        CORNER(-51.0, -56.0),
+        /** One-robot pose in the middle: red (-35.25, -55), blue (35.25, 55). */
+        SOLO(-35.25, -55.0);
+
+        public final double redX;
+        public final double redY;
+
+        ParkSlot(double redX, double redY) {
+            this.redX = redX;
+            this.redY = redY;
+        }
+
+        /** "INNER slot (-27, -56)" with this alliance's coordinates. */
+        public String label(Alliance alliance) {
+            return name() + (this == SOLO ? " pose (" : " slot (") + num(alliance.fromRedX(redX)) + ", "
+                    + num(alliance.fromRedY(redY)) + ")";
+        }
+
+        private static String num(double v) {
+            return (v == Math.rint(v)) ? String.valueOf((long) v) : String.valueOf(v);
+        }
+    }
 
     /**
-     * Park pose at a RED spot. The heading is the robot's current heading rounded to the nearest
-     * multiple of 90 deg: a square robot has a predictable footprint (LZ overlap, wall gap, room for the
-     * partner), and it barely needs to turn on the way in. A robot turned ~45 deg reaches 12.7 in from its
-     * centre instead of 9 in.
+     * Park pose in a slot. The heading is the robot's current heading rounded to the nearest multiple of
+     * 90 deg: a square robot has a predictable footprint (LZ overlap, wall gap, room for the partner), and
+     * it barely needs to turn on the way in. A robot turned ~45 deg reaches 12.7 in from its centre
+     * instead of 9 in.
      */
-    public static Pose parkPose(Alliance alliance, double redX, double redY, double currentHeadingRad) {
-        double square = Math.round(Math.toDegrees(currentHeadingRad) / 90.0) * 90.0;
-        return new Pose(alliance.fromRedX(redX), alliance.fromRedY(redY), Math.toRadians(square));
+    public static Pose parkPose(Alliance alliance, ParkSlot slot, double currentHeadingRad) {
+        return new Pose(alliance.fromRedX(slot.redX), alliance.fromRedY(slot.redY), squareHeadingRad(currentHeadingRad));
+    }
+
+    /** The multiple of 90 deg nearest to this heading (radians in, radians out). */
+    public static double squareHeadingRad(double headingRad) {
+        return Math.toRadians(Math.round(Math.toDegrees(headingRad) / 90.0) * 90.0);
     }
 
     // =============================================================================================
@@ -254,7 +342,7 @@ public final class FieldConstants {
     public static final double RED_GARDEN_MIN_Y = -70.10, RED_GARDEN_MAX_Y = -47.41;
     /** Sweep along the wall toward the red corner. TODO-MEASURE (x: intake edge must reach x ~ 69). */
     public static final double GARDEN_SWEEP_X = 60.5;                                              // TODO-MEASURE
-    public static final double GARDEN_SWEEP_START_Y = -42.0;
+    public static final double GARDEN_SWEEP_START_Y = -46.0;
     public static final double GARDEN_SWEEP_END_Y = -60.0;                                         // TODO-MEASURE
     /** Red sweep travels toward the red wall (-Y). */
     public static final double GARDEN_SWEEP_TRAVEL_DEG = -90.0;
@@ -262,10 +350,12 @@ public final class FieldConstants {
     /**
      * Two waypoints between Zone A and the sweep start: the robot turns to face the sweep direction
      * between them, away from the audience wall (a turning 18 in robot reaches 12.7 in from its centre,
-     * so it must not turn while hugging the wall).
+     * so it must not turn while hugging the wall). They sit low enough that the turning robot stays
+     * ~2 in outside the tip-1 landing box: A2 / A3 role 1 leave right after volley 1 while the spill
+     * may still be falling (G409). From S1 the leg is ~49 in.
      */
-    public static final double GARDEN_APPROACH_1_X = 52.0, GARDEN_APPROACH_1_Y = -24.0;
-    public static final double GARDEN_APPROACH_2_X = 50.0, GARDEN_APPROACH_2_Y = -38.0;
+    public static final double GARDEN_APPROACH_1_X = 52.0, GARDEN_APPROACH_1_Y = -40.0;
+    public static final double GARDEN_APPROACH_2_X = 51.0, GARDEN_APPROACH_2_Y = -50.0;
 
     public static List<Pose> gardenApproach(Alliance alliance) {
         List<Pose> points = new ArrayList<>();
@@ -309,8 +399,11 @@ public final class FieldConstants {
     // =============================================================================================
     // Routes (waypoints in OUR alliance frame) used by the AUTO paths
     // =============================================================================================
-    /** Waypoints from (x, y) to the LOADING ZONE that avoid the HIVE, the spill box and the F-far flower. */
-    public static List<Pose> routeToLoadingZone(Alliance alliance, double x, double y) {
+    /**
+     * Waypoints from (x, y) to a LOADING ZONE slot that avoid the HIVE, the spill box, the F-far flower
+     * and (for the INNER slot) a robot already in the CORNER slot.
+     */
+    public static List<Pose> routeToLoadingZone(Alliance alliance, double x, double y, ParkSlot target) {
         double rx = alliance.fromRedX(x);
         double ry = alliance.fromRedY(y);
         List<Pose> points = new ArrayList<>();
@@ -318,18 +411,40 @@ public final class FieldConstants {
             if (rx > 44.0 && ry > -38.0) points.add(point(alliance, SPILL_ESCAPE_X, SPILL_ESCAPE_Y));
             points.add(point(alliance, CORRIDOR_A_X, CORRIDOR_A_Y));
             points.add(point(alliance, CORRIDOR_B_X, CORRIDOR_B_Y));
-        } else if (rx < -52.0 && ry > -36.0) {
-            points.add(point(alliance, FAR_WALL_ESCAPE_X, ry));   // straight out along +X first (F-far flower)
+        } else if (rx < FAR_WALL_ESCAPE_BEYOND_X && ry > -36.0) {
+            points.add(point(alliance, FAR_WALL_ESCAPE_X, ry));   // S6: straight out along +X first (F-far flower)
+        } else if (rx > -50.0 && ry < -58.0) {
+            points.add(point(alliance, rx, LEAVE_ALLIANCE_WALL_Y)); // S4: straight off our alliance wall first
+        }
+        // From the far half into the INNER slot: the lane goes AFTER any far-wall escape point (never
+        // before it, or the route doubles back west through the corner slot).
+        if (target == ParkSlot.INNER && rx < -33.0) points.add(innerLane(alliance));
+        return points;
+    }
+
+    /** Lane point into the INNER slot from the far half (clear of a robot in the CORNER slot). */
+    public static Pose innerLane(Alliance alliance) {
+        return point(alliance, INNER_LANE_X, INNER_LANE_Y);
+    }
+
+    /** A3 role 1's exit waypoints from its Zone B spot to the INNER slot (along the TIP-2 box's bottom edge). */
+    public static List<Pose> role1ExitToInner(Alliance alliance) {
+        List<Pose> points = new ArrayList<>();
+        points.add(point(alliance, ROLE1_EXIT_1_X, ROLE1_EXIT_1_Y));
+        points.add(point(alliance, ROLE1_EXIT_2_X, ROLE1_EXIT_2_Y));
+        return points;
+    }
+
+    /** Waypoints from the start to the Zone A side spot (S3/S4: straight off our alliance wall first). */
+    public static List<Pose> routeToZoneASide(Alliance alliance, StartSpot start) {
+        List<Pose> points = new ArrayList<>();
+        if (start == StartSpot.S3 || start == StartSpot.S4) {
+            points.add(point(alliance, start.redX, LEAVE_ALLIANCE_WALL_Y));
         }
         return points;
     }
 
-    /** A3 role 1: lane point that keeps us clear of the role-2 partner parked at (-51, -56). */
-    public static Pose role1Lane(Alliance alliance) {
-        return point(alliance, ROLE1_LANE_X, ROLE1_LANE_Y);
-    }
-
-    /** Waypoints from (x, y) in the audience half to a Zone B spot, through the corridor. */
+    /** Waypoints from (x, y) in the audience half to the far half, through the corridor. */
     public static List<Pose> routeToZoneB(Alliance alliance, double x, double y) {
         double rx = alliance.fromRedX(x);
         double ry = alliance.fromRedY(y);
