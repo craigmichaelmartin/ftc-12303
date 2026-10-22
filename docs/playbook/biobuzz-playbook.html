@@ -83,6 +83,10 @@ header.hero .wrap { display: grid; gap: 1.1rem; }
 .fact .big { font-family: var(--font-display); font-weight: 800; font-size: 2rem; line-height: 1; }
 .fact .big.y { color: var(--pollen-ink); }
 .fact .lbl { font-size: 0.92rem; color: var(--ink-2); }
+.highlights { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem 2rem; margin-top: 0.4rem; }
+.highlights > div { display: grid; gap: 0.45rem; align-content: start; min-width: 0; }
+.highlights h2 { font-family: var(--font-mono); font-size: 0.78rem; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-2); }
+.highlights ul { margin: 0; padding-left: 1.1rem; display: grid; gap: 0.4rem; }
 
 section { padding-block: 2.4rem; border-top: 1px solid var(--line); }
 section > .wrap { display: grid; gap: 1.3rem; }
@@ -218,6 +222,27 @@ footer ul { margin: 0; padding-left: 1.1rem; display: grid; gap: 0.25rem; }
       <div class="fact" role="listitem"><span class="big y num">8</span><span class="lbl">POLLEN tip every cell after that (or 3 NECTAR + 3 POLLEN)</span></div>
       <div class="fact" role="listitem"><span class="big num">20</span><span class="lbl">points per TIP, in AUTO or TELEOP; a MAJOR foul costs the same</span></div>
       <div class="fact" role="listitem"><span class="big num">98%</span><span class="lbl">of early matches where the TIP counts differed were won by the alliance with more TIPS (102 of 104)</span></div>
+    </div>
+    <div class="highlights">
+      <div>
+        <h2>Strategy highlights</h2>
+        <ul>
+          <li><b>Win with TIPS.</b> Each TIP is worth 20 points, and TIPS decide matches.</li>
+          <li><b>AUTO:</b> our 4 preloads tip the start cell, then we leave and park. That's 28 points, or 36 and the SWARM RP with a partner that also leaves and parks.</li>
+          <li><b>TELEOP:</b> the two-zone loop. Shoot, sweep the spill, cross to the other end, shoot again. Two loads of 4 make each TIP after the first.</li>
+          <li><b>Last minute:</b> fire what's on board at about 0:12, then both robots park. POLLEN only until NECTAR passes its tests.</li>
+        </ul>
+      </div>
+      <div>
+        <h2>Robot and code highlights</h2>
+        <ul>
+          <li><b>Pedro Pathing 3</b> drives the AUTO paths, on <b>goBILDA Pinpoint</b> odometry with X/Y pods.</li>
+          <li><b>Limelight 3A</b> AprilTags aim the turret at the cell opening. Position comes from odometry, because the HIVE tags move when it tips.</li>
+          <li><b>Turret flywheel shooter</b>, kept and tuned: feeding gated on flywheel speed, a steel flywheel, more turret travel.</li>
+          <li><b>Never more than 4 balls:</b> sensors count every ball, stop the intake at 4 and refuse NECTAR at the mouth.</li>
+          <li><b>One INIT menu</b> sets alliance, start, routine, park slot and delay. Laptop tests sweep every AUTO route on both alliances.</li>
+        </ul>
+      </div>
     </div>
   </div>
 </header>
