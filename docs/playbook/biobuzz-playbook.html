@@ -209,7 +209,7 @@ footer ul { margin: 0; padding-left: 1.1rem; display: grid; gap: 0.25rem; }
 
 <header class="hero">
   <div class="wrap">
-    <div class="eyebrow">FTC 12303 · 2026–27 BIOBUZZ presented by RTX · playbook v1.1, Oct 20 2026 (matches the audited starter code)</div>
+    <div class="eyebrow">FTC 12303 · 2026–27 BIOBUZZ presented by RTX</div>
     <h1>Tip the HIVE early, tip it often, then park.</h1>
     <p class="lede">Our robot is a turret pollen shooter, which suits a game decided by HIVE TIPS. This page lays out how to play it in AUTO, TELEOP and the last minute, which parts of the robot to tune, and what to test first. It's grounded in the TU05 manual, the official field setup guide, the Q&amp;A board and early-season match data.</p>
     <div class="meta"><span>Field frame: +X toward audience, +Y toward blue, inches</span><span>Coordinates are red; blue = rotate 180°: (x, y, h) → (−x, −y, h + 180)</span><span>Robot design: keep it, tune it</span></div>
@@ -469,12 +469,11 @@ flowchart LR
 <section id="robot">
   <div class="wrap">
     <div class="sechead"><div class="eyebrow">Robot · keep the design, tune it</div><h2>Refinements, in priority order</h2>
-      <p class="muted prose">The robot's direction is right: turret shooter, full-width intake, hollow turret center. The list below is about making it legal, consistent and countable. Anything larger is marked optional.</p></div>
+      <p class="muted prose">The robot: SWYFT mecanum drive with X/Y odometry pods, a turret flywheel shooter fed up through the hollow turret center, a full-width intake, and a Limelight 3A camera (the only legal programmable vision coprocessor, R702). The design is right for this game. The list below is about making it legal, consistent and countable. Anything larger is marked optional.</p></div>
     <div class="tablewrap">
       <table>
         <thead><tr><th>Priority</th><th>Change</th><th>Why</th></tr></thead>
         <tbody>
-          <tr><td><span class="pill">done</span></td><td>Camera is a <b>Limelight 3A</b> (confirmed Oct 21)</td><td>The only legal programmable vision coprocessor. The 3G is explicitly prohibited (R702).</td></tr>
           <tr><td><span class="pill must">must</span></td><td>Main power switch and robot signs (plus a listed grounding strap, recommended)</td><td>Inspection blockers (R603, R401–R403). The strap is optional under R605, but it protects the Limelight from static.</td></tr>
           <tr><td><span class="pill must">must</span></td><td>Ball sensors: a REV Color Sensor V3 at the intake mouth (a Brushland in I2C mode also works; its digital outputs aren't read), a "slot 4 full" sensor, and a beam-break at the feed (strongly recommended: it confirms every shot)</td><td>Count to 4 and stop the intake; refuse NECTAR at the mouth. Every ball, garden balls too, must pass within 4 cm of the mouth sensor. G407 and G408 have no momentary exception.</td></tr>
           <tr><td><span class="pill tune">measure</span></td><td>Measure on the robot: count the turret ring and pinion teeth; confirm the flywheel's right-angle (bevel/miter) drive and its ratio; check the hood contact surface, the intake roller layout and whether the 60 mm flywheel fits</td><td>The photos only give estimates. The ratios go into <span class="mono">RobotConfig</span>: <span class="mono">TURRET_GEAR_RATIO</span> (5 is a guess) and <span class="mono">FLYWHEEL_TICKS_PER_REV</span> = 28 × motor turns per wheel turn.</td></tr>
@@ -483,7 +482,7 @@ flowchart LR
           <tr><td><span class="pill tune">tune</span></td><td>Set the hood for a <b>~64° actual exit angle</b>; fight bounce-outs</td><td>A fixed hood covers lip distances of about 27–90 in (30–92 in to the opening centre: the robot warns outside that band). One team measured 44% bounce-outs with a solid fixed hood, so test foam or compliant surfaces and spin.</td></tr>
           <tr><td><span class="pill tune">tune</span></td><td>Turret: a goBILDA <b>5-turn Dual Mode Servo</b> in the same mount (optional: a REV Through Bore Encoder on an idler gear meshing with the ring, for feedback only); calibrate the zero with Tune: Turret Calibrator and add hard stops</td><td>As built, the 300° servo through a ~4–6:1 ring gives only about 50–75° of turret travel (300° ÷ ratio) and no feedback; the 5-turn servo gives about 300–450°. The ring centre is the ball path, so no encoder fits on the turret axis. The code drives the servo by position only: never put it in continuous mode, and measure <span class="mono">TURRET_ENCODER_TICKS_PER_DEG</span> before turning the encoder on. No home switch is needed: a positional servo is absolute. If the turret fails, set <span class="mono">TURRET_PINNED = true</span>: it holds its centre and the chassis does the aiming (driver RB aim-assist; AUTO turns the robot).</td></tr>
           <tr><td><span class="pill tune">tune</span></td><td>Power servos at 6 V (REV Servo Hub or goBILDA Servo Power Injector)</td><td>Hub servo ports are 5 V and share 2 A per pair, and a stalled servo draws 2–2.5 A.</td></tr>
-          <tr><td><span class="pill tune">tune</span></td><td>The X/Y odometry pods are already on: run <b>Check: Odometry</b> to name them and confirm the Pinpoint wiring, then set RobotConfig. Put the Limelight on the turret, pitched ~35–40° up</td><td>The HIVE tags face down from about 50 in high, and they move when the HIVE tips, so they're for aiming, not for finding the robot's position.</td></tr>
+          <tr><td><span class="pill tune">tune</span></td><td>Identify the X/Y odometry pods with <b>Check: Odometry</b> (pod type, Pinpoint wiring, directions) and set RobotConfig. Put the Limelight on the turret, pitched ~35–40° up</td><td>The HIVE tags face down from about 50 in high, and they move when the HIVE tips, so they're for aiming, not for finding the robot's position.</td></tr>
           <tr><td><span class="pill tune">tune</span></td><td>Protect the hubs and wiring, cradle the battery, guard the turret's open center and the flywheel</td><td>Defense is "everywhere in TELEOP" in Michigan. A ball landing on the robot near a spill risks G409. Inspection doesn't require a battery cradle, but a loose battery can get the robot disabled (G412.B).</td></tr>
           <tr><td><span class="pill opt">optional</span></td><td>Move the intake to a spare DC motor: a goBILDA 5203 picked after measuring the roller. If the photo estimate holds (≈96 mm wheels, ≈1.2:1 step-up), 435 rpm gives ≈8.6 ft/s and 312 rpm ≈6.2 ft/s at the surface; 1150 rpm would give ≈23 ft/s with the least torque.</td><td>A servo makes about 2–3 W against about 22 W for a motor. If pickup is the bottleneck, this is the fix. The code runs <span class="mono">intake</span> as a servo or a motor.</td></tr>
           <tr><td><span class="pill opt">optional</span></td><td>NECTAR path: a compliant or adjustable hood gap</td><td>Only after POLLEN cycles are reliable. Then set <span class="mono">ACCEPT_OWN_NECTAR = true</span> so the intake takes our NECTAR.</td></tr>
@@ -577,7 +576,7 @@ flowchart TB
         <p class="muted" style="font-size:.88rem">176 matches at 11 US events, Sept 19 – Oct 17, 2026. Two TIPS already win most matches.</p>
       </div>
     </div>
-    <div class="callout red"><b>Calendar check.</b> Metro Detroit league meets run Oct 24 – Nov 19, with the League Tournament on Dec 4–5 and the FiM State SE championship on Dec 11–13. FTC Events lists 12303 for 2026 but with no events assigned yet. <b>FiM round-3 registration opens Wed Oct 21 at 7 am</b>, so confirm the team's league or qualifier placement with FiM. <b>If we're in a league, the meets count:</b> League Tournament rankings add each team's best 10 League Meet matches, and missing matches count as zero (manual §14, p.167). A meet is only 5–6 matches, so plan on at least two meets, for example Nov 11 and Nov 19. A robot that only runs A0 and parks still banks points and SWARM RPs.</div>
+    <div class="callout red"><b>Calendar check.</b> Metro Detroit league meets run Oct 24 – Nov 19, with the League Tournament on Dec 4–5 and the FiM State SE championship on Dec 11–13. <b>Register through FiM and confirm the team's league or qualifier placement.</b> <b>If we're in a league, the meets count:</b> League Tournament rankings add each team's best 10 League Meet matches, and missing matches count as zero (manual §14, p.167). A meet is only 5–6 matches, so plan on at least two meets, for example Nov 11 and Nov 19. A robot that only runs A0 and parks still banks points and SWARM RPs.</div>
   </div>
 </section>
 
@@ -615,7 +614,7 @@ flowchart TB
       <li>Early-season data: FTCScout and FTC Events, e.g. <a href="https://ftc-events.firstinspires.org/2026/USMISAS/rankings" target="_blank" rel="noopener">Saline Preview rankings</a> and the <a href="https://ftc-events.firstinspires.org/2026/region/USMI/league/MD" target="_blank" rel="noopener">Metro Detroit league page</a>. FiM events: <a href="https://firstinmichigan.us/FTC/events/" target="_blank" rel="noopener">firstinmichigan.us/FTC/events</a></li>
       <li>Field coordinates come from the official field CAD. Launch numbers are physics estimates with drag, to be checked by experiments 2–3.</li>
     </ul>
-    <p>Prepared Oct 20, 2026 for the 12303 drive team and coaches, and updated the same day to match the audited starter code (routes, timings, buttons and cues come from the code). Detailed plans live in <span class="mono">docs/plan/</span> in the team repo.</p>
+    <p>For the 12303 drive team and coaches. Routes, timings, buttons and cues come from the team's starter code. Detailed plans live in <span class="mono">docs/plan/</span> in the team repo.</p>
   </div>
 </footer>
 
