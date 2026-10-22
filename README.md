@@ -2,6 +2,8 @@
 
 Robot code, strategy plan and playbook for FIRST Tech Challenge team 12303.
 
+**[Open the playbook](https://claude.ai/artifact/2GiUUCR3xXbCDsAw74ALuF)**: the one-page plan with an interactive field map.
+
 ## Highlights
 
 **Strategy**
