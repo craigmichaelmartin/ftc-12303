@@ -511,7 +511,7 @@ flowchart LR
 <section id="software">
   <div class="wrap">
     <div class="sechead"><div class="eyebrow">Software · Android Studio, SDK 12.0</div><h2>One update loop, small state machines</h2>
-      <p class="muted prose"><span>The starter project lives in the team's private GitHub repo <span class="mono">github.com/craigmichaelmartin/ftc-12303</span>, branch <span class="mono">main</span> (the coach grants access). Plan documents are in <span class="mono">docs/plan/</span>, and setup and tuning order are in <span class="mono">TeamCode/…/README-12303.md</span>.</span></p></div>
+      <p class="muted prose"><span>The starter project lives in the team's GitHub repo <span class="mono">github.com/craigmichaelmartin/ftc-12303</span>, a public fork of FIRST's FtcRobotController, on branch <span class="mono">main</span>. Plan documents are in <span class="mono">docs/plan/</span>, and setup and tuning order are in <span class="mono">TeamCode/…/README-12303.md</span>.</span></p></div>
     <pre class="mermaid">
 flowchart TB
   P["Pinpoint odometry: robot pose"] --> AIM["Fused aim: bearing to the active cell + Limelight bias"]
@@ -543,7 +543,7 @@ flowchart TB
         </ul></div>
       <div class="card"><h3>Loading code onto the robot</h3>
         <ol>
-          <li><b>Once per laptop:</b> Android Studio (Narwhal 3 Feature Drop or newer), then <span class="mono">File › New › Project from Version Control</span> with <span class="mono">github.com/craigmichaelmartin/ftc-12303.git</span> (the coach grants access).</li>
+          <li><b>Once per laptop:</b> Android Studio (Narwhal 3 Feature Drop or newer), then <span class="mono">File › New › Project from Version Control</span> with <span class="mono">github.com/craigmichaelmartin/ftc-12303.git</span>. To push changes, the coach adds you as a collaborator.</li>
           <li><b>Once per robot:</b> Driver Station app 12.0, the same version as the code. A Robot Configuration with the exact names from the README. The Limelight pipeline, set on the camera over USB at <span class="mono">limelight.local:5801</span>.</li>
           <li><b>Every time:</b> pull the latest code, plug the laptop into the Control Hub's USB-C port, pick <span class="mono">TeamCode</span> and press Run.</li>
           <li><b>At events:</b> USB only, and Pedro AutoTune out of the build.</li>
