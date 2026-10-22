@@ -9,22 +9,74 @@ servo turret on a ring gear, 72 mm flywheel on a goBILDA 5203 6000 rpm motor, se
 
 ---
 
-## 1. Setup (once)
+## 1. Getting the code onto the robot
 
-1. Android Studio **Narwhal 3 Feature Drop or newer**. Clone the team repo with `File > New > Project from
-   Version Control`, URL `https://github.com/craigmichaelmartin/ftc-12303.git` (private: the coach adds your
-   GitHub account; branch `main`, built on FtcRobotController v12.0), and let Gradle sync (the first sync
-   downloads the libraries and needs internet).
-2. Build: `Build > Make Project`. From a terminal: `./gradlew :TeamCode:assembleDebug`.
-3. Laptop tests (no robot needed): `./gradlew :TeamCode:testDebugUnitTest` (section 11).
-4. Deploy to the Control Hub with the green Run button (USB-C cable at events - never Wi-Fi tools there).
-   The Driver Station app must be the same version as this code (12.0): update it with the REV Hardware Client.
-5. Make a Robot Configuration on the Driver Station with the names in section 2 (names are
-   case-sensitive). Any missing device is skipped with a `WARN:` line in INIT telemetry - read those lines.
-6. Libraries (in `build.dependencies.gradle`): FTC SDK 12.0.0, **Pedro Pathing 3** `com.pedropathing:revhub:3.0.1`
-   (Maven Central) and, only when `PEDRO_AUTOTUNE = true`, `com.pedropathing:tuning:1.0.1` (needs the
-   Dairy repo `https://repo.dairy.foundation/releases/` for its Sloth/Sinister dependencies). JUnit 4.13.2 is
-   a test-only dependency (never in the robot app).
+The Control Hub runs the robot app. Android Studio builds that app from this repo and installs it on the
+Control Hub. The Expansion Hub needs nothing: it talks to the Control Hub over the RS485 cable.
+
+### Once per laptop
+
+1. **Get access.** The repo is private: the coach adds your GitHub account (repo Settings > Collaborators).
+2. **Install Android Studio** Narwhal 3 Feature Drop or newer (FTC SDK 12 needs it). It brings its own Java.
+   On the first open, accept its prompts to install Android SDK parts.
+3. **Clone the repo.** `File > New > Project from Version Control`, URL
+   `https://github.com/craigmichaelmartin/ftc-12303.git`, sign in to GitHub when asked, then Clone (branch
+   `main`, built on FtcRobotController v12.0). Let Gradle sync finish: the first sync downloads the libraries,
+   needs internet and takes several minutes.
+4. **Check that it builds.** `Build > Make Project`. Laptop tests (no robot needed):
+   `./gradlew :TeamCode:testDebugUnitTest` (section 11).
+
+### Once per robot
+
+5. **Driver Station app 12.0**, the same version as this code. REV Driver Hub: update it with the REV Hardware
+   Client (Windows), which also updates hub firmware when it suggests it. Android phone: update "FTC Driver
+   Station" from Google Play. The robot side needs no separate update: loading this code installs the matching
+   12.0 Robot Controller app.
+6. **Names and password** (R705/R711): name the devices `12303-RC` / `12303-DS` and change the Control Hub
+   Wi-Fi password (section 9).
+7. **Robot Configuration** on the Driver Station: `Configure Robot` > New > scan, then name every port exactly
+   as in section 2 (names are case-sensitive), Save and Activate. A missing device is skipped with a `WARN:`
+   line in INIT telemetry - read those lines.
+8. **Limelight pipeline.** It lives on the camera, not in this code. Plug the Limelight 3A into a laptop by USB,
+   wait about 20 s for the green light, and open `http://limelight.local:5801` (or the Limelight Hardware
+   Manager). In Settings, set the team number and click "Restart Vision Client". Then set the pipeline as in
+   section 5 step 5; changes save on the camera. Back up the pipeline before any LimelightOS update (updates
+   erase pipelines). On the robot the 3A goes in the Control Hub's blue USB 3.0 port.
+
+### Every time you load code
+
+9. Plug the laptop into the Control Hub's **USB-C** port with a data cable (charge-only cables don't work). The
+   device list at the top of Android Studio shows "REV Robotics Control Hub".
+10. Pick the `TeamCode` run configuration and click **Run** (green arrow). It builds and installs the app, and
+    the Driver Station reconnects after a few seconds.
+11. On the Driver Station, pick an OpMode: the first time, `Check: Sensors` and `Check: Odometry` (section 5
+    order); in a match, `12303 Auto` (it queues `12303 TeleOp` next).
+
+### Getting and sharing changes
+
+- `Git > Pull` before you start, then Run again to load the latest code.
+- After a change works on the robot, commit and push from Android Studio's Git menu with a message that says
+  what changed and why.
+- At home only, you can load code over Wi-Fi: join the robot's Wi-Fi network, run
+  `adb connect 192.168.43.1:5555`, then Run. **At events: USB only** - no Wi-Fi tools anywhere in the venue
+  (R704.D, Q&A 26). Pedro AutoTune stays out of the build (`PEDRO_AUTOTUNE = false`, the default) except at
+  home while tuning (section 5 step 2).
+
+### If something goes wrong
+
+- **No Control Hub in Android Studio's device list:** try another USB-C cable (many are charge-only) and another
+  laptop port. In a terminal, `adb devices` should list the hub.
+- **Gradle sync fails:** check the internet connection, then `File > Sync Project with Gradle Files`.
+- **The Driver Station warns about a version mismatch:** update the Driver Station app (step 5).
+- **`12303 TeleOp` is missing from the OpMode list:** the install did not finish. Run again and read Android
+  Studio's Run window for errors.
+
+### Libraries
+
+In `build.dependencies.gradle`: FTC SDK 12.0.0, **Pedro Pathing 3** `com.pedropathing:revhub:3.0.1` (Maven
+Central) and, only when `PEDRO_AUTOTUNE = true`, `com.pedropathing:tuning:1.0.1` (needs the Dairy repo
+`https://repo.dairy.foundation/releases/` for its Sloth/Sinister dependencies). JUnit 4.13.2 is a test-only
+dependency (never in the robot app).
 
 ## 2. Robot Configuration names
 
@@ -39,7 +91,7 @@ servo turret on a ring gear, 72 mm flywheel on a goBILDA 5203 6000 rpm motor, se
 | `feeder` | Servo | Gate that releases one ball into the flywheel. |
 | `hood` | Servo | OPTIONAL. Held at `HOOD_POSITION`. |
 | `pinpoint` | goBILDA Pinpoint Odometry Computer | I2C bus **1, 2 or 3** (bus 0 shares the hub IMU). |
-| `limelight` | Limelight 3A (top-level USB device) | Must be a **3A** (the 3G is illegal, R702). USB 3.0 (blue) port. |
+| `limelight` | Limelight 3A: shows up as an "Ethernet Device" when you scan; rename it `limelight` | Must be a **3A** (the 3G is illegal, R702). USB 3.0 (blue) port. |
 | `mouthColor` | REV Color Sensor V3 (a Brushland Color Rangefinder in **I2C mode** works too; its digital outputs are NOT read) | At the intake mouth, where EVERY ball (garden balls taken with the roller edge too) passes within `MOUTH_BALL_PRESENT_CM` before the roller commits it. |
 | `slot4` | REV Color Sensor V3 | Sees the 4th storage slot ("full"). Different I2C bus from `mouthColor` (same address 0x52). |
 | `feedBeam` | Digital Device | OPTIONAL IR break-beam where balls enter the flywheel. Strongly recommended (confirms every shot). |

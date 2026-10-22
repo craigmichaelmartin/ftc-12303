@@ -532,7 +532,7 @@ flowchart TB
           <li><b>Pedro Pathing 3</b> for AUTO paths. Its AutoTune is the fastest route to reliable paths once the odometry pods are on, but use it at home only: its Wi-Fi web server is illegal anywhere in an event venue (R704.D, Q&amp;A 26). Until Foresight is tuned, paths are capped at half speed, which is why A2 and A3 wait for tuning.</li>
           <li><b>Flywheel:</b> start with the hub's <span class="mono">setVelocity</span> PIDF (F = 32767 / max ticks/s, P = 0.1·F, I = 0.1·P). Call it "ready" only after 3 loops within 2.5% or 60 rpm, whichever is larger.</li>
           <li><b>Which cell is up:</b> red starts with the audience cell up, blue with the far cell up. The operator presses Y on every TIP. The camera sees the up cell only from the zone it faces, so it confirms a TIP only after we reach the new zone (0.5 s of unbroken evidence); a Y within 3 s of a camera switch only confirms it.</li>
-          <li><b>Laptop tests:</b> <span class="mono">./gradlew :TeamCode:testDebugUnitTest</span> runs 31 JUnit tests with no robot: every AUTO leg swept for walls, FLOWERS, HIVE legs, partners and spill boxes, plus ball handling, the HIVE tracker and shot dips.</li>
+          <li><b>Laptop tests:</b> <span class="mono">./gradlew :TeamCode:testDebugUnitTest</span> runs the JUnit tests with no robot: every AUTO leg swept for walls, FLOWERS, HIVE legs, partners and spill boxes, plus ball handling, the HIVE tracker and shot dips.</li>
         </ul></div>
       <div class="card"><h3>Competition hygiene</h3>
         <ul>
@@ -541,6 +541,14 @@ flowchart TB
           <li><span class="mono">12303 Auto</span> preselects <span class="mono">12303 TeleOp</span>, so the drive team can't forget it.</li>
           <li>Pose, ball count and HIVE state hand off from AUTO to TELEOP, so field-centric drive and aiming start correct. Don't restart the robot between them.</li>
         </ul></div>
+      <div class="card"><h3>Loading code onto the robot</h3>
+        <ol>
+          <li><b>Once per laptop:</b> Android Studio (Narwhal 3 Feature Drop or newer), then <span class="mono">File › New › Project from Version Control</span> with <span class="mono">github.com/craigmichaelmartin/ftc-12303.git</span> (the coach grants access).</li>
+          <li><b>Once per robot:</b> Driver Station app 12.0, the same version as the code. A Robot Configuration with the exact names from the README. The Limelight pipeline, set on the camera over USB at <span class="mono">limelight.local:5801</span>.</li>
+          <li><b>Every time:</b> pull the latest code, plug the laptop into the Control Hub's USB-C port, pick <span class="mono">TeamCode</span> and press Run.</li>
+          <li><b>At events:</b> USB only, and Pedro AutoTune out of the build.</li>
+        </ol>
+        <p class="muted" style="font-size:.88rem">Step by step, with troubleshooting: <span class="mono">README-12303.md</span>, section 1.</p></div>
     </div>
   </div>
 </section>
