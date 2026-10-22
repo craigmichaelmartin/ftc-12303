@@ -169,7 +169,7 @@ In the code as of 10/20 the folders are `config/` (robot and field constants), `
 
 ## 9. Tests, tuning and logging
 
-- **Tuning OpModes** (details in the README): Pedro AutoTune (home only), **Tune: Flywheel**, **Tune: Turret Calibrator**, **Tune: Shot Map Logger** (CSV), **Check: Limelight**, **Check: Sensors**, **Test: Tip Counter**. They feed the experiments in [07](07-testing-and-practice.md).
+- **Tuning OpModes** (details in the README): Pedro AutoTune (home only), **Tune: Flywheel**, **Tune: Turret Calibrator**, **Tune: Shot Map Logger** (CSV), **Check: Limelight**, **Check: Odometry** (pod type, wiring and directions from a 48 in push), **Check: Sensors**, **Test: Tip Counter**. They feed the experiments in [07](07-testing-and-practice.md).
 - **Logging:** CSV files on the Control Hub (`/sdcard/FIRST/data/`) and DS telemetry. Both are allowed because nothing is streamed (R704.D).
 - **Laptop tests:** JUnit 4.13.2 (test-only) under `TeamCode/src/test/`, run with `./gradlew :TeamCode:testDebugUnitTest` (31 tests, fake devices, a manual clock `util/Clock`):
   - **RouteSweepTest**: every AUTO leg for both alliances, every routine, valid start and park choice, swept with a turning 18 in robot (walls, our side, FLOWERS, HIVE feet and legs, the A3 partner, a corner-slot robot, the active spill box), plus path timeouts and the A3 time budget;
@@ -193,7 +193,7 @@ In the code as of 10/20 the folders are `config/` (robot and field constants), `
 
 | Week | Deliverable |
 |---|---|
-| W1 | Build and deploy; Check: Sensors passes; Pinpoint configured; flywheel PIDF + ready gate; shot-map logger; count-to-4 interlock |
+| W1 | Build and deploy; Check: Odometry names the pods; Check: Sensors passes; Pinpoint configured; flywheel PIDF + ready gate; shot-map logger; count-to-4 interlock |
 | W2 | Pedro tuning at home (AutoTune, then compile it out again); turret calibration; Limelight pipeline + vision bias; **A0 and A1 reliable** |
 | W3 | TELEOP automation: auto-aim, one-button volley, auto-stop at 4, cues, HiveTracker overrides |
 | W4 | A2 / A3 role 1 / A3 role 2 routines (12303 Auto), only with a tuned follower; HiveTracker vision auto-switch tuned on our HIVE |

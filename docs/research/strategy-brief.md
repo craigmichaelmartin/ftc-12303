@@ -9,12 +9,12 @@ Where a `.verify.md` corrects a report, the correction wins.
 ## Team (from the coach, 2026-10-20)
 High-school / mixed ages. Java in Android Studio. Driver + operator. 4–8 h robot time per week. First competition 6+ weeks out
 (Michigan Metro Detroit league; League Tournament 12/4–5; FiM Round-3 registration opens 10/21 7am — flag to coach).
-Has: goBILDA Pinpoint + odometry pods, spare DC motors, colour/distance sensors, a HIVE (real or replica), official POLLEN/NECTAR.
+Has: goBILDA Pinpoint + odometry pods (update 10/21: the X/Y pods are already mounted; pod type and wiring to be confirmed with Check: Odometry), spare DC motors, colour/distance sensors, a HIVE (real or replica), official POLLEN/NECTAR.
 Robot works today: drives, shooter launches POLLEN. NECTAR never tested (pollen only so far).
 **Design decision: KEEP the current design and tune it.** Everything below is a refinement; anything bigger is labelled OPTIONAL.
 
 Robot: SWYFT Drive V2 mecanum (4 SWYFT Spike motors in-wheel, 12.7:1, ~6.4 ft/s), REV Control Hub + Expansion Hub, Limelight
-(must be a 3A — 3G is illegal per R702), turret on a large ring gear turned by a goBILDA Dual Mode Servo + 60T pinion (~50–75° travel
+(confirmed 3A on 10/21 — the 3G would be illegal per R702), turret on a large ring gear turned by a goBILDA Dual Mode Servo + 60T pinion (~50–75° travel
 for a 4–6:1 ring as built, no feedback; count the teeth), single 72 mm Hogback flywheel driven by a goBILDA 5203 6000 rpm 1:1 motor,
 apparently through a right-angle bevel/miter gear pair (photos; confirm the ratio on the robot), under a 3D-printed C hood,
 full-width star/compliant-wheel roller intake driven by a Dual Mode Servo through gears (shaft count, wheel size and ratio: measure on
@@ -100,7 +100,7 @@ Under-HIVE lane (TELEOP only, centre |Y| ≤ 9.5, G409/G417 risk) — avoid in A
 - GARDEN: ignore except free pushes on the way to park (1 pt each).
 
 ## Robot refinements (keep the design) — priority order
-Must (rules/inspection): confirm Limelight 3A; legal main power switch (R603); robot signs; G407/G408 sensors
+Must (rules/inspection): Limelight 3A (confirmed 10/21); legal main power switch (R603); robot signs; G407/G408 sensors
 (colour/distance at intake mouth + "slot 4 full" + break-beam at shooter feed) and software auto-stop at 4. Recommended (not an
 inspection item, R605 only permits it): a listed grounding strap for ESD.
 Tune: flywheel velocity PIDF + feed gating on measured speed (gate ±2–3% with a short dwell — 28 CPR encoder is coarse);

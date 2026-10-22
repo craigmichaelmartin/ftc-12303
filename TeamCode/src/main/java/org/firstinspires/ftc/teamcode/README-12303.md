@@ -104,7 +104,10 @@ flipping back (`HIVE_Y_CONFIRMS_VISION_MS`).
    line shows the suggestion; redo it whenever the intake, its servo/motor or its power changes - see
    section 9). Pinpoint: the OpMode zeroes the pose at INIT (gamepad1 back zeroes it again) - push the
    robot: x must grow going forward, y going left.
-2. **Pedro AutoTune** (at home only): set `PEDRO_AUTOTUNE = true` in `build.dependencies.gradle` (or build with
+2. **Check: Odometry** first, then **Pedro AutoTune**. The X/Y pods are on the robot but their type and wiring
+   were not known on 10/21: run **Check: Odometry** (push the robot 48 in forward, then 48 in left): it says whether a Pinpoint is found, names the pod from its counts per inch (goBILDA 4-bar ≈ 505, goBILDA swing-arm ≈ 337, SWYFT 38 mm ≈ 872) and prints the RobotConfig section 3 lines for pod type and directions. If the Pinpoint is not found and the counts appear under a motor
+   port instead, the pods are wired to the hub: the code then needs a two-wheel localizer (ask the coach).
+   **Pedro AutoTune** (at home only): set `PEDRO_AUTOTUNE = true` in `build.dependencies.gradle` (or build with
    `-PpedroAutoTune=true`), deploy, join the robot Wi-Fi, open `http://192.168.43.1:10158`. Run Mecanum Tuner
    (copy directions into `RobotConfig` section 2), Pinpoint Tuner (copy offsets/directions/pod type into section
    3), Foresight Tuner (paste its block into `pedro/Constants.java`, set `FORESIGHT_TUNED = true`, remove the
@@ -148,6 +151,7 @@ flipping back (`HIVE_Y_CONFIRMS_VISION_MS`).
 | Tune: Turret Calibrator | Servo position <-> turret angle, soft limits, slew rate, encoder scale. |
 | Tune: Shot Map Logger | Builds the distance -> RPM table (CSV + suggested rows). |
 | Check: Limelight | Tags, cell, height (up/down), bearing error, vision bias. |
+| Check: Odometry | Pinpoint found?, pod type from a 48 in push (goBILDA 4-bar / swing-arm / SWYFT, or the measured counts per inch), pod directions; motor-port encoders for hub-wired pods. |
 | Check: Sensors | Colour classification, slot 4, beam, ball time at the mouth (`MOUTH_ONE_BALL_MAX_MS`), Pinpoint (zeroed), one-at-a-time direction tests. |
 | Test: Tip Counter | Balls needed to tip our HIVE, dwell time. |
 
@@ -323,7 +327,7 @@ at the 0.5 cap), role 1 leaves the corridor end at 17 s.
 
 ## 10. TODO-MEASURE list (all in `config/RobotConfig.java` unless noted)
 
-Drive directions (4); Pinpoint pod type, X/Y pod offsets and directions; `AIM_ASSIST_TURN_KP`;
+Drive directions (4); Pinpoint pod type (Check: Odometry), X/Y pod offsets and directions; `AIM_ASSIST_TURN_KP`;
 `FLYWHEEL_DIRECTION`, `FLYWHEEL_TICKS_PER_REV` (bevel ratio), `FLYWHEEL_MAX_TICKS_PER_SEC`, ready window,
 `FLYWHEEL_SHOT_DIP_FRACTION`, `FLYWHEEL_DEFAULT_RPM`; `SHOT_TABLE` (physics model only) and
 `SHOT_TABLE_RPM_SCALE`; `HOOD_POSITION`; turret `GEAR_RATIO`, `SERVO_CENTER`, `SERVO_DIRECTION`, `CENTER_DEG`,

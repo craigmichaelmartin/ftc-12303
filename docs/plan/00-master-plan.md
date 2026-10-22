@@ -81,11 +81,11 @@ Owners left blank on purpose: fill them in at the next team meeting. Robot time 
 
 ### Week 1 · 10/20–10/26: blockers, sensors, flywheel, first tests
 - [ ] Register and confirm league placement with FiM (Round 3 opens 10/21, 7 am). Owner: ____
-- [ ] Inspection blockers: Limelight is a 3A? main power switch, signs (a grounding strap is recommended, not required) ([05 §1](05-robot-tuning.md#1-inspection-blockers-fix-these-in-week-1)). Owner: ____
+- [ ] Inspection blockers: Limelight **confirmed 3A** (coach, 10/21); main power switch, signs (a grounding strap is recommended, not required) ([05 §1](05-robot-tuning.md#1-inspection-blockers-fix-these-in-week-1)). Owner: ____
 - [ ] Possession sensors (mouth, slot 4, feed beam) + software auto-stop at 4 ([05 §2](05-robot-tuning.md#2-must-rules-and-inspection)). Owner: ____
 - [ ] Flywheel velocity control + "ready" gate ([06 §5](06-software.md#5-flywheel-control-and-the-distance--rpm-table)). Owner: ____
 - [ ] Set-up checks and HIVE calibration; Exp 1 tip threshold; Exp 2a hood angle; start Exp 2b shot map ([07](07-testing-and-practice.md)). Owner: ____
-- [ ] Pinpoint + 2 pods mounted; starter code on the robot; **Check: Sensors** passes; laptop tests pass ([06 §9](06-software.md#9-tests-tuning-and-logging)). Owner: ____
+- [ ] X/Y odometry pods are already on the robot (coach, 10/21): run **Check: Odometry** (push the robot 48 in forward, then 48 in left): it says whether a Pinpoint is found, names the pod from its counts per inch (goBILDA 4-bar ≈ 505, goBILDA swing-arm ≈ 337, SWYFT 38 mm ≈ 872) and prints the RobotConfig section 3 lines for pod type and directions; starter code on the robot; **Check: Sensors** passes; laptop tests pass ([06 §9](06-software.md#9-tests-tuning-and-logging)). Owner: ____
 - [ ] Order parts ([05 §6](05-robot-tuning.md#6-shopping-list)); some are out of stock. Owner: ____
 - [ ] Answer the robot questions ([05 §7](05-robot-tuning.md#7-questions-only-the-robot-can-answer-measure-in-week-1)): the "measure on robot" rows in the [07 set-up checks](07-testing-and-practice.md#set-up-checks-week-1-before-any-experiment) (ring and pinion teeth, flywheel drive ratio, hood contact surface, intake layout, 60 mm flywheel fit). Owner: ____
 
@@ -160,7 +160,7 @@ Owners left blank on purpose: fill them in at the next team meeting. Robot time 
 | 7 | Slow servo intake | Too few loads per match | 6 V power, Exp 8, OPTIONAL DC-motor intake | |
 | 8 | Our HIVE differs from event HIVEs (variation; dwell 0.25–3.4 s) | Wrong ball counts and timing | Calibrate to EFSG §12.3; fire full volleys; the coach keeps the count | |
 | 9 | Wi-Fi streaming at the venue (Dashboard, Panels, Pedro AutoTune) | Rule violation (R704.D, QA26) | `PEDRO_AUTOTUNE = false` and re-deploy before events; every 12303 OpMode shows an INIT warning line ([06 §8](06-software.md#8-competition-rules-for-software-checklist)) | |
-| 10 | Parts out of stock (Brushland sensor, Limelight 3A, 312 rpm motor) | Delays | Order alternatives now ([05 §6](05-robot-tuning.md#6-shopping-list)) | |
+| 10 | Parts out of stock (Brushland sensor, 312 rpm motor) | Delays | Order alternatives now ([05 §6](05-robot-tuning.md#6-shopping-list)) | |
 | 11 | Only 4–8 h of robot time per week | The plan slips | Follow the time budget ([07](07-testing-and-practice.md#suggested-use-of-robot-time-48-h-per-week-est)); freeze in W6 | |
 | 12 | Plan and code drift apart (poses, buttons) | Confusion at events | The code README is the final word; update these docs when the code changes; the laptop route test checks every AUTO leg | |
 

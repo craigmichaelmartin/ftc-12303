@@ -13,6 +13,7 @@ Robot time is 4–8 hours a week, so run the experiments in the order shown and 
 | Practice field, wall to wall, both directions | Official CAD field is **141.3 in** (CAD). Tiles may make ours different | | |
 | Our HIVE pivot position from two walls | Centre of the field; pivot 43.95 in high (M p.69) | | |
 | Up-CELL lip height | 53.5 ± 0.5 in (FAC 1.13) | | |
+| Odometry pods: **Check: Odometry**, push 48 in forward, then 48 in left | Pinpoint found; each pod line names the pod (goBILDA 4-bar ≈ 505 counts/in, swing-arm ≈ 337, SWYFT 38 mm ≈ 872, or a measured value) and a direction; copy the SET lines into RobotConfig §3 and rebuild | | |
 | Odometry: push the robot 48 in straight | Reads 48 ± 0.5 in | | |
 | Odometry: spin the robot 10 full turns | Reads 3600 ± 2° | | |
 | Limelight distance vs tape measure, 5 spots | Within ±2 in (≈ 1% speed error, est.) | | |

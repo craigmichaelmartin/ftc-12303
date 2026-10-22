@@ -12,7 +12,7 @@ The robot can't play until these pass (G303, R-rules; self-check with the Inspec
 
 | # | Item | Rule | What to do | Part / price |
 |---|---|---|---|---|
-| 1 | **Limelight must be a 3A** | R702, Table 12-9: the 3A is the only programmable vision coprocessor allowed. **The 3G is named as prohibited** (Example 6; M p.140–141) | Look at it: the 3A is USB-C only, with **no Ethernet jack**. A 3G or 4 cannot be used; fall back to a UVC webcam with the SDK AprilTag processor (legal under R707/R708) | LL3A $189 (ServoCity 3122-0002-0001, sold out 10/20). Webcam: goBILDA Global Shutter USB Camera 3122-0004-0001, $74.99 |
+| 1 | **Limelight must be a 3A**: **confirmed 3A** (coach, 10/21) | R702, Table 12-9: the 3A is the only programmable vision coprocessor allowed. **The 3G is named as prohibited** (Example 6; M p.140–141) | Look at it: the 3A is USB-C only, with **no Ethernet jack**. A 3G or 4 cannot be used; fall back to a UVC webcam with the SDK AprilTag processor (legal under R707/R708) | LL3A $189 (ServoCity 3122-0002-0001, sold out 10/20). Webcam: goBILDA Global Shutter USB Camera 3122-0004-0001, $74.99 |
 | 2 | **Main power switch** (none seen in photos) | R603, Table 12-5 (M p.136): exactly one approved switch, accessible to the team (it need not be reachable by field staff, IC), away from fast-moving parts and pinch points | Mount it where the team can reach it, away from the flywheel, the turret mesh and pinch points, shielded from robot contact | REV Switch Cable and Bracket REV-31-1387, $13 (checked 10/20), or goBILDA Floodgate 3103-0005-0001 (check vendor) |
 | 3 | **Robot signs** (none seen) | R401–R403 (M p.129–130): at least 2 signs on surfaces ≥ 90° apart, each ≥ 6.5 × 2.5 in, solid red or blue, white numerals about 2.25 in tall, not stacked, not lit | Make one red set and one blue set; bring both to inspection | DIY |
 | 4 | Grounding strap (**recommended, not an inspection item**) | R605, Table 12-6 (M p.136–137): grounding the electronics to the frame is only *permitted*, with listed straps; the frame can't carry current. The IC asks how you ground the electronics "if at all" | Recommended for static (ESD) protection, e.g. for the Limelight: spare XT30 on a hub → frame | REV-31-1269, $5.50 (470 Ω) or SWYFT SR-Ground-01 |
@@ -99,6 +99,7 @@ With A, B or both:
 - **OPTIONAL** bigger fix: a DC-motor intake (§4). The code drives `intake` as a continuous-rotation servo or a DC motor, so no code change is needed.
 
 ### 3.7 Odometry: Pinpoint + 2 pods (the team has them)
+- **The X/Y pods are already on the robot** (coach, 10/21); which pods, and whether they plug into the Pinpoint, are not known yet. Run **Check: Odometry** (push the robot 48 in forward, then 48 in left): it says whether a Pinpoint is found, names the pod from its counts per inch (goBILDA 4-bar ≈ 505, goBILDA swing-arm ≈ 337, SWYFT 38 mm ≈ 872) and prints the RobotConfig section 3 lines for pod type and directions. If the Pinpoint is not found and the counts show up under a motor port, the pods are wired to the REV hub instead: the code then needs Pedro's two-wheel localizer (a short code change; ask).
 - Mount the pods rigidly with consistent spring down-force.
 - Wire the Pinpoint to an **I2C bus other than 0** (bus 0 shares the hub's IMU; ftc-docs hub tips).
 - Tuned, expect about 0.5 in error after driving around and returning (goBILDA Pinpoint guide).
@@ -193,7 +194,7 @@ Wiring notes for the code team (names are the Robot Configuration names in `READ
 
 These are also the "measure on robot" rows in the [07 set-up checks](07-testing-and-practice.md#set-up-checks-week-1-before-any-experiment).
 
-1. Limelight model (3A?).
+1. ~~Limelight model~~: confirmed 3A (coach, 10/21). Odometry pods: on the robot, type and wiring found with Check: Odometry.
 2. Ring and pinion tooth counts (or the ring's tooth-tip diameter); servo variants and which are in continuous mode (the turret servo must stay positional); which hub ports (5 V) or 6 V module.
 3. How the flywheel is driven: the photos show a right-angle bevel/miter pair, so confirm it and count the motor turns per wheel turn. What the ball is squeezed against (the printed C, the black foam block or the grey servo's pad), the gap, and whether the exit angle can change without reprinting. Whether the 60 mm steel flywheel fits beside the wheel (axial room between a wheel face and its printed arm, more than the disc plus screw heads).
 4. Intake: one roller shaft or two? Which gear does the servo drive, and how many teeth are on each gear? Boot-wheel size (72 or 96 mm); the intake servo's label (2000-0025-0002 / -0003 / -0004) and mode; whether the hinged crossbar floats.

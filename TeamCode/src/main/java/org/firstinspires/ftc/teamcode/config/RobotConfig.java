@@ -107,10 +107,11 @@ public final class RobotConfig {
     // =============================================================================================
     /** goBILDA pods: 4-bar (32 mm) or swing-arm (48 mm). Ignored when PINPOINT_CUSTOM_TICKS_PER_INCH > 0. */
     public static GoBildaPinpointDriver.GoBildaOdometryPods PINPOINT_POD_TYPE =
-            GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD;                            // TODO-MEASURE (which pods?)
+            GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD;                            // TODO-MEASURE: run Check: Odometry
     /**
      * For NON-goBILDA pods only (e.g. SWYFT Linear Odometry: 4096 counts / (pi x 38 mm) = 34.31 ticks/mm
-     * = 871.5 ticks/in - but check whether SWYFT's "4096 PPR" means counts or pulses: R5 2.4).
+     * = 871.5 ticks/in - but check whether SWYFT's "4096 PPR" means counts or pulses: R5 2.4). Check: Odometry
+     * measures it: for any pod it does not recognise it prints the measured value to put here.
      * Leave at 0 to use PINPOINT_POD_TYPE.
      */
     public static double PINPOINT_CUSTOM_TICKS_PER_INCH = 0.0;
