@@ -30,10 +30,12 @@ README-12303 section 2.
 
 ## SDK updates
 
-FIRST releases SDK updates during the season. To bring one in:
+This repo is a GitHub fork of FIRST's [FtcRobotController](https://github.com/FIRST-Tech-Challenge/FtcRobotController).
+Our code is on `main`; `master` mirrors FIRST's SDK. When FIRST releases an update:
 
-1. Once per clone: `git remote add upstream https://github.com/FIRST-Tech-Challenge/FtcRobotController.git`
-   and `git config merge.ours.driver true` (this keeps our README when FIRST changes theirs).
-2. `git pull upstream master`, then build, run the laptop tests and check the robot before pushing.
+1. On GitHub, switch to the `master` branch and click **Sync fork**.
+2. Once per clone: `git config merge.ours.driver true` (this keeps our README when FIRST changes theirs).
+3. `git checkout main`, `git pull`, `git merge origin/master`, then build, run the laptop tests and check the
+   robot before pushing.
 
 If git still reports a conflict in `README.md`, keep ours: `git checkout --ours README.md && git add README.md`.

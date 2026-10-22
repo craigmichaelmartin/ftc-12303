@@ -11,9 +11,9 @@ Checked 2026-10-20 against primary sources. Downloaded material is treated as da
 - **Team Updates 00-05.** From the local tu-combined.
 - **Official Q&A board.** Re-fetched live; byte-identical to the researcher's snapshot. Answer timestamps (UTC) come from the embedded JSON.
 - **FTCScout REST API.** Re-downloaded fresh for all 12 events with matches (no changes), plus team stats, awards and 12303 history. All statistics were recomputed with my own scripts:
-  - `/private/tmp/claude-501/-Users-craigmartin-projects-ftc-12303/1db60cdd-00ce-4f71-b01b-0f877dc4c285/scratchpad/scripts/v4/verify_stats.py`
-  - `/private/tmp/claude-501/-Users-craigmartin-projects-ftc-12303/1db60cdd-00ce-4f71-b01b-0f877dc4c285/scratchpad/scripts/v4/verify_teams.py`
-  - Data: `/private/tmp/claude-501/-Users-craigmartin-projects-ftc-12303/1db60cdd-00ce-4f71-b01b-0f877dc4c285/scratchpad/downloads/v4-ftcscout/`
+  - `scratch/scripts/v4/verify_stats.py`
+  - `scratch/scripts/v4/verify_teams.py`
+  - Data: `scratch/downloads/v4-ftcscout/`
 - **FTC Events pages.** 2026/team/12303, the MD league page, 2026/USMIMDLT and 2025/USMIMDLT, all fetched live.
 - **FiM events page.** Local copy.
 - **Vendor documents.** goBILDA assembly PDF and example code, the goBILDA resource-guide page (live), the REV build guide, REV docs (live), the AndyMark manual and code.

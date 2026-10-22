@@ -834,7 +834,7 @@ An owned FLOWER scores 2 pts per element in the volume; the bottom NECTAR bonus 
 
 ## Appendix A: Scripts and outputs
 
-All files are under `/private/tmp/claude-501/-Users-craigmartin-projects-ftc-12303/1db60cdd-00ce-4f71-b01b-0f877dc4c285/scratchpad/`. Run with `python3 -I`; standard library only.
+All files are under `scratch/`. Run with `python3 -I`; standard library only.
 
 | Script (`scripts/`) | Output (`r3out/`) | What it does |
 |---|---|---|

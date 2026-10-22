@@ -15,7 +15,7 @@ Prepared 2026-10-20 for the 12303 coach and the strategy agents that follow.
 **Evidence labels**
 - **[V] VERIFIED**: stated directly by a cited primary source (manual, FIRST guide or Q&A, manufacturer page).
 - **[P] PHOTO**: seen in a photo. Confidence is high (H), medium (M) or low (L), and the crop file is cited.
-- **[D] DERIVED**: my arithmetic. The script is `/private/tmp/claude-501/-Users-craigmartin-projects-ftc-12303/1db60cdd-00ce-4f71-b01b-0f877dc4c285/scratchpad/scripts/r7_calcs.py`.
+- **[D] DERIVED**: my arithmetic. The script is `scratch/scripts/r7_calcs.py`.
 - **[I] INFERENCE**: engineering judgment. Treat it as a hypothesis to test on the robot.
 - **[C] COMMUNITY**: forum or third-party data, mostly via R4. Not official.
 
@@ -93,7 +93,7 @@ A **turret-mounted single-flywheel shooter on a mecanum chassis with a full-widt
 
 ## 1. Evidence: photos and crops
 
-The originals were copied to `/private/tmp/claude-501/-Users-craigmartin-projects-ftc-12303/1db60cdd-00ce-4f71-b01b-0f877dc4c285/scratchpad/downloads/photos/`. Crops were made with `scripts/r7_crop.py` (python3 -I) and saved under `…/scratchpad/downloads/photos/crops/`.
+The originals were copied to `scratch/downloads/photos/`. Crops were made with `scripts/r7_crop.py` (python3 -I) and saved under `…/scratchpad/downloads/photos/crops/`.
 
 | Photo | View | Key crops |
 |---|---|---|
@@ -643,7 +643,7 @@ Whichever is chosen:
 - R5 hardware: `…/scratchpad/research/R5-hardware.md` (Limelight geometry, servo and motor tables, port map, recommended parts with prices)
 
 **Local tools**
-- Crop script: `/private/tmp/claude-501/-Users-craigmartin-projects-ftc-12303/1db60cdd-00ce-4f71-b01b-0f877dc4c285/scratchpad/scripts/r7_crop.py`
-- Calculations: `/private/tmp/claude-501/-Users-craigmartin-projects-ftc-12303/1db60cdd-00ce-4f71-b01b-0f877dc4c285/scratchpad/scripts/r7_calcs.py`
+- Crop script: `scratch/scripts/r7_crop.py`
+- Calculations: `scratch/scripts/r7_calcs.py`
   - §1 intake speeds; §2 turret travel; §3 flywheel energy; §4 exit speeds; §5 compression; §6 CG; §7 storage length; §8 flywheel options; §9 FLOWER lob sensitivity.
-- Crops: `/private/tmp/claude-501/-Users-craigmartin-projects-ftc-12303/1db60cdd-00ce-4f71-b01b-0f877dc4c285/scratchpad/downloads/photos/crops/`
+- Crops: `scratch/downloads/photos/crops/`

@@ -3,7 +3,7 @@
 Research date: 2026-10-20. Scope: a precise field model for AUTO path planning and turret aiming.
 All lengths in inches, all angles in degrees. Every number has a source tag (see Section 15) and an uncertainty.
 
-Companion machine-readable data (same numbers): `/private/tmp/claude-501/-Users-craigmartin-projects-ftc-12303/1db60cdd-00ce-4f71-b01b-0f877dc4c285/scratchpad/research/R2-field-geometry-data.json`
+Companion machine-readable data (same numbers): `docs/research/R2-field-geometry-data.json`
 
 Legend for confidence: **[V]** verified in a primary source (manual, official CAD, official guide, SDK binary); **[D]** derived by me from primary data (geometry/maths, reproducible); **[E]** estimate / physics model / community observation, needs field testing.
 

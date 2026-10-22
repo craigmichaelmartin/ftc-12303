@@ -16,12 +16,13 @@ Control Hub. The Expansion Hub needs nothing: it talks to the Control Hub over t
 
 ### Once per laptop
 
-1. **Get access.** The repo is private: the coach adds your GitHub account (repo Settings > Collaborators).
+1. **Get access.** The repo is public, so anyone can clone it. To push changes, the coach adds your GitHub
+   account as a collaborator (repo Settings > Collaborators).
 2. **Install Android Studio** Narwhal 3 Feature Drop or newer (FTC SDK 12 needs it). It brings its own Java.
    On the first open, accept its prompts to install Android SDK parts.
 3. **Clone the repo.** `File > New > Project from Version Control`, URL
-   `https://github.com/craigmichaelmartin/ftc-12303.git`, sign in to GitHub when asked, then Clone (branch
-   `main`, built on FtcRobotController v12.0). Let Gradle sync finish: the first sync downloads the libraries,
+   `https://github.com/craigmichaelmartin/ftc-12303.git`, then Clone (branch `main`, built on FtcRobotController
+   v12.0). Sign in to GitHub in Android Studio if you will push changes. Let Gradle sync finish: the first sync downloads the libraries,
    needs internet and takes several minutes.
 4. **Check that it builds.** `Build > Make Project`. Laptop tests (no robot needed):
    `./gradlew :TeamCode:testDebugUnitTest` (section 11).

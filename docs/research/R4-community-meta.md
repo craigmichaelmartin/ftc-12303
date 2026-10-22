@@ -13,7 +13,7 @@ Prepared for FTC team 12303 (Shumate Sith, Rockwood MI) strategy work. Game reve
 | [SIM] | Simulator output or simulator assumption - NOT reality |
 | [INFERENCE] | My own reasoning from the above; treat as hypothesis |
 
-Local copies of everything downloaded are under `/private/tmp/claude-501/-Users-craigmartin-projects-ftc-12303/1db60cdd-00ce-4f71-b01b-0f877dc4c285/scratchpad/downloads/` (subfolders `eventfieldguide/`, `ftcscout/`, `gameqa/`, `teamupdates/`, `monashores/`, `chiefdelphi/`, `reddit/`, `youtube/`, `gobilda-starterbot/`, `rev-starterbot/`, `andymark-starterbot/`). Analysis scripts: `.../scratchpad/scripts/analyze_ftcscout.py`, `analyze_ftcscout2.py`, `parse_qa.py`; raw analysis output `.../scratchpad/scripts/ftcscout_analysis_out.txt` and `ftcscout_analysis2_noKZ.txt`.
+Local copies of everything downloaded are under `scratch/downloads/` (subfolders `eventfieldguide/`, `ftcscout/`, `gameqa/`, `teamupdates/`, `monashores/`, `chiefdelphi/`, `reddit/`, `youtube/`, `gobilda-starterbot/`, `rev-starterbot/`, `andymark-starterbot/`). Analysis scripts: `.../scratchpad/scripts/analyze_ftcscout.py`, `analyze_ftcscout2.py`, `parse_qa.py`; raw analysis output `.../scratchpad/scripts/ftcscout_analysis_out.txt` and `ftcscout_analysis2_noKZ.txt`.
 
 ---
 

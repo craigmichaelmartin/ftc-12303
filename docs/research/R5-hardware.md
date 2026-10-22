@@ -4,7 +4,7 @@ Prepared 2026-10-20 for the 12303 coach. Scope: SWYFT Drive V2, Limelight 3A, go
 
 **Labels used in this report**
 - **VERIFIED**: stated directly by the cited source (manual page, manufacturer page or SDK release notes).
-- **DERIVED**: my arithmetic from cited inputs. The script is at `/private/tmp/claude-501/-Users-craigmartin-projects-ftc-12303/1db60cdd-00ce-4f71-b01b-0f877dc4c285/scratchpad/scripts/hw_calcs.py` and `launch2.py`.
+- **DERIVED**: my arithmetic from cited inputs. The script is at `scratch/scripts/hw_calcs.py` and `launch2.py`.
 - **ESTIMATE / INFERENCE**: engineering judgment. Treat these as hypotheses to test on the robot.
 - **COMMUNITY**: forum or third-party claims that I could not confirm.
 
@@ -738,4 +738,4 @@ DigitalChannel yellowAtMouth = hardwareMap.digitalChannel.get("crf0_pin0");
 - [S58] REV Digital LED Indicator: https://www.revrobotics.com/rev-31-2010/ , https://docs.revrobotics.com/rev-crossover-products/indicators/digital-led/specs
 - [S59] SDK 12.0 Javadoc, Gamepad (rumble/LED): https://javadoc.io/static/org.firstinspires.ftc/RobotCore/12.0.0/com/qualcomm/robotcore/hardware/Gamepad.html
 - [S60] REV Resistive Grounding Strap: https://www.revrobotics.com/rev-31-1269/
-- [S-calc] Local calculation scripts: `/private/tmp/claude-501/-Users-craigmartin-projects-ftc-12303/1db60cdd-00ce-4f71-b01b-0f877dc4c285/scratchpad/scripts/hw_calcs.py`, `/private/tmp/claude-501/-Users-craigmartin-projects-ftc-12303/1db60cdd-00ce-4f71-b01b-0f877dc4c285/scratchpad/scripts/launch2.py`
+- [S-calc] Local calculation scripts: `scratch/scripts/hw_calcs.py`, `scratch/scripts/launch2.py`
