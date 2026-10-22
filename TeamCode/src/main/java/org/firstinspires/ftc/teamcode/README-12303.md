@@ -11,11 +11,14 @@ servo turret on a ring gear, 72 mm flywheel on a goBILDA 5203 6000 rpm motor, se
 
 ## 1. Setup (once)
 
-1. Android Studio **Narwhal 3 Feature Drop or newer**. Open this repo (FtcRobotController v12.0, branch
-   `12303-biobuzz`) and let Gradle sync.
+1. Android Studio **Narwhal 3 Feature Drop or newer**. Clone the team repo with `File > New > Project from
+   Version Control`, URL `https://github.com/craigmichaelmartin/ftc-12303.git` (private: the coach adds your
+   GitHub account; branch `main`, built on FtcRobotController v12.0), and let Gradle sync (the first sync
+   downloads the libraries and needs internet).
 2. Build: `Build > Make Project`. From a terminal: `./gradlew :TeamCode:assembleDebug`.
 3. Laptop tests (no robot needed): `./gradlew :TeamCode:testDebugUnitTest` (section 11).
 4. Deploy to the Control Hub with the green Run button (USB-C cable at events - never Wi-Fi tools there).
+   The Driver Station app must be the same version as this code (12.0): update it with the REV Hardware Client.
 5. Make a Robot Configuration on the Driver Station with the names in section 2 (names are
    case-sensitive). Any missing device is skipped with a `WARN:` line in INIT telemetry - read those lines.
 6. Libraries (in `build.dependencies.gradle`): FTC SDK 12.0.0, **Pedro Pathing 3** `com.pedropathing:revhub:3.0.1`
