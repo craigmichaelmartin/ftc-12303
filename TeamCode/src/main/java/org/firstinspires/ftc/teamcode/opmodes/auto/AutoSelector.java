@@ -3,14 +3,10 @@ package org.firstinspires.ftc.teamcode.opmodes.auto;
 import com.qualcomm.robotcore.hardware.Gamepad;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
-import org.firstinspires.ftc.teamcode.config.FieldConstants;
 import org.firstinspires.ftc.teamcode.config.FieldConstants.ParkSlot;
 import org.firstinspires.ftc.teamcode.config.FieldConstants.StartSpot;
-import org.firstinspires.ftc.teamcode.config.RobotConfig;
 import org.firstinspires.ftc.teamcode.pedro.Constants;
-import org.firstinspires.ftc.teamcode.subsystems.Turret;
 import org.firstinspires.ftc.teamcode.util.Alliance;
-import org.firstinspires.ftc.teamcode.util.HiveState;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -138,23 +134,22 @@ public class AutoSelector {
         return routine.canStartFrom(start);
     }
 
+    /**
+     * The CHECK line for a start this routine is not built for (the robot will not move), naming the starts
+     * to use; null when the combination is valid.
+     */
+    public static String invalidStartWarning(AutoRoutineType routine, StartSpot start) {
+        if (routine.canStartFrom(start)) return null;
+        return AutoRoutine.invalidText(routine, start)
+                + (routine.shootsStartCellFirst() ? " (use S1-S4)" : routine == AutoRoutineType.A3_ROLE2 ? " (use S6)" : "");
+    }
+
     /** Combinations that are probably a mistake (shown as "CHECK:" lines in INIT). */
     public List<String> sanityWarnings() {
         List<String> w = new ArrayList<>();
         boolean red = alliance == Alliance.RED;
-        if (!validCombination()) {
-            w.add(AutoRoutine.invalidText(routine, start)
-                    + (routine.shootsStartCellFirst() ? " (use S1-S4)" : routine == AutoRoutineType.A3_ROLE2 ? " (use S6)" : ""));
-        }
-        if (routine == AutoRoutineType.A3_ROLE2 && validCombination() && !RobotConfig.TURRET_PINNED) {
-            Turret.AimSolution s = Turret.solve(FieldConstants.aimPoint(alliance, HiveState.B),
-                    FieldConstants.startPose(alliance, start), 0.0, 0.0);
-            if (!s.reachable) {
-                w.add(String.format(java.util.Locale.US,
-                        "A3 role 2 cannot shoot from %s: the second cell is %.0f deg off the turret centre (limits %+.0f/%+.0f). Use S6, or skip A3",
-                        start, s.desiredOffsetDeg, RobotConfig.TURRET_MIN_DEG, RobotConfig.TURRET_MAX_DEG));
-            }
-        }
+        String invalid = invalidStartWarning(routine, start);
+        if (invalid != null) w.add(invalid);
         if (routine.fixedParkSlot() == null && park == ParkSlot.INNER && (start == StartSpot.S5 || start == StartSpot.S7)) {
             w.add("Park INNER from " + start + " crosses the CORNER slot: use CORNER unless the partner parks after us");
         }

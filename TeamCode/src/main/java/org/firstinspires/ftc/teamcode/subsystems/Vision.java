@@ -24,15 +24,19 @@ import java.util.List;
 /**
  * Limelight 3A wrapper for BIOBUZZ AprilTags.
  *
+ * MOUNT: fixed to the chassis, looking out of the robot's BACK (CAMERA_YAW_OFFSET_DEG = 180), the same way
+ * as the shooter, pitched up ~35-40 deg. So while the robot aims (back toward the up cell) the camera sees
+ * that cell's tags. Its position on the robot is CAMERA_FORWARD_IN / CAMERA_LEFT_IN from the centre.
+ *
  * WHAT WE USE THE TAGS FOR (and what not):
  *  - The tags are on the HIVE cells, which MOVE when the HIVE tips, so they are NOT used to find the
  *    robot's field position (SDK 12.0 README: "not suitable for absolute Field Localization").
  *    The Pinpoint does positioning.
  *  - Aim correction ("vision bias"): for each visible tag of the cell we are aiming at, compare the
  *    bearing the camera MEASURES with the bearing odometry PREDICTS (we know where each tag is from
- *    the CAD). The low-passed difference is added to the turret aim. This fixes small odometry,
- *    turret and field-tolerance errors. It is only updated while the turret is settled and the chassis
- *    is neither turning nor driving, so camera latency does not matter.
+ *    the CAD). The low-passed difference is added to the aim heading. This fixes small odometry
+ *    (heading) and field-tolerance errors. It is only updated while the chassis is neither turning nor
+ *    driving, so camera latency does not matter.
  *  - Which cell is up: up-cell tags are ~49.8 in above the floor, down-cell tags ~35.5 in (R2 7.3).
  *    We estimate each tag's height from the camera angle and give HiveTracker an opinion (A or B).
  *    After a TIP all our tags face the OTHER half of the field, so the camera confirms a TIP only from
@@ -129,11 +133,10 @@ public class Vision {
     // ---------------------------------------------------------------------------------------------
     /**
      * @param robotPose        robot pose from the Pinpoint (field frame)
-     * @param turretRobotDeg   where the turret points relative to the robot front (deg), for a turret camera
      * @param targetCell       the cell we are aiming at (its tags feed the aim bias)
-     * @param stableForBias    true when the turret is settled and the chassis is not turning or driving
+     * @param stableForBias    true when the chassis is not turning or driving
      */
-    public void update(Pose robotPose, double turretRobotDeg, HiveState targetCell, boolean stableForBias) {
+    public void update(Pose robotPose, HiveState targetCell, boolean stableForBias) {
         long now = System.nanoTime();
         double dt = (lastUpdateNs == 0) ? 0.0 : (now - lastUpdateNs) / 1e9;
         lastUpdateNs = now;
@@ -153,7 +156,7 @@ public class Vision {
         }
         lastLatencyMs = result.getCaptureLatency() + result.getTargetingLatency();
 
-        double[] cam = cameraPose(robotPose, turretRobotDeg);   // {x, y, yawDeg}
+        double[] cam = cameraPose(robotPose);   // {x, y, yawDeg}
         List<LLResultTypes.FiducialResult> fiducials = result.getFiducialResults();
         if (fiducials == null) fiducials = Collections.emptyList();
         for (LLResultTypes.FiducialResult f : fiducials) {
@@ -178,22 +181,29 @@ public class Vision {
         return new double[]{fwd, left, up};
     }
 
-    /** Camera position and yaw on the field: {x, y, yawDeg}. */
-    public static double[] cameraPose(Pose robot, double turretRobotDeg) {
-        double headingDeg = Math.toDegrees(robot.heading());
-        double baseX = robot.x(), baseY = robot.y();
-        double yawDeg = headingDeg + RobotConfig.CAMERA_YAW_OFFSET_DEG;
-        if (RobotConfig.CAMERA_ON_TURRET) {
-            double[] axis = Turret.turretAxisOnField(robot);
-            baseX = axis[0];
-            baseY = axis[1];
-            yawDeg += turretRobotDeg;
-        }
-        double yaw = Math.toRadians(yawDeg);
+    /**
+     * Camera position and yaw on the field: {x, y, yawDeg}. The camera is fixed to the chassis at
+     * (CAMERA_FORWARD_IN, CAMERA_LEFT_IN) from the robot centre, looking CAMERA_YAW_OFFSET_DEG from the
+     * robot front (180 = out of the back).
+     */
+    public static double[] cameraPose(Pose robot) {
+        double h = robot.heading();
+        double fwd = RobotConfig.CAMERA_FORWARD_IN, left = RobotConfig.CAMERA_LEFT_IN;
         return new double[]{
-                baseX + RobotConfig.CAMERA_FORWARD_IN * Math.cos(yaw),
-                baseY + RobotConfig.CAMERA_FORWARD_IN * Math.sin(yaw),
-                yawDeg};
+                robot.x() + fwd * Math.cos(h) - left * Math.sin(h),
+                robot.y() + fwd * Math.sin(h) + left * Math.cos(h),
+                MathUtil.wrapDeg(Math.toDegrees(h) + RobotConfig.CAMERA_YAW_OFFSET_DEG)};
+    }
+
+    /**
+     * Measured minus predicted field bearing to a tag (deg, + = the tag is further counter-clockwise than
+     * odometry thinks). measured = camera yaw + the tag's azimuth in the camera (+ = left); predicted =
+     * bearing from the camera position to the tag's CAD position.
+     */
+    public static double bearingErrorDeg(double[] cam, double azimuthDeg, FieldPoint tag) {
+        double measured = cam[2] + azimuthDeg;
+        double predicted = MathUtil.bearingDeg(cam[0], cam[1], tag.x, tag.y);
+        return MathUtil.wrapDeg(measured - predicted);
     }
 
     private TagSighting makeSighting(LLResultTypes.FiducialResult f, double[] cam, HiveState targetCell) {
@@ -238,9 +248,7 @@ public class Vision {
         s.looksUp = s.heightIn > RobotConfig.TAG_UP_HEIGHT_THRESHOLD_IN;
 
         // Bearing check (only used for the cell we aim at, which should be up).
-        double measured = cam[2] + s.azimuthDeg;
-        double predicted = MathUtil.bearingDeg(cam[0], cam[1], tagUp.x, tagUp.y);
-        s.bearingErrorDeg = MathUtil.wrapDeg(measured - predicted);
+        s.bearingErrorDeg = bearingErrorDeg(cam, s.azimuthDeg, tagUp);
         return s;
     }
 
@@ -338,7 +346,7 @@ public class Vision {
         return evidence;
     }
 
-    /** Low-passed aim correction to add to the turret, degrees. */
+    /** Low-passed aim correction to add to the aim heading, degrees (+ = counter-clockwise). */
     public double aimBiasDeg() {
         return RobotConfig.VISION_BIAS_ENABLED ? aimBiasDeg : 0.0;
     }

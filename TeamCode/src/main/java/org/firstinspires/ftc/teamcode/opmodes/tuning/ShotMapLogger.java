@@ -19,11 +19,16 @@ import java.util.Map;
 import java.util.TreeMap;
 
 /**
- * SHOT MAP LOGGER - builds the distance -> RPM table (strategy brief testing plan, experiment 2:
- * 5 distances x 0/20/40 deg off-axis, 10 shots each, record made / bounce-out / miss).
+ * SHOT MAP LOGGER - builds the distance -> RPM table (07 testing plan, Exp 2b: 5 distances x 0/20/40 deg
+ * off-axis, 10 shots each, record made / bounce-out / miss; then Exp 2c, the bounce-out check, at the
+ * table settings).
  *
  * Setup: robot on RED, placed at a known spot (start it on S1, or drive there - the Pinpoint tracks it).
- * Auto-aim is ON: the turret points at the current target cell (Y flips between the two cells).
+ * Do Exp 2a first: measure SHOOTER_FORWARD_IN / SHOOTER_LEFT_IN (the distances are measured from where the
+ * ball leaves the shooter, with the robot turned onto its aim, so a row is right even if RB is pressed
+ * before the robot has turned), the fixed exit angle and k. Auto-aim is ON: a shot waits until the robot's
+ * back points at the current target cell (Y flips between the two cells) - hold RT to let the robot turn
+ * itself onto it.
  *
  *   A           flywheel on/off at the chosen RPM
  *   dpad up/dn  RPM +-50                  dpad left/right  distance override -+3 in (only without odometry)
@@ -32,6 +37,7 @@ import java.util.TreeMap;
  *   back        delete the last row from the screen table (the CSV keeps it and gets a
  *               DELETED_PREVIOUS marker row - skip marked rows when you analyse the file)
  *   Y           flip target cell (HIVE state)
+ *   RT (hold)   aim-assist: the robot turns until its back points at the target
  *   sticks      drive slowly (field-centric, red driver view) to the next test spot
  *
  * The table on screen groups rows by distance (3 in buckets) and RPM. The suggested SHOT_TABLE row per
@@ -94,7 +100,7 @@ public class ShotMapLogger extends LinearOpMode {
             if (y) robot.hive.operatorToggle();
             if (rb && pending == null) {      // score the last shot first
                 spinning = true;
-                robot.indexer.requestSingleShot();
+                robot.carrier.requestSingleShot();
                 pending = snapshot();
             }
             if (pending != null && (x || b || lb)) {
@@ -110,8 +116,9 @@ public class ShotMapLogger extends LinearOpMode {
 
             rpm = Math.max(0, Math.min(RobotConfig.FLYWHEEL_MAX_RPM, rpm));
             robot.setManualRpm(spinning ? rpm : 0.0);
+            double turn = gamepad1.right_trigger > 0.3 ? robot.aimAssistTurn() : -gamepad1.right_stick_x * 0.3;
             robot.drive.driveFieldCentric(-gamepad1.left_stick_y * 0.4, gamepad1.left_stick_x * 0.4,
-                    -gamepad1.right_stick_x * 0.3, Alliance.RED.driverForwardHeadingDeg());
+                    turn, Alliance.RED.driverForwardHeadingDeg());
             robot.update();
             show();
         }
@@ -146,10 +153,10 @@ public class ShotMapLogger extends LinearOpMode {
                 robot.drive.hasLocalizer() ? "(odometry)" : "(MANUAL - dpad L/R)",
                 FieldConstants.offAxisDeg(Alliance.RED, robot.targetCell(), robot.drive.pose().x(), robot.drive.pose().y())));
         telemetry.addLine(pending != null ? ">>> score the last shot: X made, B bounced out, LB missed (RB waits for this)"
-                : "RB = fire one | A = flywheel | back = delete last row (CSV marks it) | Y = flip target cell");
-        telemetry.addLine(String.format(Locale.US, "feed %s %s | balls %d | target cell %s | turret %+.1f %s",
-                robot.indexer.feedState(), robot.indexer.blockedBy(), robot.indexer.count(), robot.targetCell(),
-                robot.turret.currentOffsetDeg(), robot.aim().reachable ? "" : "(OUT OF RANGE: rotate robot)"));
+                : "RB = fire one | A = flywheel | back = delete last row (CSV marks it) | Y = flip target cell | RT = aim-assist");
+        telemetry.addLine(String.format(Locale.US, "feed %s %s | balls %d | target cell %s | heading err %+.1f (tol %.1f) %s",
+                robot.carrier.feedState(), robot.carrier.blockedBy(), robot.carrier.count(), robot.targetCell(),
+                robot.aim().headingErrorDeg, robot.aim().toleranceDeg, robot.aim().onTarget() ? "ON TARGET" : "(hold RT to aim)"));
         addSummary();
         telemetry.update();
     }

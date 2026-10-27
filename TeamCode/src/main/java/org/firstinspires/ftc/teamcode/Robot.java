@@ -8,12 +8,12 @@ import com.qualcomm.robotcore.hardware.VoltageSensor;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.config.FieldConstants;
 import org.firstinspires.ftc.teamcode.config.RobotConfig;
+import org.firstinspires.ftc.teamcode.subsystems.Aim;
+import org.firstinspires.ftc.teamcode.subsystems.Carrier;
 import org.firstinspires.ftc.teamcode.subsystems.Drivetrain;
 import org.firstinspires.ftc.teamcode.subsystems.HiveTracker;
-import org.firstinspires.ftc.teamcode.subsystems.Indexer;
 import org.firstinspires.ftc.teamcode.subsystems.Intake;
 import org.firstinspires.ftc.teamcode.subsystems.Shooter;
-import org.firstinspires.ftc.teamcode.subsystems.Turret;
 import org.firstinspires.ftc.teamcode.subsystems.Vision;
 import org.firstinspires.ftc.teamcode.util.Alliance;
 import org.firstinspires.ftc.teamcode.util.FieldPoint;
@@ -31,26 +31,29 @@ import java.util.Locale;
  *   1. clear the bulk cache on both hubs (MANUAL bulk caching: every motor encoder / digital input
  *      is read from the hubs in ONE message per hub per loop - SDK sample ConceptMotorBulkRead)
  *   2. drivetrain (reads the Pinpoint over I2C, drives the wheels)
- *   3. vision -> HIVE tracker (which cell is up?) -> turret aim + flywheel speed
- *   4. indexer (count, colour, feed) -> intake (obeys "full" and refuses NECTAR at the mouth)
+ *   3. vision -> HIVE tracker (which cell is up?) -> aim (heading + distance) -> flywheel speed
+ *   4. carrier (count, colour, feed) -> intake (obeys "full" and refuses NECTAR at the mouth)
  *
  * The OpMode sets what it WANTS (drive sticks, auto-aim on/off, fire, intake) BEFORE calling update().
  *
- * FIRING GATES (Indexer feeds a ball only when all are OK):
+ * AIMING: the shooter is fixed and shoots out of the robot's BACK, so the robot aims by turning
+ * (subsystems/Aim). TeleOp: the driver holds RB (aim-assist). AUTO: the shooting poses face the target
+ * and the robot turns itself onto the aim heading during a volley.
+ *
+ * FIRING GATES (the carrier feeds a ball only when all are OK):
  *   flywheel at speed, and - with AUTO-AIM on - the target cell's opening faces the robot (off-axis <=
- *   FIRE_MAX_OFF_AXIS_DEG), the turret is on target (or, with a pinned / missing turret, the CHASSIS
- *   points at the target within CHASSIS_AIM_TOLERANCE_DEG), the chassis is still, and no TIP pause.
+ *   FIRE_MAX_OFF_AXIS_DEG), the robot's heading is inside the aim tolerance (computed from the distance
+ *   and the opening's width), the chassis is still, and no TIP pause.
  *   MANUAL aim (auto-aim off) is a deliberate operator override: only the flywheel speed gates it.
  *
- * G403: building a Robot never moves anything. Actuators move only after arm() (or armForAutoInit()).
+ * G403 / G304.H: building a Robot never moves anything, and nothing moves before arm() (at START).
  */
 public class Robot {
     public final Drivetrain drive;
     public final Shooter shooter;
-    public final Turret turret;
     public final Vision vision;
     public final HiveTracker hive;
-    public final Indexer indexer;
+    public final Carrier carrier;
     public final Intake intake;
     /** Problems found while starting up (missing devices, ...). Show them in INIT telemetry. */
     public final List<String> warnings = new ArrayList<>();
@@ -62,8 +65,9 @@ public class Robot {
     private boolean autoAim = false;
     private boolean spinUp = false;
     private double manualRpm = 0.0;
+    private double aimTrimDeg = 0.0;
     private HiveState aimOverride = null;
-    private Turret.AimSolution aim = new Turret.AimSolution();
+    private Aim.Solution aim = new Aim.Solution();
 
     private double batteryVolts = 0.0;
     private long lastBatteryReadMs = 0;
@@ -86,12 +90,10 @@ public class Robot {
 
         drive = new Drivetrain(hw, warnings);
         shooter = new Shooter(hw, warnings);
-        turret = new Turret(hw, warnings);
         vision = new Vision(hw, alliance, warnings);
         hive = new HiveTracker(alliance);
-        indexer = new Indexer(hw, alliance, warnings);
+        carrier = new Carrier(hw, alliance, warnings);
         intake = new Intake(hw, warnings);
-        if (RobotConfig.TURRET_PINNED) warnings.add("TURRET_PINNED: turret held at centre, the chassis aims (driver RB aim-assist)");
     }
 
     /** Change alliance (AUTO selector / TeleOp INIT). Updates every subsystem that cares. */
@@ -99,7 +101,7 @@ public class Robot {
         this.alliance = alliance;
         vision.setAlliance(alliance);
         hive.setAlliance(alliance);
-        indexer.setAlliance(alliance);
+        carrier.setAlliance(alliance);
     }
 
     public Alliance alliance() {
@@ -108,26 +110,14 @@ public class Robot {
 
     /**
      * Allow every actuator to move. TeleOp: call right after START (never in INIT - G403).
-     * AUTO: call at START (AUTO INIT uses armForAutoInit()).
+     * AUTO: call at START (AUTO INIT moves nothing, so the robot is motionless after INIT - G304.H).
      */
     public void arm() {
         armed = true;
         drive.arm();
         shooter.arm();
-        turret.arm();
-        indexer.arm();
+        carrier.arm();
         intake.arm();
-    }
-
-    /**
-     * AUTO INIT only: positional servos may hold the starting configuration (R103) - turret centre, gate
-     * closed, hood - but the continuous-rotation intake and spinners, the wheels and the flywheel stay
-     * unpowered until START, so the robot is fully motionless after INIT (G304.H).
-     */
-    public void armForAutoInit() {
-        turret.arm();
-        shooter.armHoodOnly();
-        indexer.armGateOnly();
     }
 
     public boolean isArmed() {
@@ -137,9 +127,8 @@ public class Robot {
     // ---------------------------------------------------------------------------------------------
     // What the OpMode wants
     // ---------------------------------------------------------------------------------------------
-    /** Turret follows the up cell (fused odometry + vision aim). Off = manual aim. */
+    /** Auto-aim on: shots wait until the robot's back points at the up cell. Off = manual aim. */
     public void setAutoAim(boolean on) {
-        if (autoAim && !on) turret.center();
         autoAim = on;
     }
 
@@ -172,6 +161,18 @@ public class Robot {
     }
 
     /**
+     * Operator aim trim (deg, + = the robot turns counter-clockwise = the ball goes further left, seen from
+     * the shooter looking toward the cell).
+     */
+    public void addAimTrim(double deltaDeg) {
+        aimTrimDeg += deltaDeg;
+    }
+
+    public double aimTrimDeg() {
+        return aimTrimDeg;
+    }
+
+    /**
      * Aim at this cell no matter what the HIVE tracker says (null = follow the tracker).
      * AUTO A3 role 2 uses it to pre-aim at the second cell while waiting for the partner's TIP.
      */
@@ -195,22 +196,21 @@ public class Robot {
         drive.update();
         Pose pose = drive.pose();
 
-        // Which cell is up, and how far off is our aim? (bias only learned while things are still)
-        boolean stable = turret.isSettled() && Math.abs(drive.turnRateDegPerSec()) < 15.0
+        // Which cell is up, and how far off is our aim? (bias only learned while the chassis is still)
+        boolean stable = Math.abs(drive.turnRateDegPerSec()) < 15.0
                 && drive.speedInPerSec() < RobotConfig.FIRE_MAX_CHASSIS_SPEED_IN_PER_SEC;
-        vision.update(pose, turret.currentRobotFrameDeg(), targetCell(), stable);
+        vision.update(pose, targetCell(), stable);
         hive.update(vision);
         tipEvent = hive.consumeTipEvent();
         confirmEvent = hive.consumeConfirmEvent();
         if (tipEvent) {
-            indexer.pauseForTip();
+            carrier.pauseForTip();
             vision.resetBias();
         }
-        turret.setVisionBias(vision.aimBiasDeg());
 
-        // Aim + flywheel
+        // Aim (heading the robot needs + distance) and flywheel speed
         FieldPoint target = FieldConstants.aimPoint(alliance, targetCell());
-        aim = autoAim ? turret.aimAt(target, pose) : Turret.solve(target, pose, turret.trimDeg(), turret.visionBiasDeg());
+        aim = Aim.solve(target, pose, offAxisDeg(), aimTrimDeg, vision.aimBiasDeg());
         if (manualRpm > 0) {
             shooter.setTargetRpm(manualRpm);
         } else if (spinUp) {
@@ -219,18 +219,17 @@ public class Robot {
         } else {
             shooter.stop();
         }
-        turret.update();
         shooter.update();
 
         // Balls
-        indexer.update(shooter.atSpeed(), aimReady(), stillEnoughToFire(), hive.tipPauseActive(),
+        carrier.update(shooter.atSpeed(), aimReady(), stillEnoughToFire(), hive.tipPauseActive(),
                 shooter.consumeShotDip(), intake.isIntaking(), intake.isReversing());
-        fullEvent = indexer.consumeFullEvent();
-        shotEvent = indexer.consumeShotEvent();
-        unconfirmedEvent = indexer.consumeUnconfirmedEvent();
+        fullEvent = carrier.consumeFullEvent();
+        shotEvent = carrier.consumeShotEvent();
+        unconfirmedEvent = carrier.consumeUnconfirmedEvent();
         if (shotEvent) hive.onBallLaunched();
-        // Level-triggered refusal (G408): the roller keeps reversing while a refused ball is at the mouth.
-        intake.update(indexer.isFull(), indexer.refusedBallAtMouth());
+        // Level-triggered refusal (G408): the intake keeps reversing while a refused ball is at the mouth.
+        intake.update(carrier.isFull(), carrier.refusedBallAtMouth());
         rejectEvent = intake.consumeRejectStarted();
     }
 
@@ -258,14 +257,14 @@ public class Robot {
     // ---------------------------------------------------------------------------------------------
     // Status
     // ---------------------------------------------------------------------------------------------
-    /** Latest aim solution (distance, turret angle, reachable, chassis turn needed). */
-    public Turret.AimSolution aim() {
+    /** Latest aim solution (distance, aim heading, heading error, tolerance). */
+    public Aim.Solution aim() {
         return aim;
     }
 
-    /** True when the turret cannot aim (TURRET_PINNED, or no turret servo): the chassis must aim. */
-    public boolean chassisMustAim() {
-        return turret.chassisMustAim();
+    /** Driver aim-assist turn power (+ = counter-clockwise) for the latest aim; 0 without odometry. */
+    public double aimAssistTurn() {
+        return drive.hasLocalizer() ? Aim.assistTurn(aim) : 0.0;
     }
 
     /**
@@ -285,16 +284,12 @@ public class Robot {
 
     /**
      * Aim OK for a shot? Manual aim (auto-aim off): always - a deliberate override. Auto-aim: the target
-     * must face us, and the turret must be on a reachable target - or, with a pinned / missing turret,
-     * the chassis must point at it within CHASSIS_AIM_TOLERANCE_DEG (no odometry: cannot be checked).
+     * must face us and the robot's heading must be inside the aim tolerance (Aim.readyToFire). Without
+     * odometry the aim cannot be checked: only the flywheel gates the shot.
      */
     public boolean aimReady() {
-        if (!autoAim) return true;
-        if (targetFacesAway()) return false;
-        if (turret.chassisMustAim()) {
-            return !drive.hasLocalizer() || Math.abs(aim.chassisTurnDeg) <= RobotConfig.CHASSIS_AIM_TOLERANCE_DEG;
-        }
-        return turret.onTarget();
+        if (!autoAim || !drive.hasLocalizer()) return true;
+        return Aim.readyToFire(aim, offAxisDeg());
     }
 
     /** Auto-aim shots need a still chassis (stop to shoot); manual aim is gated on flywheel speed only. */
@@ -320,7 +315,7 @@ public class Robot {
         return fullEvent;
     }
 
-    /** The roller started reversing to refuse NECTAR this loop. */
+    /** The intake started reversing to refuse NECTAR this loop. */
     public boolean rejectEventThisLoop() {
         return rejectEvent;
     }
@@ -344,28 +339,29 @@ public class Robot {
 
     /** AUTO -> TeleOp hand-off (call every AUTO loop). */
     public void saveToPoseStorage() {
-        PoseStorage.save(drive.pose(), alliance, indexer.count(), hive.state());
+        PoseStorage.save(drive.pose(), alliance, carrier.count(), hive.state());
     }
 
     /** Standard status lines for any OpMode. */
     public void addTelemetry(Telemetry t) {
         Pose p = drive.pose();
         t.addLine(String.format(Locale.US, "BALLS %d/%d%s | mouth %s | slot4 %s | intake %s",
-                indexer.count(), RobotConfig.MAX_BALLS, indexer.isFull() ? " FULL" : "",
-                indexer.mouthBall(), indexer.slot4Occupied() ? "BALL" : "-", intake.state()));
+                carrier.count(), RobotConfig.MAX_BALLS, carrier.isFull() ? " FULL" : "",
+                carrier.hasMouthSensor() ? carrier.mouthBall().toString() : "NO SENSOR (count drops per feed)",
+                carrier.hasSlot4Sensor() ? (carrier.slot4Occupied() ? "BALL" : "-") : "no sensor", intake.state()));
         t.addLine(String.format(Locale.US, "FLYWHEEL %.0f / %.0f rpm %s (trim %+.0f)",
                 shooter.measuredRpm(), shooter.targetRpm(), shooter.state(), shooter.trimRpm()));
-        String aimMode = autoAim ? (turret.chassisMustAim() ? "CHASSIS AIM" : "auto") : "MANUAL AIM";
-        t.addLine(String.format(Locale.US, "AIM %s: cell %s, %s %.1f in | turret %+.1f (cmd %+.1f) %s | bias %+.1f | %s",
-                aimMode, targetCell(), hive.zoneText(), aim.distanceIn, turret.currentOffsetDeg(), turret.commandOffsetDeg(),
-                turret.state(), turret.visionBiasDeg(),
-                aim.reachable ? "reachable" : String.format(Locale.US, "TURN CHASSIS %+.0f deg", aim.chassisTurnDeg)));
+        String aimMode = autoAim ? "auto" : "MANUAL AIM";
+        t.addLine(String.format(Locale.US, "AIM %s: cell %s, %s %.1f in | heading err %+.1f (tol %.1f) %s | trim %+.1f | bias %+.1f",
+                aimMode, targetCell(), hive.zoneText(), aim.distanceIn, aim.headingErrorDeg, aim.toleranceDeg,
+                aim.onTarget() ? "ON TARGET" : String.format(Locale.US, "TURN %+.0f deg (driver RB)", aim.headingErrorDeg),
+                aimTrimDeg, vision.aimBiasDeg()));
         t.addLine(String.format(Locale.US, "HIVE state %s (by %s) | our balls at this cell %d | vision: %d tags, says %s",
                 hive.state(), hive.lastSource(), hive.ballsLaunchedAtCurrentCell(), vision.ownTagsSeen(),
                 vision.evidence() == null ? "-" : vision.evidence().toString()));
-        t.addLine(String.format(Locale.US, "FEED %s%s | shots confirmed %d, unconfirmed %d",
-                indexer.feedState(), indexer.blockedBy().isEmpty() ? "" : " (waiting: " + indexer.blockedBy() + ")",
-                indexer.confirmedShots(), indexer.unconfirmedShots()));
+        t.addLine(String.format(Locale.US, "FEED %s%s | carrier %+.2f | shots confirmed %d, unconfirmed %d",
+                carrier.feedState(), carrier.blockedBy().isEmpty() ? "" : " (waiting: " + carrier.blockedBy() + ")",
+                carrier.carrierPower(), carrier.confirmedShots(), carrier.unconfirmedShots()));
         t.addLine(String.format(Locale.US, "POSE (%.1f, %.1f) %.0f deg %s | off-axis %.0f deg | loop %.0f ms | %.1f V",
                 p.x(), p.y(), Math.toDegrees(p.heading()), drive.hasLocalizer() ? "" : "(NO ODOMETRY)",
                 offAxisDeg(), loopMs, batteryVolts));
@@ -380,10 +376,19 @@ public class Robot {
             t.addLine(String.format(Locale.US, "!! distance %.0f in is outside the reliable shot band (%.0f-%.0f in)",
                     aim.distanceIn, RobotConfig.SHOT_MIN_DISTANCE_IN, RobotConfig.SHOT_MAX_DISTANCE_IN));
         }
-        if (turret.encoderRezeroCount() > 0) {
-            t.addLine(String.format(Locale.US, "!! turret encoder re-zeroed %d x (last %+.1f deg): skipped teeth or wrong TURRET_ENCODER_TICKS_PER_DEG",
-                    turret.encoderRezeroCount(), turret.lastRezeroErrorDeg()));
-        }
+    }
+
+    /**
+     * Loud INIT lines when there is no mouth sensor (nothing when it is fitted): the robot then cannot
+     * count balls coming in or refuse NECTAR, so the drivers must (G407 / G408). TeleOp shows them at the
+     * top; AUTO right under its selection menu (the alliance banner stays the top line).
+     */
+    public void addBallSensorWarning(Telemetry t) {
+        if (carrier.hasMouthSensor()) return;
+        t.addLine("!!!! NO MOUTH SENSOR ('" + RobotConfig.MOUTH_COLOR + "'): balls coming in are NOT counted and NECTAR is NOT refused (G407/G408) !!!!");
+        t.addLine("!! The count starts at the preloads and drops by one per feed; an RB volley feeds " + RobotConfig.MAX_BALLS + " times");
+        t.addLine("!! Drivers: stop intaking at 4 balls BY EYE and steer around NECTAR. Operator back / L-stick = count -1 / +1;"
+                + " an eject (LB) does not lower the count: press back once per ball ejected");
     }
 
     /** Startup warnings, one line each. */

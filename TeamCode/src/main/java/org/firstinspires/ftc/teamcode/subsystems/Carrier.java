@@ -1,12 +1,12 @@
 package org.firstinspires.ftc.teamcode.subsystems;
 
-import com.qualcomm.robotcore.hardware.CRServo;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.NormalizedColorSensor;
 import com.qualcomm.robotcore.hardware.NormalizedRGBA;
-import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.SwitchableLight;
 
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
@@ -19,8 +19,9 @@ import org.firstinspires.ftc.teamcode.util.OptionalHardware;
 import java.util.List;
 
 /**
- * Ball handling inside the robot: the ball COUNT, the colour sensors, the "internal spinners"
- * (indexer CR servo) and the feeder GATE that releases one ball at a time into the flywheel.
+ * Ball handling inside the robot: the ball COUNT, the optional ball sensors and the CARRIER wheel above
+ * the tunnel. The carrier does two jobs: stopped, it holds the balls (a gate); spinning, it pushes the
+ * ball under it into the shooting wheel (it feeds). It may be a DC motor or a continuous-rotation servo.
  *
  * WHY THE COUNT MATTERS (possession discipline is a design requirement):
  *  - G407: at most 4 scoring elements CONTROLLED at once. No "momentary" exception (Q&A 3), and a
@@ -29,38 +30,51 @@ import java.util.List;
  * So: the count starts at the INIT Preloads value (4 in a match), the intake is not allowed to pull when
  * we are full, and a REFUSED ball at the mouth makes the intake spin backward for as long as it is there.
  * Refused = the opponent's NECTAR, and our own NECTAR too while RobotConfig.ACCEPT_OWN_NECTAR = false
- * (phase 1: the hood is gapped for 2.8 in POLLEN). The slot-4 sensor is the safety net: if it sees a
- * ball, we ARE full, whatever the count says.
+ * (POLLEN only until NECTAR passes its tests). The slot-4 sensor is the safety net: if it sees a ball, we
+ * ARE full, whatever the count says.
+ *
+ * EVERY BALL SENSOR IS OPTIONAL. Without the mouth sensor the robot cannot count balls coming in or refuse
+ * NECTAR: the count starts at the Preloads value and drops by one per feed, the operator fixes it with
+ * +1 / -1, and a plain volley feeds at least MAX_BALLS times (the code cannot know how many balls came
+ * in; empty feeds are harmless). The drivers stop intaking at 4 balls by eye and steer around NECTAR.
+ * INIT shows a loud warning (Robot.addBallSensorWarning).
  *
  * COUNTING AT THE MOUTH: a ball is counted when it LEAVES the mouth sensor's view after being pulled in
  * (and has been gone BALL_COUNT_DEBOUNCE_MS) - so the 4th ball is fully drawn in before "full" stops and
- * reverses the roller. A ball that leaves while the roller pushes outward, or a refused ball, is not counted.
+ * reverses the intake. A ball that leaves while the intake pushes outward, or a refused ball, is not counted.
  * LAST FREE SLOT (3 counted): a 5th ball right behind ball 4 must not follow it in (G407), and one sensor
  * cannot always see the gap between two touching balls. So with 3 counted, anything back in view before the
  * debounce has ended counts ball 4 at once (the full pulse then pushes the newcomer away), and so does a
- * ball still in view MOUTH_ONE_BALL_MAX_MS after the roller started pulling it (two balls touching). The
+ * ball still in view MOUTH_ONE_BALL_MAX_MS after the intake started pulling it (two balls touching). The
  * slot-4 sensor is read every MOUTH_SENSOR_PERIOD_MS while ball 4 comes in.
  *
  * FEED SEQUENCE (one ball):
- *   WAIT_FOR_READY  - stage the next ball against the closed gate; wait until the flywheel is at speed,
- *                     the aim is ready, the chassis is still, and no TIP pause is active.
- *   GATE_OPEN       - open the gate for FEEDER_OPEN_MS while the spinners push one ball through.
- *   WAIT_FOR_SHOT   - gate closed; wait for the break-beam or a flywheel speed dip to confirm the ball
- *                     left (or SHOT_CONFIRM_TIMEOUT_MS: an "unconfirmed feed" - counted as fired when
- *                     COUNT_UNCONFIRMED_SHOTS, reported once for the operator rumble). Count - 1. Then the
- *                     next ball (volley) or IDLE. There is no automatic jam retry.
+ *   WAIT_FOR_READY - carrier stopped (holding the balls); wait until the flywheel is at speed, the aim is
+ *                    good, the chassis is still, no TIP pause, and MIN_SHOT_INTERVAL_MS since the last ball.
+ *   FEEDING        - carrier at CARRIER_FEED_POWER until the shot is confirmed (flywheel dip, or the feed
+ *                    beam if fitted) - then it stops at once - or CARRIER_FEED_MS at most, then it stops.
+ *                    (A TIMED push - Tune: Flywheel RB - always runs exactly CARRIER_FEED_MS.)
+ *   CONFIRMING     - carrier stopped; a push that ended without a confirmation waits up to
+ *                    SHOT_CONFIRM_TIMEOUT_MS for a late dip / beam break. None = an "unconfirmed feed"
+ *                    (counted as fired when COUNT_UNCONFIRMED_SHOTS, reported once for the operator rumble).
+ *   Count - 1. Then the next ball of a volley goes back to WAIT_FOR_READY (so it waits for the flywheel to
+ *   be back at speed and the aim to be good), or IDLE. There is no automatic jam retry.
+ * While the intake pulls balls in (and nothing is being fired) the carrier runs at CARRIER_INTAKE_POWER
+ * (0 = stopped). Eject (operator LB) runs it backward, together with the intake.
+ *
+ * G403 / G304.H: no carrier power before arm() (TeleOp START; AUTO START).
  */
-public class Indexer {
+public class Carrier {
 
     public enum FeedState {
-        /** Gate closed, nothing to fire. */
+        /** Carrier stopped, nothing to fire. */
         IDLE,
-        /** A shot is requested; staging the ball and waiting for shooter / aim / chassis. */
+        /** A shot is requested; carrier stopped, waiting for shooter / aim / chassis. */
         WAIT_FOR_READY,
-        /** Gate open: one ball is going into the flywheel. */
-        GATE_OPEN,
-        /** Gate closed again, waiting to confirm the ball left. */
-        WAIT_FOR_SHOT,
+        /** Carrier spinning: one ball is going into the shooting wheel. */
+        FEEDING,
+        /** Carrier stopped again, waiting (briefly) to confirm the ball left. */
+        CONFIRMING,
         /** The target cell just changed: no launching for a moment while we retarget. */
         TIP_PAUSE,
         /** Operator is emptying the robot backward through the intake. */
@@ -68,9 +82,7 @@ public class Indexer {
     }
 
     // hardware (any of these may be null)
-    private final CRServo spinner;
-    private final CRServo spinner2;
-    private final Servo feeder;
+    private final DcMotorSimple carrier;
     private final NormalizedColorSensor mouthColor;
     private final DistanceSensor mouthDistance;
     private final NormalizedColorSensor slot4Color;
@@ -79,7 +91,6 @@ public class Indexer {
 
     private Alliance alliance;
     private boolean armed = false;
-    private boolean gateArmed = false;
     private int count = 0;
 
     // sensors
@@ -100,11 +111,11 @@ public class Indexer {
     /** Already counted while still in view (last free slot: two balls touching). */
     private boolean presenceCounted = false;
     private long presenceStartMs = 0, presenceLastSeenMs = 0;
-    /** How long the roller has pulled this presence in so far (sum over mouth reads while intaking). */
+    /** How long the intake has pulled this presence in so far (sum over mouth reads while intaking). */
     private long presencePulledMs = 0;
     /** How long the last ball was in the mouth sensor's view, and the longest since reset (SensorCheck). */
     private long lastPresenceMs = -1, longestPresenceMs = -1;
-    /** The roller was pushing outward when the ball disappeared from view (it went OUT, not in). */
+    /** The intake was pushing outward when the ball disappeared from view (it went OUT, not in). */
     private boolean leftWhileReversing = false;
 
     // feeding
@@ -114,10 +125,13 @@ public class Indexer {
     private boolean volleyRequested = false;
     private boolean singleRequested = false;
     private boolean ejectRequested = false;
+    /** The requested single ball is a TIMED push (Tune: Flywheel RB): it ignores the shot confirmation. */
+    private boolean timedPushRequested = false;
+    /** The push running now ignores the shot confirmation and lasts exactly CARRIER_FEED_MS. */
+    private boolean timedFeed = false;
     private boolean shotSeenThisFeed = false;
-    private boolean stagingNeeded = true;
-    private int volleyMinCycles = 0;
-    private int volleyCycles = 0;
+    private int volleyMinFeeds = 0;
+    private int volleyFeeds = 0;
     private int consecutiveUnconfirmed = 0;
     private int confirmedShots = 0, unconfirmedShots = 0;
     private String blockedBy = "";
@@ -128,28 +142,34 @@ public class Indexer {
     private boolean unconfirmedEvent = false;
     private boolean wasFull = false;
 
-    // outputs (only written when they change)
-    private double lastSpinnerPower = Double.NaN;
-    private double lastFeederPosition = Double.NaN;
-    private long lastIntakeInMs = -100000;
+    // output (only written when it changes)
+    private double lastCarrierPower = Double.NaN;
 
-    public Indexer(HardwareMap hw, Alliance alliance, List<String> warnings) {
+    public Carrier(HardwareMap hw, Alliance alliance, List<String> warnings) {
         this.alliance = alliance;
-        spinner = OptionalHardware.get(hw, CRServo.class, RobotConfig.INDEXER, warnings);
-        spinner2 = OptionalHardware.getQuiet(hw, CRServo.class, RobotConfig.INDEXER_2);
-        feeder = OptionalHardware.get(hw, Servo.class, RobotConfig.FEEDER, warnings);
-        mouthColor = OptionalHardware.get(hw, NormalizedColorSensor.class, RobotConfig.MOUTH_COLOR, warnings);
+        carrier = OptionalHardware.get(hw, DcMotorSimple.class, RobotConfig.CARRIER, warnings);
+        mouthColor = OptionalHardware.getQuiet(hw, NormalizedColorSensor.class, RobotConfig.MOUTH_COLOR);
         mouthDistance = OptionalHardware.getQuiet(hw, DistanceSensor.class, RobotConfig.MOUTH_COLOR);
-        slot4Color = OptionalHardware.get(hw, NormalizedColorSensor.class, RobotConfig.SLOT4_COLOR, warnings);
+        slot4Color = OptionalHardware.getQuiet(hw, NormalizedColorSensor.class, RobotConfig.SLOT4_COLOR);
         slot4Distance = OptionalHardware.getQuiet(hw, DistanceSensor.class, RobotConfig.SLOT4_COLOR);
         feedBeam = OptionalHardware.getQuiet(hw, DigitalChannel.class, RobotConfig.FEED_BEAM);
 
-        if (spinner != null) spinner.setDirection(RobotConfig.INDEXER_DIRECTION);
-        if (spinner2 != null) spinner2.setDirection(RobotConfig.INDEXER_DIRECTION);
+        if (carrier != null) {
+            carrier.setDirection(RobotConfig.CARRIER_DIRECTION);
+            if (carrier instanceof DcMotor) {
+                // A DC-motor carrier: plain power control, and BRAKE so a stopped carrier holds the balls.
+                // Nothing moves here (G403).
+                ((DcMotor) carrier).setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+                ((DcMotor) carrier).setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+            }
+        }
         if (feedBeam != null) feedBeam.setMode(DigitalChannel.Mode.INPUT);
         setupColorSensor(mouthColor);
         setupColorSensor(slot4Color);
-        if (mouthColor == null) warnings.add("no mouth colour sensor: intake cannot count balls or refuse NECTAR (G407/G408)!");
+        if (mouthColor == null) {
+            warnings.add("no mouth sensor '" + RobotConfig.MOUTH_COLOR
+                    + "': balls coming in are not counted and NECTAR is not refused (G407/G408)");
+        }
     }
 
     private static void setupColorSensor(NormalizedColorSensor sensor) {
@@ -162,19 +182,9 @@ public class Indexer {
         this.alliance = alliance;
     }
 
-    /** First actuator commands: close the gate and allow the spinners (TeleOp START / AUTO START - G403). */
+    /** Allow the carrier to move (TeleOp START / AUTO START - G403, G304.H). */
     public void arm() {
         armed = true;
-        armGateOnly();
-    }
-
-    /**
-     * AUTO INIT: hold the feeder gate closed (a positional servo may hold the starting configuration,
-     * R103) but leave the continuous-rotation spinners unpowered until START (G304.H).
-     */
-    public void armGateOnly() {
-        gateArmed = true;
-        writeFeeder(RobotConfig.FEEDER_CLOSED_POSITION);
     }
 
     // ---------------------------------------------------------------------------------------------
@@ -200,7 +210,7 @@ public class Indexer {
         return count >= RobotConfig.MAX_BALLS || slot4Occupied;
     }
 
-    /** True if this ball colour must not be taken in (G408; own NECTAR too in phase 1). */
+    /** True if this ball colour must not be taken in (G408; own NECTAR too until NECTAR is accepted). */
     public boolean isRefusedColor(BallColor c) {
         return alliance.isOpponentColor(c) || (!RobotConfig.ACCEPT_OWN_NECTAR && alliance.isOwnColor(c));
     }
@@ -213,21 +223,24 @@ public class Indexer {
     // ---------------------------------------------------------------------------------------------
     // Requests
     // ---------------------------------------------------------------------------------------------
-    /** Fire every ball we have, one at a time, each only when everything is ready. */
+    /**
+     * Fire every ball we have, one at a time, each only when everything is ready. Without a mouth sensor
+     * (balls coming in are not counted) it feeds at least MAX_BALLS times.
+     */
     public void requestVolley() {
-        requestVolley(0);
+        requestVolley(hasMouthSensor() ? 0 : RobotConfig.MAX_BALLS);
     }
 
     /**
-     * Fire every ball we have, and cycle the gate at least minGateCycles times even if the count says
-     * fewer (AUTO after the garden sweep, where a ball may have missed the mouth sensor). Empty cycles are
-     * harmless; with a feed beam fitted the volley stops after 2 unconfirmed (empty) cycles in a row.
+     * Fire every ball we have, and feed at least minFeeds times even if the count says fewer (AUTO after
+     * the garden sweep, where a ball may have missed the mouth sensor). Empty feeds are harmless; with a
+     * feed beam fitted the volley stops after 2 unconfirmed (empty) feeds in a row.
      */
-    public void requestVolley(int minGateCycles) {
+    public void requestVolley(int minFeeds) {
         if (feedState == FeedState.EJECTING) return;
         volleyRequested = true;
-        volleyMinCycles = Math.max(0, minGateCycles);
-        volleyCycles = 0;
+        volleyMinFeeds = Math.max(0, minFeeds);
+        volleyFeeds = 0;
         consecutiveUnconfirmed = 0;
     }
 
@@ -235,26 +248,41 @@ public class Indexer {
     public void requestSingleShot() {
         if (feedState == FeedState.EJECTING) return;
         singleRequested = true;
+        timedPushRequested = false;
+    }
+
+    /**
+     * Tune: Flywheel only (07 Exp 0b): one TIMED push. Like requestSingleShot() (it waits for the same
+     * gates), but the carrier runs for exactly CARRIER_FEED_MS even when a flywheel dip or the beam confirms
+     * the shot early - the push the carrier makes when nothing confirms a shot - so CARRIER_FEED_MS can be
+     * tuned: long enough for one ball, too short for two. A dip or beam break during the push still counts
+     * the ball as confirmed.
+     */
+    public void requestTimedPush() {
+        if (feedState == FeedState.EJECTING) return;
+        singleRequested = true;
+        timedPushRequested = true;
     }
 
     /** Stop firing after the current ball. */
     public void cancelFiring() {
         volleyRequested = false;
         singleRequested = false;
-        volleyMinCycles = 0;
+        timedPushRequested = false;
+        volleyMinFeeds = 0;
     }
 
     public boolean isFiring() {
-        return volleyRequested || singleRequested || feedState == FeedState.GATE_OPEN
-                || feedState == FeedState.WAIT_FOR_SHOT;
+        return volleyRequested || singleRequested || feedState == FeedState.FEEDING
+                || feedState == FeedState.CONFIRMING;
     }
 
-    /** Hold to run the spinners backward (empty the robot through the intake). */
+    /** Hold to run the carrier backward (empty the robot through the intake). */
     public void setEjecting(boolean eject) {
         ejectRequested = eject;
     }
 
-    /** The target cell changed: stop launching right now (the ball already in the gate still goes). */
+    /** The target cell changed: stop launching right now (a ball already being pushed still goes). */
     public void pauseForTip() {
         cancelFiring();
         if (feedState == FeedState.WAIT_FOR_READY || feedState == FeedState.IDLE) go(FeedState.TIP_PAUSE);
@@ -265,17 +293,16 @@ public class Indexer {
     // ---------------------------------------------------------------------------------------------
     /**
      * @param shooterReady   flywheel at speed
-     * @param aimReady       aim OK (turret on target / chassis aimed; always true with manual aim)
+     * @param aimReady       aim OK (heading inside the aim tolerance; always true with manual aim)
      * @param chassisStill   robot not moving / turning (stop to shoot; always true with manual aim)
      * @param tipPause       HiveTracker says the target cell just changed
      * @param shotDip        flywheel reported a speed dip this loop
-     * @param intakeIn       intake roller is pulling balls in
-     * @param intakeOut      intake roller is pushing outward (eject, refusal, full pulse)
+     * @param intakeIn       intake wheel is pulling balls in
+     * @param intakeOut      intake wheel is pushing outward (eject, refusal, full pulse)
      */
     public void update(boolean shooterReady, boolean aimReady, boolean chassisStill, boolean tipPause,
                        boolean shotDip, boolean intakeIn, boolean intakeOut) {
         long now = Clock.nowMs();
-        if (intakeIn) lastIntakeInMs = now;
         if (intakeOut) lastIntakeOutMs = now;
         readMouth(now, intakeIn);
         readSlot4(now, intakeIn);
@@ -287,24 +314,21 @@ public class Indexer {
         wasFull = full;
 
         runFeedStateMachine(now, shooterReady, aimReady, chassisStill, tipPause);
-        if (armed) writeOutputs(now, intakeIn);
-        else if (gateArmed) writeFeeder(RobotConfig.FEEDER_CLOSED_POSITION);
-    }
-
-    /** Older signature (no outward-roller information). */
-    public void update(boolean shooterReady, boolean aimReady, boolean chassisStill, boolean tipPause,
-                       boolean shotDip, boolean intakeIn) {
-        update(shooterReady, aimReady, chassisStill, tipPause, shotDip, intakeIn, false);
+        if (armed) writeOutput(intakeIn);
     }
 
     private boolean moreToFire() {
-        return count > 0 || (volleyCycles < volleyMinCycles
-                && !(feedBeam != null && consecutiveUnconfirmed >= 2));
+        boolean unconfirmedRun = consecutiveUnconfirmed >= 2;
+        // With COUNT_UNCONFIRMED_SHOTS = false the count only drops on confirmed shots: stop after 2
+        // unconfirmed feeds in a row instead of feeding an empty (or jammed) robot forever.
+        boolean countLeft = count > 0 && (RobotConfig.COUNT_UNCONFIRMED_SHOTS || !unconfirmedRun);
+        boolean minFeedsLeft = volleyFeeds < volleyMinFeeds && !(feedBeam != null && unconfirmedRun);
+        return countLeft || minFeedsLeft;
     }
 
     private void runFeedStateMachine(long now, boolean shooterReady, boolean aimReady, boolean chassisStill, boolean tipPause) {
         long inState = now - stateStartMs;
-        if (ejectRequested && feedState != FeedState.GATE_OPEN && feedState != FeedState.EJECTING) {
+        if (ejectRequested && feedState != FeedState.FEEDING && feedState != FeedState.EJECTING) {
             cancelFiring();
             go(FeedState.EJECTING);
             return;
@@ -312,7 +336,6 @@ public class Indexer {
         switch (feedState) {
             case IDLE:
                 if (singleRequested || (volleyRequested && moreToFire())) {
-                    stagingNeeded = true;     // first ball: push the stack up against the gate first
                     go(tipPause ? FeedState.TIP_PAUSE : FeedState.WAIT_FOR_READY);
                 } else {
                     volleyRequested = false;   // nothing left to fire
@@ -332,17 +355,22 @@ public class Indexer {
                     blockedBy = whatBlocks(now, shooterReady, aimReady, chassisStill);
                     if (blockedBy.isEmpty()) {
                         shotSeenThisFeed = false;
-                        stagingNeeded = false;
-                        go(FeedState.GATE_OPEN);
+                        timedFeed = timedPushRequested;
+                        timedPushRequested = false;
+                        go(FeedState.FEEDING);
                     }
                 }
                 break;
 
-            case GATE_OPEN:
-                if (inState >= RobotConfig.FEEDER_OPEN_MS) go(FeedState.WAIT_FOR_SHOT);
+            case FEEDING:
+                if (shotSeenThisFeed && !timedFeed) {
+                    ballLeft(true, now);                 // confirmed: the carrier stops at once
+                } else if (inState >= RobotConfig.CARRIER_FEED_MS) {
+                    go(FeedState.CONFIRMING);            // pushed long enough for one ball: stop
+                }
                 break;
 
-            case WAIT_FOR_SHOT:
+            case CONFIRMING:
                 if (shotSeenThisFeed) {
                     ballLeft(true, now);
                 } else if (inState >= RobotConfig.SHOT_CONFIRM_TIMEOUT_MS) {
@@ -362,7 +390,6 @@ public class Indexer {
 
     /** Empty string = nothing blocks the shot. */
     private String whatBlocks(long now, boolean shooterReady, boolean aimReady, boolean chassisStill) {
-        if (stagingNeeded && now - stateStartMs < RobotConfig.INDEXER_STAGE_MS) return "staging";
         if (now - lastShotMs < RobotConfig.MIN_SHOT_INTERVAL_MS) return "interval";
         if (!shooterReady) return "flywheel";
         if (!aimReady) return "aim";
@@ -372,7 +399,7 @@ public class Indexer {
 
     private void ballLeft(boolean confirmed, long now) {
         lastShotMs = now;
-        volleyCycles++;
+        volleyFeeds++;
         if (confirmed) {
             confirmedShots++;
             consecutiveUnconfirmed = 0;
@@ -389,7 +416,7 @@ public class Indexer {
         go((volleyRequested && moreToFire()) ? FeedState.WAIT_FOR_READY : FeedState.IDLE);
         if (feedState == FeedState.IDLE) {
             volleyRequested = false;
-            volleyMinCycles = 0;
+            volleyMinFeeds = 0;
         }
     }
 
@@ -449,7 +476,7 @@ public class Indexer {
         long sincePreviousRead = now - presenceLastSeenMs;
         presenceLastSeenMs = now;
         if (presenceOutgoing) return;
-        if (isRefusedColor(seen)) presenceRefused = true;   // sticky for this ball (G408 / phase 1)
+        if (isRefusedColor(seen)) presenceRefused = true;   // sticky for this ball (G408 / POLLEN only)
         if (intakeIn && !presenceRefused) {
             if (presencePulledIn) presencePulledMs += sincePreviousRead;   // only time spent pulling counts
             presencePulledIn = true;
@@ -470,7 +497,7 @@ public class Indexer {
 
     /** The ball at the mouth is gone: count it if it went IN. */
     private void endPresence() {
-        // The roller pushing outward at the moment the ball left view = it went OUT, not in.
+        // The intake pushing outward at the moment the ball left view = it went OUT, not in.
         if (presencePulledIn && !presenceRefused && !presenceOutgoing && !presenceCounted && !leftWhileReversing) {
             count = Math.min(RobotConfig.MAX_BALLS, count + 1);
         }
@@ -486,8 +513,8 @@ public class Indexer {
     }
 
     private void readSlot4(long now, boolean intakeIn) {
-        // While ball 4 comes in (3 counted, roller pulling) slot 4 is read at the mouth rate: "full" as soon
-        // as ball 4 reaches its slot, before a 5th ball right behind it is drawn in (G407).
+        // While ball 4 comes in (3 counted, intake pulling) slot 4 is read at the mouth rate: "full" as soon
+        // as ball 4 reaches its place, before a 5th ball right behind it is drawn in (G407).
         long period = (intakeIn && count == RobotConfig.MAX_BALLS - 1)
                 ? RobotConfig.MOUTH_SENSOR_PERIOD_MS : RobotConfig.SLOT4_SENSOR_PERIOD_MS;
         if (slot4Color == null || now - lastSlot4ReadMs < period) return;
@@ -506,8 +533,8 @@ public class Indexer {
         if (feedBeam == null) return;
         boolean raw = feedBeam.getState();
         boolean broken = RobotConfig.FEED_BEAM_BROKEN_IS_LOW ? !raw : raw;
-        if (broken && !beamBroken && (feedState == FeedState.GATE_OPEN || feedState == FeedState.WAIT_FOR_SHOT)) {
-            shotSeenThisFeed = true;       // a ball crossed the beam on its way to the flywheel
+        if (broken && !beamBroken && (feedState == FeedState.FEEDING || feedState == FeedState.CONFIRMING)) {
+            shotSeenThisFeed = true;       // a ball crossed the beam on its way into the shooting wheel
         }
         beamBroken = broken;
     }
@@ -541,47 +568,29 @@ public class Indexer {
     }
 
     // ---------------------------------------------------------------------------------------------
-    // Outputs
+    // Output
     // ---------------------------------------------------------------------------------------------
-    private void writeOutputs(long now, boolean intakeIn) {
-        double power = 0.0;
+    /** Carrier power for the current state (+ = toward the shooting wheel). Stopped = holding the balls. */
+    private double powerFor(boolean intakeIn) {
         switch (feedState) {
-            case GATE_OPEN:
-                power = RobotConfig.INDEXER_FEED_POWER;
-                break;
-            case WAIT_FOR_READY:
-                // first ball: push the stack up against the closed gate for INDEXER_STAGE_MS
-                power = (stagingNeeded && now - stateStartMs < RobotConfig.INDEXER_STAGE_MS) ? RobotConfig.INDEXER_STAGE_POWER : 0.0;
-                break;
-            case WAIT_FOR_SHOT:
-                // gate just closed: bring the next ball up against it while we confirm the shot
-                power = RobotConfig.INDEXER_STAGE_POWER;
-                break;
+            case FEEDING:
+                return RobotConfig.CARRIER_FEED_POWER;
             case EJECTING:
-                power = RobotConfig.INDEXER_EJECT_POWER;
-                break;
+                return RobotConfig.CARRIER_EJECT_POWER;
+            case IDLE:
+                // Nothing is being fired: optionally help the balls along while the intake pulls them in.
+                return intakeIn ? RobotConfig.CARRIER_INTAKE_POWER : 0.0;
             default:
-                // pack balls toward the gate while (and shortly after) the intake runs
-                if (intakeIn || now - lastIntakeInMs < RobotConfig.INDEXER_RUN_AFTER_INTAKE_MS) {
-                    power = RobotConfig.INDEXER_STAGE_POWER;
-                }
-                break;
+                // WAIT_FOR_READY, CONFIRMING, TIP_PAUSE: stopped, so no ball reaches the shooting wheel.
+                return 0.0;
         }
-        writeSpinners(power);
-        writeFeeder(feedState == FeedState.GATE_OPEN ? RobotConfig.FEEDER_OPEN_POSITION : RobotConfig.FEEDER_CLOSED_POSITION);
     }
 
-    private void writeSpinners(double power) {
-        if (power == lastSpinnerPower) return;
-        if (spinner != null) spinner.setPower(power);
-        if (spinner2 != null) spinner2.setPower(power);
-        lastSpinnerPower = power;
-    }
-
-    private void writeFeeder(double position) {
-        if (feeder == null || position == lastFeederPosition) return;
-        feeder.setPosition(position);
-        lastFeederPosition = position;
+    private void writeOutput(boolean intakeIn) {
+        double power = powerFor(intakeIn);
+        if (carrier == null || power == lastCarrierPower) return;
+        carrier.setPower(power);
+        lastCarrierPower = power;
     }
 
     // ---------------------------------------------------------------------------------------------
@@ -594,7 +603,7 @@ public class Indexer {
         return e;
     }
 
-    /** True once after each ball that left through the flywheel (confirmed, or counted unconfirmed). */
+    /** True once after each ball that left through the shooting wheel (confirmed, or counted unconfirmed). */
     public boolean consumeShotEvent() {
         boolean e = shotEvent;
         shotEvent = false;
@@ -677,5 +686,14 @@ public class Indexer {
 
     public boolean hasSlot4Sensor() {
         return slot4Color != null;
+    }
+
+    public boolean isPresent() {
+        return carrier != null;
+    }
+
+    /** The last power sent to the carrier (0 before START). */
+    public double carrierPower() {
+        return Double.isNaN(lastCarrierPower) ? 0.0 : lastCarrierPower;
     }
 }

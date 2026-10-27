@@ -4,7 +4,9 @@ AUTO is a ladder of four routines. **Build them in order, and never use a rung i
 
 Coordinates are inches in the field frame from [01 §6](01-game-and-scoring.md#6-the-field-in-our-coordinate-frame): +X toward the audience, +Y toward blue, heading 0° = facing the audience, counter-clockwise positive. Source tags are explained in the [source key](00-master-plan.md#source-key). **est.** = our estimate; time it on the practice field.
 
-**This page describes what the code does** (as of 2026-10-20: `config/FieldConstants.java`, `opmodes/auto/AutoLegs.java`, `AutoRoutine.java`, `AutoSelector.java`, `config/RobotConfig.java`; summary in `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/README-12303.md` §8). If this page and the code disagree, the code is what the robot will do: fix the page, or change the code on purpose and re-run the laptop route test (`RouteSweepTest`, [06 §9](06-software.md#9-tests-tuning-and-logging)).
+**This page describes what the code does** (`config/FieldConstants.java`, `opmodes/auto/AutoLegs.java`, `AutoRoutine.java`, `AutoSelector.java`, `config/RobotConfig.java`, `subsystems/Aim.java`; summary in `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/README-12303.md` §8). If this page and the code disagree, the code is what the robot will do: fix the page, or change the code on purpose and re-run the laptop route test (`RouteSweepTest`, [06 §9](06-software.md#9-tests-tuning-and-logging)).
+
+**How our robot shoots in AUTO.** The shooter is fixed and shoots out of the robot's **back**; the intake is at the **front**. Every start spot puts the front against the wall, every shooting pose puts the back toward the target CELL, and during each volley the robot turns itself onto the exact aim heading (operator trim and vision bias included) whenever it is more than half the aim tolerance off, stepping off a wall first if it touches one. Each ball waits until the heading is inside the whole tolerance.
 
 **Words that work for both alliances** (use them in the queue and on the field):
 - **Our start wall** = the end wall behind S1 (red: audience wall; blue: far wall). **The end wall opposite our start** = red: far wall; blue: audience wall.
@@ -22,7 +24,7 @@ Coordinates are inches in the field frame from [01 §6](01-game-and-scoring.md#6
   - not touching a FLOWER and not in the LOADING ZONE (LZ);
   - inside the 18 in cube (R102), though preloads may stick out;
   - touching exactly 4 preload POLLEN;
-  - **motionless after INIT**. Our AUTO INIT holds only positional servos (turret at centre, feeder gate closed, hood). The intake, spinners, wheels and flywheel stay unpowered until START.
+  - **motionless after INIT**. Our AUTO INIT moves nothing: the intake, carrier, wheels and flywheel stay unpowered until START.
 - **No flywheel pre-spin.** All parts must be still at the start (R102, G304.H). Spin-up happens after START.
 - **Stay on our side.** Disrupting the opponent's AUTO is a MAJOR foul per match, even when accidental, and crossing the centre line is "a risky gameplay strategy" (G402, M p.106). Each alliance has priority over the balls and FLOWERS on its side.
 - **LEAVE** = not touching **any** wall when AUTO ends (QA21). **PARK** = at least partly in our LZ. A partner pushing you off the wall still counts (QA28).
@@ -39,8 +41,8 @@ Coordinates are inches in the field frame from [01 §6](01-game-and-scoring.md#6
 | Rung | What it does | Our points | Needs | Gate |
 |---|---|---|---|---|
 | **A0 Safe** | Drive off the wall into our LZ park slot (the INIT Park choice) | 8 (LEAVE 3 + PARK 5) | Drive, Pinpoint odometry, Pedro paths | 10/10 before the first event |
-| **A1 Tip & Park** (primary) | From S1, fire the 4 preloads, tip the start CELL, hold until the spill has landed, park | **28** (tip 20 + 3 + 5). With a partner that LEAVEs and PARKs: **36 + SWARM RP** | Indexer holding 4, flywheel gating, aim | ≥ 8/10 |
-| **A2 Tip, Reload, Volley** (stretch) | A1's volley (no hold), then sweep our GARDEN POLLEN, fire them into the second CELL from B2, park | 28 in AUTO + 3–4 of the 8 balls needed for tip 2 | Fast enough intake, count sensor, **tuned follower** | ≥ 8/10 |
+| **A1 Tip & Park** (primary) | From S1, fire the 4 preloads, tip the start CELL, hold until the spill has landed, park | **28** (tip 20 + 3 + 5). With a partner that LEAVEs and PARKs: **36 + SWARM RP** | Tunnel holding 4, carrier feeding one ball at a time, flywheel gating, aim | ≥ 8/10 |
+| **A2 Tip, Reload, Volley** (stretch) | A1's volley (no hold), then sweep our GARDEN POLLEN, fire them into the second CELL from B2, park | 28 in AUTO + 3–4 of the 8 balls needed for tip 2 | Fast enough intake (a mouth or slot-4 sensor ends the sweep at 4), **tuned follower** | ≥ 8/10 |
 | **A3 Alliance double-tip** (stretch) | We run the **"A3 role 1"** routine (an A2 variant). A partner with a shooter runs role 2: it waits at S6 and fires its 4 into our second CELL | **56** for the alliance (2 tips + 2 LEAVE + 2 PARK) | A partner with a shooter; **both robots tuned**; a rehearsal | ≥ 8/10 together |
 
 For scale: the best US alliance AUTO so far is **36**, and only about 7% of alliance-matches have scored that 36 (an AUTO tip plus SWARM locked in AUTO). No US alliance has made 2 AUTO tips (FTCScout, as of 2026-10-20).
@@ -49,34 +51,36 @@ For scale: the best US alliance AUTO so far is **36**, and only about 7% of alli
 
 ## Poses (red)
 
-Headings assume the shooter's "turret zero" points out of the robot's **front** (`RobotConfig.TURRET_CENTER_DEG = 0`; if ours points elsewhere, set it and the code adds the offset). All values are CAD-derived ([01 §6](01-game-and-scoring.md#6-the-field-in-our-coordinate-frame)) with ±1 in field tolerance (M p.63). Clearances are for 18 × 18 in robots with the **real (rotated) footprint**, from the code's route test.
+Heading is the way the robot's **front** (the intake) faces. The shooter points out of the back (`RobotConfig.SHOOTER_FACING_DEG = 180`), so the code turns every shooting heading 180° from the bearing to the CELL. All values are CAD-derived ([01 §6](01-game-and-scoring.md#6-the-field-in-our-coordinate-frame)) with ±1 in field tolerance (M p.63). Clearances are for 18 × 18 in robots with the **real (rotated) footprint**, from the code's route test.
 
-**Start spots.** Every start is **square to its wall**: the robot's back touches the wall. The older 151° (S2) and 31° (S7) were aim bearings, not placement headings: an 18 in robot turned about 30° cannot touch the wall at those centres.
+**Distances.** A *shot distance* is horizontal, from where the ball leaves the robot (with the robot turned onto its aim) to the aim point. It is the number on the AIM telemetry line and the input to the RPM table. Until `SHOOTER_FORWARD_IN` is measured ([07 Exp 2a](07-testing-and-practice.md#2a-exit-angle-exit-point-and-speed-ratio-k-do-this-first)), the code puts that point 7 in behind the robot centre, so every shot distance below is 7 in shorter than the distance from the robot centre.
+
+**Start spots.** Every start is **square to its wall**, with the robot's **front (intake) touching the wall** and its back (the shooter) facing into the field. Aiming from S2 or S7 would need the robot turned about 30°, and an 18 in robot turned that far cannot touch the wall at those centres.
 
 | Name | X | Y | Heading | Used by | Notes |
 |---|---|---|---|---|---|
-| **S1** | 61.67 | -12.75 | 180° | A0, A1, A2, A3 role 1 | Back on our start wall, on our HIVE axis. 45.2 in to the aim point, dead ahead |
-| S2 | 61.67 | -37.5 | 180° | A0; A1/A2/A3 role 1 via the side spot | 51.5 in, 29° off-axis (aim bearing 151°). The CELL is 28.7° off the turret centre, outside the as-built ±28°, so shoot-first routines first drive to the Zone A side spot. 0.9 in from the GARDEN tape |
-| S3 | 45 | -61.67 | 90° | A0; A1/A2/A3 role 1 via the side spot | Back on our alliance wall, audience side. Shoot-first routines first drive straight off the wall to (45, -48) |
-| S4 | 0 | -61.67 | 90° | A0; A1/A2/A3 role 1 via the side spot | Alliance wall centre, beside the HIVE. Straight off the wall to (0, -48) first |
-| S5 | -61.67 | -61.67 | 0° | A0 only | Far/red corner, 6 in from the LZ |
-| **S6** | -61.67 | -10.1 | 0° | A3 role 2 (and A0) | Back on the end wall opposite our start, on our HIVE axis. 45.3 in to the second-CELL aim point once it is up (aim bearing -3.3°). **Only 1.35 in from F-far** |
-| S7 | -61.67 | -40.0 | 0° | A0 (A3 role 2 only with > ±32° turret travel) | 52.8 in; the second CELL is **31.1° off the turret centre**, outside the as-built ±28°, so role 2 cannot fire from here. The INIT screen shows a CHECK line for A3 role 2 at S7 |
+| **S1** | 61.67 | -12.75 | 0° | A0, A1, A2, A3 role 1 | Front on our start wall, on our HIVE axis, back toward the HIVE. A 38.2 in shot (45.2 in from the robot centre), straight out of the back |
+| S2 | 61.67 | -37.5 | 0° | A0; A1/A2/A3 role 1 via the side spot | 29° off-axis, 51.5 in from the robot centre to the aim point (aiming from here would need heading -29°). Shoot-first routines first drive to the Zone A side spot. 0.9 in from the GARDEN tape |
+| S3 | 45 | -61.67 | -90° | A0; A1/A2/A3 role 1 via the side spot | Front on our alliance wall, audience side. Shoot-first routines first drive straight off the wall to (45, -48) |
+| S4 | 0 | -61.67 | -90° | A0; A1/A2/A3 role 1 via the side spot | Front on the alliance wall centre, beside the HIVE. Straight off the wall to (0, -48) first |
+| S5 | -61.67 | -61.67 | 180° | A0 only | Front on the far wall, far/red corner, 6 in from the LZ |
+| **S6** | -61.67 | -10.1 | 180° | A3 role 2 (only start for it), A0 | Front on the end wall opposite our start, on our HIVE axis, back toward the HIVE. A 38.3 in shot (45.3 in from the robot centre) at the second CELL once it is up. The back is 3.3° off the aim: inside the 4° aim tolerance but more than half of it, so the volley steps the robot 1 in off the wall and turns it onto the aim. **Only 1.35 in from F-far** |
+| S7 | -61.67 | -40.0 | 180° | A0 only | 31.1° off-axis, 52.8 in from the robot centre to the second-CELL aim point. Not an A3 role-2 start: from here role 2 would have to turn about 31° with its front against the far wall, so S7 + A3 role 2 is an invalid pair (the robot does not move; INIT shows a `CHECK:` line ending `(use S6)`) |
 
 **Shooting spots, waypoints and park slots** (the code drives exactly these; turning robots reach 12.7 in from their centre, so routes drive straight off walls and turn only in open space):
 
 | Name | X | Y | Heading | Used by | Notes |
 |---|---|---|---|---|---|
-| Zone A side spot | 55 | -37 | 147.8° | A1/A2/A3 role 1 from S2–S4 | 45.5 in, 32° off-axis. 6.8 in outside the tip-1 landing box, 2.9 in from a partner on S1, 3.3 in off the audience wall |
-| Spill escape | 52 | -40 | – | park drives from Zone A | Keeps the robot about 2 in outside the tip-1 landing box from S1. From the Zone A side spot the robot still faces 147.8° until (30, -42), and one corner passes only about 0.2 in from the box (A1 leaves only after its spill hold) |
-| Corridor points | 30, -42 and -30, -40 | | – | all routes between the zones | Point A is 2 in lower so a robot still turning stays ≥ 2 in outside the tip-1 box from S1 and the garden (from the Zone A side spot: 1.6 in while turning, 0.2 in on the leg before). ≥ 6.1 in from the HIVE feet and legs at heading 180° (A0, A1); a robot turning on this leg passes closer (A2: ≥ 3.7 in). 3 in from a robot in the corner slot |
-| Garden approach | 52, -40 → 51, -50 | | turns 180° → -90° between them | A2, A3 role 1 | Turns away from the audience wall and stays ≥ 1.95 in outside the tip-1 landing box while turning (A2/A3 role 1 leave right after the volley, while the spill may still be falling). ≈ 49 in from S1 |
-| Garden sweep | 60.5, -46 → 60.5, -60 | | intake leading toward -Y | A2, A3 role 1 | 0.3 speed, intake on. Gets all 4 only if the roller reaches within 1.4 in of the wall (`GARDEN_SWEEP_X`, TODO-MEASURE; [07 Exp 8](07-testing-and-practice.md#exp-8--intake-pickup-speed)). "Option 1" (face the wall and drive into the line) is not in the code: test only |
-| A2 (Zone A centre) | 48 | -12.75 | 180° | TELEOP only | 31.5 in to the aim point. Its front edge is about 3 in **inside** the tip-1 landing box: not used in AUTO |
-| B2 (Zone B centre) | -48 | -12.75 | 0° | A2 volley 2 | 31.5 in to the second-CELL aim point. Its front edge is about 3 in inside the TIP-2 landing box: fine for A2 (4 balls cannot tip the empty second CELL), but move off after any tipping volley here. If the shot map says 31.5 in is too close, change `ZONE_B_SHOOT_X` (e.g. B-head -55) and re-run the route test |
-| A3 role-1 wait point | -30 | -40 | 0° (square) | A3 role 1 | Waits here until 17 s from START. 2.3 in from role 2's whole park drive, 3 in from a corner-slot robot |
+| Zone A side spot | 55 | -37 | -32.2° | A1/A2/A3 role 1 from S2–S4 | A 38.5 in shot (45.5 in from the robot centre), 32° off-axis. 6.8 in outside the tip-1 landing box, 2.9 in from a partner on S1, 3.3 in off the audience wall |
+| Spill escape | 52 | -40 | – | park drives from Zone A | Keeps the robot about 2 in outside the tip-1 landing box from S1. From the Zone A side spot the robot still faces -32.2° until (30, -42), and one corner passes only about 0.2 in from the box (A1 leaves only after its spill hold) |
+| Corridor points | 30, -42 and -30, -40 | | – | all routes between the zones | Point A is 2 in lower so a robot still turning stays ≥ 2 in outside the tip-1 box from S1 and the garden (from the Zone A side spot: 1.6 in while turning, 0.2 in on the leg before). ≥ 6.1 in from the HIVE feet and legs for a square robot (A0, A1); a robot turning on this leg passes closer (A2: ≥ 4.77 in; A3 role 1: ≥ 5.2 in). 3 in from a robot in the corner slot |
+| Garden approach | 52, -40 → 51, -50 | | turns clockwise between them to drive intake-first: 0° → -90° (from the side spot -32.2° → -90°) | A2, A3 role 1 | Turns away from the audience wall and stays ≥ 1.95 in outside the tip-1 landing box while turning (5.9 in from the side spot). A2/A3 role 1 leave right after the volley, while the spill may still be falling. ≈ 49 in from S1 |
+| Garden sweep | 60.5, -46 → 60.5, -60 | | -90°, intake leading toward -Y | A2, A3 role 1 | 0.3 speed, intake on. Gets all 4 only if the intake wheel reaches within 1.4 in of the wall (`GARDEN_SWEEP_X`, TODO-MEASURE; [07 Exp 8](07-testing-and-practice.md#exp-8--intake-pickup-speed)). "Option 1" (face the wall and drive into the line) is not in the code: test only |
+| A2 (Zone A centre) | 48 | -12.75 | 0° | TELEOP only | A 24.5 in shot (31.5 in from the robot centre), below the 30–92 in shot band. The robot's back edge is about 3 in **inside** the tip-1 landing box: not used in AUTO |
+| B2 (Zone B centre) | -48 | -12.75 | 180° | A2 volley 2 | A 24.5 in shot (31.5 in from the robot centre) at the second CELL: the one AUTO shooting pose below the 30–92 in shot band (the laptop route test checks it against a 24 in floor instead), so telemetry warns during A2's second volley. The robot's back edge is about 3 in inside the TIP-2 landing box: fine for A2 (4 balls cannot tip the empty second CELL), but move off after any tipping volley here. **Open decision for the shot map** ([07 Exp 2b](07-testing-and-practice.md#2b-shot-map-builds-the-distance--rpm-table)): B2 stays here unless the short shot misses. Then move it back toward (-55, -12.75) (B-head, a ≈ 31.5 in shot). That spot passes the route test (front edge 6.7 in off the far wall, 4 in outside the TIP-2 box), but it is only ≈ 1.6 in from F-far and the approach drives toward the FLOWER, so an overshoot touches it. To move B2, change `ZONE_B_SHOOT_X` and re-run the route test. Measure `SHOOTER_FORWARD_IN` first ([07 Exp 2a](07-testing-and-practice.md#2a-exit-angle-exit-point-and-speed-ratio-k-do-this-first)): at -8 in, B2 is a 23.5 in shot, the route test fails, and B2 must be decided again |
+| A3 role-1 wait point | -30 | -40 | 180° (square) | A3 role 1 | Waits here until 17 s from START. 2.3 in from role 2's whole park drive, 3 in from a corner-slot robot |
 | Inner lane | -31 | -35.5 | – | A3 role 1 (to its spot); every INNER park from the far half | ≥ 2.4 in from a corner-slot robot; 2.3–3.1 in from the HIVE foot |
-| Role-1 spot | -52 | -30 | 25.9° | A3 role 1 volley 2 | 39.5 in, 26° off-axis. Turned footprint: 0.87 in outside the TIP-2 landing box, 1.6 in from F-far, 1.1 in from a robot still at S6, 5.0 in from the corner-slot robot. **A robot still at S7 overlaps it by about 8 in** |
+| Role-1 spot | -52 | -30 | -154.1° | A3 role 1 volley 2 | A 32.5 in shot (39.5 in from the robot centre), 26° off-axis. Turned footprint: 0.87 in outside the TIP-2 landing box, 1.6 in from F-far, 1.1 in from a robot still at S6, 5.0 in from the corner-slot robot. **A robot still at S7 would overlap it by about 8 in** (one more reason A3 role 2 starts on S6 only) |
 | Role-1 exit | -51.5, -36.5 → -31, -36.5 | | turns square on the first piece | A3 role 1 | Drops straight down, then runs along the bottom edge of the TIP-2 landing box (skims the nominal box by 0.5 in instead of crossing it 7.7 in deep); 1.5 in above the corner-slot robot |
 | Far-wall escape | -50 | (same y) | – | leaving S6 only | First leg straight along +X: F-far is 1.35 in away, and a diagonal first move clips it |
 | **Corner slot** | -51 | -56 | square* | first robot to park; A3 role 2 always | The LZ end nearer the field corner (red: far-wall end). 4.6 in into the LZ along the wall, 5.3 in out from it on an event field, 5.67 in off the wall |
@@ -91,8 +95,8 @@ Aim points: red audience CELL **(16.50, -12.74, 58.27)**; red far CELL **(-16.48
 
 ### Setting up with the jig
 
-- **S1:** robot's back against **our start wall** (red: audience wall; blue: far wall), on our HIVE axis. Its alliance-wall-side edge (the robot's left side) sits **1.75 in** from the tile seam (red: Y = -23.5, between columns B and C; blue: Y = +23.5, between D and E); the robot then spans red Y -21.75 to -3.75 / blue Y +3.75 to +21.75. The same jig works on blue turned end-for-end. (On blue, the audience-wall spot on our HIVE axis is **not** S1: a robot there touches the F-aud FLOWER.)
-- **S6:** robot's back against the end wall opposite our start (red: far wall; blue: audience wall). Its alliance-wall-side edge sits **4.4 in** from the same seam (red B|C at Y = -23.5; blue D|E at Y = +23.5), and its centre-line side is 1.1 in from the centre seam (Y = 0). **Look at the FLOWER beside it (red: F-far; blue: F-aud): if the robot touches it, the start is illegal (G304.D).** Adjust within the 1.35 in gap. S7 is a role-2 backup only once the turret travels more than ±32°; otherwise drop A3 for this match.
+- **S1:** robot's **front (intake) against our start wall** (red: audience wall; blue: far wall), on our HIVE axis, back toward the HIVE. Its alliance-wall-side edge (the robot's right side) sits **1.75 in** from the tile seam (red: Y = -23.5, between columns B and C; blue: Y = +23.5, between D and E); the robot then spans red Y -21.75 to -3.75 / blue Y +3.75 to +21.75. The same jig works on blue turned end-for-end. (On blue, the audience-wall spot on our HIVE axis is **not** S1: a robot there touches the F-aud FLOWER.)
+- **S6:** robot's front against the end wall opposite our start (red: far wall; blue: audience wall), back toward the HIVE. Its alliance-wall-side edge sits **4.4 in** from the same seam (red B|C at Y = -23.5; blue D|E at Y = +23.5), and its centre-line side is 1.1 in from the centre seam (Y = 0). **Look at the FLOWER beside it (red: F-far; blue: F-aud): if the robot touches it, the start is illegal (G304.D).** Adjust within the 1.35 in gap. If S6 can't be used, drop A3 for this match: role 2 starts on S6 only (from S7 the robot does not move).
 - Tiles vary by about ±0.5 in (EFSG §7). Re-check on every new field.
 
 ---
@@ -120,10 +124,10 @@ LEAVE 3 + PARK 5 = **8**. Run it whenever a higher rung isn't trusted on that da
 ## A1 — Tip & Park (primary, start S1)
 
 ### INIT checklist
-- [ ] Robot placed at S1 with the jig, back touching our start wall (red: audience wall; blue: far wall).
+- [ ] Robot placed at S1 with the jig, front (intake) touching our start wall (red: audience wall; blue: far wall), back toward the HIVE.
 - [ ] 4 POLLEN inside the robot.
 - [ ] Selector: **Alliance = THIS match's colour, set first** (it shows RED after any app restart, e.g. a battery swap; otherwise the previous AUTO's value: read the top line `##### RED ALLIANCE #####` / `##### BLUE ALLIANCE #####` aloud). Then Start **S1** · Routine **A1** · Park (the agreed slot) · Delay **0** · Preloads **4**, then lock with A. The values shown run whether or not they are locked.
-- [ ] INIT screen: the "Place robot at" line matches our colour (red (61.7, -12.8), heading 180; blue (-61.7, 12.8), heading 0). That line and the POSE line only **repeat the selection**: the jig is the placement check. `BALLS 4/4`; the HIVE line shows "vision: N tags" with N > 0 (our start-CELL tags: red 34–37, blue 42–45) and the AIM bias is near 0; no `CHECK:`, `WARN:` or `!!` lines.
+- [ ] INIT screen: the "Place robot at" line matches our colour (red (61.7, -12.8), heading 0 = front faces AUDIENCE wall; blue (-61.7, 12.8), heading 180 = front faces FAR wall). That line and the POSE line only **repeat the selection**: the jig is the placement check. `BALLS 4/4`; the HIVE line shows "vision: N tags" with N > 0 (our start-CELL tags: red 34–37, blue 42–45; the camera looks out of the back, at the HIVE) and the AIM bias is near 0; no `CHECK:` lines, and no `WARN:` or `!!` lines other than the `NO MOUTH SENSOR` ones while the robot has no mouth sensor.
 - [ ] Nothing moves after INIT (G304.H).
 - [ ] At the transition, read the TeleOp INIT Alliance line too and fix it with gamepad 1 X / B if it is wrong ([03](03-teleop.md#start-of-teleop-the-8-second-transition)).
 
@@ -131,17 +135,17 @@ LEAVE 3 + PARK 5 = **8**. Run it whenever a higher rung isn't trusted on that da
 
 | Clock (s) | Robot | Notes / sources |
 |---|---|---|
-| 0.0 | START. The flywheel spins up to the table speed for ~45 in; the turret aims (odometry bearing 180° plus the Limelight trim). The volley is requested at once; the indexer stages the first ball (0.3 s) during the spin-up | No pre-spin allowed (R102, G304.H) |
-| ≈ 0.3–0.6 | First ball out once the flywheel is "ready" (within max(2.5%, 60 rpm) of target for 3 loops) | Spin-up ≈ 0.3–0.5 s bare; ≈ 0.5 s with the 60 mm steel flywheel (est.) |
-| ≈ 0.6–3.5 | **Fire all 4 as one volley.** Each ball waits for the wheel to be back at speed: at least **0.33 s** apart (gate 0.18 s + interval 0.15 s) plus flywheel recovery when the shot is confirmed (feed beam or speed dip), **0.73 s** apart when a feed is not confirmed. 4 balls ≈ 1.5 s (+ recovery) confirmed, ≈ 3.1 s if no feed is confirmed | The best robot at Saline fired 0.14–0.25 s apart (MonaShores); ours can't, as coded |
+| 0.0 | START. The flywheel spins up to the table speed for the shot (a 38.2 in shot). The robot's back already points at the start CELL (S1 is on its axis); if the aim heading (vision bias and trim included) is more than half the 4° tolerance away, the robot steps off the wall and turns onto it. The volley is requested at once | No pre-spin allowed (R102, G304.H) |
+| ≈ 0.3–0.6 | First carrier push once the flywheel is "ready" (within max(2.5%, 60 rpm) of target for 3 loops) and the heading is inside the aim tolerance | Spin-up ≈ 0.3–0.5 s bare; ≈ 0.5 s with a steel flywheel disc (est., model for a 72 mm wheel) |
+| ≈ 0.6–3.5 | **Fire all 4 as one volley.** For each ball the carrier spins until the shot is confirmed (flywheel speed dip or feed beam), then stops at once; the next push waits at least 0.15 s, and until the flywheel is back at speed and the robot is aimed (whichever takes longer, not the two added together). A push that is not confirmed stops after 0.4 s and waits 0.25 s more: **0.8 s per ball**, ≈ 3.05 s for 4 balls if no feed is confirmed; faster when every shot is confirmed | The best robot at Saline fired 0.14–0.25 s apart (MonaShores); ours can't, as coded |
 | ≈ 2–4 | Last ball arrives (0.4–0.6 s flight, est.). The 3rd ball should tip it (EFSG §12.3). After ≥ 3 balls the code **assumes TIP 1** (HIVE state B; with a feed beam fitted only beam-confirmed shots count) and keeps vision from undoing that for 5 s | Dwell 0.25–3.4 s, then the swing |
-| ≈ 2–4 → ≈ 3–9 | **Hold at S1, intake off**, turret centred (the camera watches the start CELL). S1 is 10.7 in outside the tip-1 landing box. **Leave once the start-CELL tags (red 34–37, blue 42–45) were seen up and then gone for 1.0 s, or 6 s after the last shot**, whichever comes first. If the start CELL is still seen up at the end, the code records "no TIP" (state A) | Swing ≈ 0.65–0.9 s (up to 2.2 s); spill on the tiles ≈ 3 s after the threshold ball, up to ~6 s (MonaShores; R2 verify F15) |
+| ≈ 2–4 → ≈ 3–9 | **Hold at S1, intake off**; the camera looks out of the back and watches the start CELL. S1 is 10.7 in outside the tip-1 landing box. **Leave once the start-CELL tags (red 34–37, blue 42–45) were seen up and then gone for 1.0 s, or 6 s after the last shot**, whichever comes first. If the start CELL is still seen up at the end, the code records "no TIP" (state A) | Swing ≈ 0.65–0.9 s (up to 2.2 s); spill on the tiles ≈ 3 s after the threshold ball, up to ~6 s (MonaShores; R2 verify F15) |
 | ≈ 3–9 → ≈ 9–15 | Drive S1 → (52, -40) → (30, -42) → (-30, -40) → our Park slot, ending square. Intake off. Settled spill balls in the way just get pushed: bulldozing is not CONTROL (G407 box D) | ≈ 127 in (corner 137 in): 3.5–4.5 s tuned, 5–6 s at the 0.5 cap |
 | ≤ 15 | **Parked: partly in the LZ, not touching any wall** | LEAVE 3 + PARK 5 (QA21) |
 | to 30 | Holds still. Saves pose, ball count, alliance and HIVE state every loop for TELEOP | |
 | **Deadline** | At **23 s** after START (`AUTO_PARK_DEADLINE_SEC`) the code drops everything and drives to the Park slot. A1 from S1 never reaches it | |
 
-**From S2–S4:** the robot first drives to the Zone A side spot (55, -37), heading 147.8° (blue (-55, 37), -32.2°); from S3/S4 it first drives straight off the alliance wall to (x, -48). Then the same volley, hold and park.
+**From S2–S4:** the robot first drives to the Zone A side spot (55, -37), heading -32.2° (blue (-55, 37), 147.8°), its back toward the start CELL; from S3/S4 it first drives straight off the alliance wall to (x, -48). Then the same volley, hold and park.
 
 ### Why fire all 4 when 3 tip it
 - Insurance: bounce-outs are common. One team measured 44% with a fixed solid hood (CD-14343).
@@ -157,17 +161,17 @@ Needs a **tuned follower**: at the shipped 0.5 cap the whole routine takes about
 | Step | What the code does | Tuned (est.) | 0.5 cap (est.) |
 |---|---|---|---|
 | Volley 1 | As A1 (S1, or the side spot from S2–S4). After ≥ 3 balls it assumes TIP 1. **No hold** | ≈ 2–3.5 s | same |
-| To the garden | (52, -40) → (51, -50) → sweep start (60.5, -46), turning 180° → -90° between the two points, away from the wall. The turning robot stays ≥ 1.95 in outside the tip-1 landing box (it leaves while the spill may still be falling, G409) | ≈ 1.5–2 s (≈ 49 in) | ≈ 2.5 s |
-| Sweep | Intake on. (60.5, -46) → (60.5, -60) at 0.3 speed. Ends at 4 balls, or 0.6 s after the sweep path ends. Our GARDEN loses 1 pt per ball taken unless refilled (M p.89) | ≈ 1.5–2 s | ≈ 2 s |
-| To Zone B | (60.5, -60) → (30, -42) → (-30, -40) → **B2 (-48, -12.75), heading 0°** (blue (48, 12.75), 180°). Spins up on the way. Turns -90° → 0° on the corridor: ≥ 2.27 in from the tip-1 box, ≥ 3.7 in from the HIVE feet and legs | ≈ 4–5.5 s (≈ 128 in) | ≈ 6.5–8 s |
-| Volley 2 | Fires into the second CELL **only if the HIVE tracker says it is up** (the assumed TIP 1, or vision); if not, it waits up to 1 s for vision, then keeps the balls. Cycles the gate at least 4 times (a garden ball may have passed outside the mouth sensor) | ≈ 1.5–3.5 s | same |
+| To the garden | (52, -40) → (51, -50) → sweep start (60.5, -46), turning clockwise from 0° to -90° between the two points (from the side spot: -32.2° → -90°), away from the wall, so it drives the sweep intake-first. The turning robot stays ≥ 1.95 in outside the tip-1 landing box (it leaves while the spill may still be falling, G409) | ≈ 1.5–2 s (≈ 49 in) | ≈ 2.5 s |
+| Sweep | Intake on. (60.5, -46) → (60.5, -60) at 0.3 speed, heading -90°. With a mouth sensor (or the slot-4 sensor) it ends at 4 balls; without them (nothing counts the balls coming in), 0.6 s after the sweep path ends. Our GARDEN loses 1 pt per ball taken unless refilled (M p.89) | ≈ 1.5–2 s | ≈ 2 s |
+| To Zone B | (60.5, -60) → (30, -42) → (-30, -40) → **B2 (-48, -12.75), heading 180°** (blue (48, 12.75), 0°), its back toward the second CELL. Spins up on the way. Turns clockwise -90° → 180° on the corridor: ≥ 4.58 in from the tip-1 box, ≥ 4.77 in from the HIVE feet and legs | ≈ 4–5.5 s (≈ 128 in) | ≈ 6.5–8 s |
+| Volley 2 | Fires into the second CELL **only if the HIVE tracker says it is up** (the assumed TIP 1, or vision); if not, it waits up to 1 s for vision, then keeps the balls. Feeds at least 4 times (`AUTO_VOLLEY2_MIN_FEEDS`): without a mouth sensor nothing counted the garden balls, and with one a garden ball may have passed outside it. Empty feeds are harmless. B2 is a 24.5 in shot, below the shot band (see [B2](#poses-red)) | ≈ 1.5–3.5 s | same |
 | Park | B2 → our Park slot: inner via the lane (-31, -35.5) ≈ 49 in, corner ≈ 43 in, solo ≈ 44 in | ≈ 1.5 s | ≈ 2–2.5 s |
 | **Deadline** | 23 s after START: the code drops everything and parks, wherever it is | | |
 
 - 3–4 of the 8 balls needed for tip 2. A2 alone cannot tip the second CELL (4 balls; 7 must not tip).
-- **NECTAR:** in phase 1 the intake refuses **all** NECTAR at the mouth (`RobotConfig.ACCEPT_OWN_NECTAR = false`). Our own NECTAR is legal to hold, but our hood can't launch it yet. The sensor reacts on contact, so routes avoid NECTAR rather than rely on it.
+- **NECTAR:** with a mouth sensor, the intake refuses **all** NECTAR at the mouth in phase 1 (`RobotConfig.ACCEPT_OWN_NECTAR = false`): our own NECTAR is legal to hold, but NECTAR through the tunnel, carrier and shooting wheel is untested. Without a mouth sensor nothing refuses it. Either way the routes avoid NECTAR rather than rely on the sensor (it reacts on contact).
 - Not in the code: picking up settled spill POLLEN in Zone A. If it is ever added, pick up only at red Y ≤ -2 (blue Y ≥ +2): the other alliance has priority on its side in AUTO (G402).
-- If the garden sweep is too slow with the servo intake, A2 stays a practice item. That decision belongs to the intake test ([07 Exp 8](07-testing-and-practice.md#exp-8--intake-pickup-speed)).
+- If the garden sweep is too slow (it must get 4 balls in ≤ 3 s), A2 stays a practice item. That decision belongs to the intake test ([07 Exp 8](07-testing-and-practice.md#exp-8--intake-pickup-speed)).
 
 ---
 
@@ -178,7 +182,7 @@ Two roles. 12303 can play **either** one: they are the routines **"A3 role 1"** 
 | Role | Start | Job | Parks in |
 |---|---|---|---|
 | **A3 role 1 "tipper"** | S1 | A1's volley (TIP 1), garden sweep (**must** reach 4), waits at the corridor end until 17 s, fires from the role-1 spot → TIP 2 | Inner slot (always) |
-| **A3 role 2 "waiter"** | S6 (S7 only with > ±32° turret travel) | Waits for the second CELL (red: far, tags 30–33; blue: audience, tags 38–41) to come up, fires 4 into it, **only if TIP 1 is confirmed by 9 s**; whatever happens it leaves for the corner slot by **13 s** (`A3_ROLE2_LEAVE_BY_SEC`: a stalled volley or a start delay is cut) | Corner slot (always) |
+| **A3 role 2 "waiter"** | S6 only | Waits for the second CELL (red: far, tags 30–33; blue: audience, tags 38–41) to come up, fires 4 into it, **only if TIP 1 is confirmed by 9 s**; whatever happens it leaves for the corner slot by **13 s** (`A3_ROLE2_LEAVE_BY_SEC`: a stalled volley or a start delay is cut) | Corner slot (always) |
 
 **Why the garden sweep must reach 4:** 4 + 4 = 8 tips the CELL. **7 must not tip** (EFSG §12.3), so 3 garden balls would leave the second CELL one short. The code has no extra sweep time: with 3 balls it fires 3 (7 in the CELL, no tip 2), and those balls still help tip 2 in TELEOP.
 
@@ -190,9 +194,9 @@ Clock times at the shipped 0.5 cap. Tuned, role 1 reaches the wait point earlier
 |---|---|---|
 | 0 → ≈ 2–3.5 | A1's volley at S1 (TIP 1 assumed after ≥ 3 balls). No hold | |
 | → ≈ 6–9 | Garden approach and sweep, as A2 | |
-| → ≈ 11–13 | (60.5, -60) → (30, -42) → **wait point (-30, -40)**, square heading (red 0°, blue 180°) | 2.3 in from role 2's whole park drive, 3 in from a corner-slot robot |
+| → ≈ 11–13 | (60.5, -60) → (30, -42) → **wait point (-30, -40)**, square heading (red 180°, blue 0°), turning clockwise from the sweep heading on the corridor | 2.3 in from role 2's whole park drive, 3 in from a corner-slot robot |
 | until **17.0** | **Waits** (`A3_ROLE1_ZONE_B_NOT_BEFORE_SEC`), so role 2 is parked before role 1 enters its end of the field | |
-| 17 → ≈ 18.5 | Lane (-31, -35.5) → role-1 spot (-52, -30), heading 25.9° (blue (52, 30), -154.1°). Spins up on the way | 39.5 in, 26° off-axis |
+| 17 → ≈ 18.5 | Lane (-31, -35.5) → role-1 spot (-52, -30), heading -154.1° (blue (52, 30), 25.9°), its back toward the second CELL. Spins up on the way | A 32.5 in shot (39.5 in from the robot centre), 26° off-axis |
 | ≈ 18.5 → 20–22.5 | Volley 2: 4 → 8 in the second CELL → **TIP 2** (only if the tracker says the second CELL is up; otherwise it waits up to 1 s for vision, then keeps the balls) | It still counts as AUTO if it finishes in the transition (M p.86) |
 | ≈ 20–22.5 → 22–25.5 | **Leaves at once**: turns square while dropping to (-51.5, -36.5), runs east to (-31, -36.5) along the bottom edge of the TIP-2 landing box (red X -42 … -24, Y -28 … +2), then the inner slot (-27, -56) | ≈ 47 in. The exit skims the nominal box by 0.5 in. The earliest spilled balls reach the floor ≈ 1.2 s after the threshold ball, usually ≈ 3 s (MonaShores; est.); measure the TIP-2 first touch in [07 Exp 1](07-testing-and-practice.md#exp-1--tip-threshold-on-our-hive)(b) before promoting A3 |
 | **Deadline** | 23 s: a volley still running is cut and the robot parks | Parked by ≈ 22–25.5 s at the cap |
@@ -203,21 +207,21 @@ Clock times at the shipped 0.5 cap. Tuned, role 1 reaches the wait point earlier
 
 | Clock (s) | Robot | Notes |
 |---|---|---|
-| INIT | At S6: red (-61.67, -10.1, 0°), back on the far wall; blue (61.67, 10.1, 180°), back on the audience wall. **Check the FLOWER beside it** (red F-far, blue F-aud; 1.35 in nominal gap). If it touches, adjust within the gap; S7 only with > ±32° turret travel, otherwise skip A3 | G304.D |
-| 0 → trigger | Pre-aims at the second CELL (still down) and spins up. Before tip 1 the second CELL's tags face away from us, so we can't see them | |
+| INIT | At S6: red (-61.67, -10.1, 180°), front on the far wall; blue (61.67, 10.1, 0°), front on the audience wall; back toward the HIVE. **Check the FLOWER beside it** (red F-far, blue F-aud; 1.35 in nominal gap). If it touches, adjust within the gap; if that fails, skip A3 (role 2 starts on S6 only) | G304.D |
+| 0 → trigger | Its back already points at the second CELL (still down; S6 is 3.3° off the aim, inside the 4° tolerance); it spins up for a 38.3 in shot. Before tip 1 the second CELL's tags face away from us, so we can't see them | |
 | Trigger | The second-CELL tags (red 30–33, blue 38–41) are seen up for 0.5 s without a break (`HIVE_VISION_CONFIRM_MS`), or the HIVE tracker already says state B | **Never fire at a moving HIVE** (M p.87, QA12) |
-| Trigger by **9 s** | 1 s TIP pause (retarget) + 0.3 s staging, then fires 4 into the second CELL (≈ 1.5 s confirmed, ≈ 3.1 s unconfirmed) | `A3_ROLE2_LATEST_FIRE_SEC` = 9 s |
+| Trigger by **9 s** | 1 s TIP pause (retarget), then the volley: the robot steps about 1 in off the wall, turns the 3.3° onto the aim and fires 4 into the second CELL (≈ 3.05 s if no feed is confirmed, faster when shots are confirmed). Its 4th carrier push ends by 9 + 1 + 3 × 0.8 + 0.4 = 12.8 s at the latest (the budget the laptop route test checks) | `A3_ROLE2_LATEST_FIRE_SEC` = 9 s |
 | Trigger at 9–10 s | Records state B but **keeps the preloads** | |
 | No trigger by **10 s** | **Keeps the preloads** (`A3_ROLE2_TIP_WAIT_TIMEOUT_SEC` = 10 s). `A3_ROLE2_FIRE_WITHOUT_TIP_CONFIRM = true` would fire at 9 s anyway: use it only after the partner's tip timing is rehearsed | |
-| After the volley (≤ ≈ 13.4 s) | S6 → (-50, -10.1), straight along +X first → corner slot (-51, -56) | ≈ 57.6 in. Parked by ≈ 16–16.5 s at the 0.5 cap |
+| After the volley (by 13 s at the latest) | S6 → (-50, -10.1), straight along +X first → corner slot (-51, -56). The route test also checks this drive from the aimed pose (turned, 1 in off the wall) | ≈ 57.6 in. Parked by ≈ 16–16.5 s at the 0.5 cap |
 
 ### Who is where, when (both roles, at the 0.5 cap)
 
 | Clock (s) | Role 1 tipper (from S1) | Role 2 waiter (from S6) |
 |---|---|---|
-| 0–3.5 | Fires 4 at the start CELL | Waits, pre-aimed at the second CELL |
+| 0–3.5 | Fires 4 at the start CELL | Waits, its back toward the second CELL |
 | ≈ 3–9 | Garden approach and sweep | TIP 1 completes at ≈ 2.5–8.5 s; fires 4 if it is confirmed by 9 s |
-| ≈ 9–13 | Corridor to the wait point (-30, -40) | Volley done by ≈ 13.4 s; drives S6 → (-50, -10.1) → corner slot |
+| ≈ 9–13 | Corridor to the wait point (-30, -40) | Volley done by 13 s; drives S6 → (-50, -10.1) → corner slot |
 | ≈ 13–17 | Waits at (-30, -40) | Parked by ≈ 16–16.5 s |
 | 17–22.5 | Lane → role-1 spot → volley 2 → tip 2 | Parked |
 | ≈ 20–25.5 | Exit along the TIP-2 box edge → inner slot | Parked |
@@ -234,7 +238,7 @@ Say the words in [brackets] for our colour this match.
 
 ### A3 (say this in the queue; about 60 seconds)
 1. "Does your robot have a shooter and an AUTO that can wait at S6, on the end wall **opposite** our start [red: far wall / blue: audience wall], and fire its 4 preloads into our **second CELL** (the one that comes up after our tip, facing you) **after** it comes up? It only works if both robots have a tuned path follower and we rehearse it." If not, skip A3: we run A1 or A2, and you do LEAVE + PARK.
-2. "We start at S1, our back on the [red: audience / blue: far] wall on our HIVE axis, and tip our start CELL with our preloads. The tip usually finishes about 3–9 s after START (allow up to 10 s). You start at S6: back on the [red: far / blue: audience] wall, centred on our HIVE, with your centre-line edge about 1 in from the centre line. Check you are not touching the FLOWER beside you [red: F-far / blue: F-aud]."
+2. "We start at S1, our front on the [red: audience / blue: far] wall on our HIVE axis (we shoot out of our back), and tip our start CELL with our preloads. The tip usually finishes about 3–9 s after START (allow up to 10 s). You start at S6: against the [red: far / blue: audience] wall, centred on our HIVE, with your centre-line edge about 1 in from the centre line. Check you are not touching the FLOWER beside you [red: F-far / blue: F-aud]."
 3. "Fire **only after our CELL has swung**: when you see our second CELL's tags come up [red: 30–33 / blue: 38–41]. Without vision, not before about 10 s."
 4. "After you fire, park in the **corner slot** of our LOADING ZONE [red: its far-wall end / blue: its audience end], 5–6 in off the wall, **by 16 s**. We wait at the end of our corridor [red: y = -40 / blue: y = +40] until 17 s, then shoot from your end of the field and park in the inner slot."
 5. "Don't touch any wall at the end of AUTO (no LEAVE, QA21). Stay on our side (G402)."
@@ -257,16 +261,17 @@ What the code does (it has no "fire anyway", no jam retry and no blind drive-off
 |---|---|---|
 | Flywheel never reaches "ready" (for example, an unplugged encoder) | The volley waits on "flywheel" | Nothing is fired. The volley gives up 5 s after the robot has stopped (`AUTO_VOLLEY_TIMEOUT_SEC`) and the robot moves on with its balls (no tip). Check the encoder cable in the pit |
 | No Limelight lock | No valid own tag | Aims from odometry alone (the jig makes the S1 pose exact); the vision bias stays 0 |
-| Ball won't leave (jam) | No beam break and no flywheel dip within 0.4 s of a feed | The ball is counted as fired anyway (`COUNT_UNCONFIRMED_SHOTS`) and the next one is fed: no reverse, no retry. After 4 such feeds (≈ 3 s) the count is 0 and the volley ends. Without a feed beam the code then assumes the tip (≥ 3 fired → state B) and parks with the jammed balls inside; with a feed beam only confirmed shots count toward the tip. Coach: if the FEED line showed unconfirmed feeds in AUTO, the operator corrects the count (left-stick click = +1 per stuck ball) and the HIVE state (Y) at TELEOP start |
+| No mouth sensor | INIT shows the `!!!! NO MOUTH SENSOR …` lines (right under the selection menu) and a `WARN:` line | Expected while the robot has no mouth sensor: the count starts at the Preloads value and drops by one per feed, the garden sweep ends 0.6 s after its path, and volley 2 feeds 4 times |
+| Ball won't leave (jam) | No beam break and no flywheel dip during the 0.4 s carrier push or the 0.25 s after it | The ball is counted as fired anyway (`COUNT_UNCONFIRMED_SHOTS`) and the next one is fed: no reverse, no retry. After 4 such feeds (≈ 3 s) the count is 0 and the volley ends. Without a feed beam the code then assumes the tip (≥ 3 fired → state B) and parks with the jammed balls inside; with a feed beam only confirmed shots count toward the tip. Coach: if the FEED line showed unconfirmed feeds in AUTO, the operator corrects the count (left-stick click = +1 per stuck ball) and the HIVE state (Y) at TELEOP start |
 | No tip after 4 balls | A1 only: the start-CELL tags (red 34–37, blue 42–45) are still seen up at the end of the spill hold | Parks anyway (still 8) and hands TELEOP state A ("no TIP"). A2 and A3 role 1 don't hold, so they keep the assumed state B; the operator checks the HIVE at TELEOP start ([03](03-teleop.md)) |
 | Target CELL faces away (wrong start or zone) | The aim solver | The volley is skipped and the balls are kept |
 | Running late | Match clock | **One park deadline: 23 s after START** (`AUTO_PARK_DEADLINE_SEC`), from anywhere |
 | Partner or ball blocks the path | Path timeout = leg length ÷ (0.6 × cruise) + 1.5 s (cruise 26.2 in/s at the 0.5 cap): S1 → park ≈ 9.6 s, garden → B2 ≈ 9.6 s, garden approach ≈ 4.6 s | A timed-out path stops and the robot holds where it is; the next step starts from there |
 | Robot not on the selected spot | Nothing on the robot detects it: the INIT POSE line only repeats the selected start | Jig and tape check before INIT. Weak cross-check: own tags seen and AIM bias near 0 in INIT |
 | Odometry dead (Pinpoint missing / Pedro not started) | INIT shows `!! NO ODOMETRY: paths are skipped (no LEAVE/PARK)` and a `WARN:` line | Paths are skipped, so A0 scores 0. From S1 run A1, which still fires from the start spot (tip 20, no LEAVE/PARK) |
-| Ball count wrong at INIT | `BALLS n/4` line (= the Preloads value; a ball seen by the slot-4 sensor forces 4) | Set Preloads to 4. INIT shows `CHECK: Preloads n: a match starts with exactly 4 (G304.G)` otherwise |
+| Ball count wrong at INIT | `BALLS n/4` line (= the Preloads value; a ball seen by the slot-4 sensor, when fitted, forces 4) | Set Preloads to 4. INIT shows `CHECK: Preloads n: a match starts with exactly 4 (G304.G)` otherwise |
 | Wrong alliance selected | Top INIT line `##### RED ALLIANCE #####`; vision shows 0 own tags | Set Alliance first, every match (RED after an app restart) |
-| Start not valid for the routine | `CHECK: !! INVALID START Sx FOR <ROUTINE>: ROBOT WILL NOT MOVE` | Fix Start or Routine: otherwise the robot does not move at all |
+| Start not valid for the routine | `CHECK: !! INVALID START Sx FOR <ROUTINE>: ROBOT WILL NOT MOVE (use S1-S4)` (A1, A2, A3 role 1) or `… (use S6)` (A3 role 2) | Fix Start or Routine: otherwise the robot does not move at all |
 | Robot touching a wall at 30 s | Nothing on the robot detects it | Park slots are 5.67–6.7 in off the wall; check this in the 10-run test (QA21) |
 | Opponent crosses into our side | – | Don't react. The coach notes the match number for the Question Box (T301, M p.149) |
 
@@ -298,10 +303,11 @@ Gamepad 1 menu during INIT of the one AUTO OpMode, **12303 Auto**. The coach may
 - **Every line is remembered until the Robot Controller app restarts**; a battery swap or reboot puts all of them back to the first-run values. **Every match: set Alliance to THIS match's colour first** (the top line reads `##### RED ALLIANCE #####  must be THIS match's colour (RED after an app restart)`), then check every line.
 - D-pad up/down = line, left/right = value, **A = lock/unlock** (a toggle that only stops edits; B does nothing). **The values shown run whether or not they are locked.** When locked the screen shows `>>> LOCKED <<<` under the lines.
 - Changing Routine moves Start to that routine's home spot (S1 for A1, A2 and A3 role 1; S6 for A3 role 2; A0 keeps Start). Change Start afterwards if needed.
-- Valid starts: A0 any; A1, A2 and A3 role 1: S1–S4; A3 role 2: S6 (S7 is accepted with a CHECK warning). Any other combination shows `CHECK: !! INVALID START Sx FOR <ROUTINE>: ROBOT WILL NOT MOVE`, and the robot does not move.
-- Other `CHECK:` lines: "A3 role 2 cannot shoot from S7: the second cell is 31 deg off the turret centre (limits -28/+28). Use S6, or skip A3"; "Park INNER from S5/S7 crosses the CORNER slot: use CORNER unless the partner parks after us"; "Park SOLO touches both slots: only if the partner does not park in AUTO"; "0 preloads: nothing to shoot"; "Preloads n: a match starts with exactly 4 (G304.G)"; the S6 FLOWER warning (red F-far, blue F-aud); "A2/A3 needs a TUNED path follower … and, for A3, a rehearsal with the partner".
-- Under the menu: `Place robot at (x, y), heading h = front faces … wall (square to the wall)` and "(the POSE line below only repeats this selection - check the placement with the jig)". It is **not** a placement check. With no Pinpoint: `!! NO ODOMETRY: paths are skipped (no LEAVE/PARK). From S1, A1 still fires from the start spot`. Before tuning: `NOTE: Pedro Foresight not tuned yet … paths capped at half speed`.
-- AUTO INIT holds only the positional servos (turret centre, feeder gate closed, hood); the intake, spinners, wheels and flywheel stay unpowered until START. The selected alliance is saved to `/sdcard/FIRST/12303_alliance.txt` on every INIT change and at START, so TeleOp starts on the same colour even after an app restart.
+- Valid starts: A0 any; A1, A2 and A3 role 1: S1–S4; A3 role 2: S6 only. Any other combination shows `CHECK: !! INVALID START Sx FOR <ROUTINE>: ROBOT WILL NOT MOVE` followed by the starts to use, ` (use S1-S4)` or ` (use S6)` (for example `CHECK: !! INVALID START S7 FOR A3_ROLE2: ROBOT WILL NOT MOVE (use S6)`), and the robot does not move.
+- Other `CHECK:` lines: "Park INNER from S5/S7 crosses the CORNER slot: use CORNER unless the partner parks after us"; "Park SOLO touches both slots: only if the partner does not park in AUTO"; "0 preloads: nothing to shoot"; "Preloads n: a match starts with exactly 4 (G304.G)"; the S6 FLOWER warning (red F-far, blue F-aud); "A2/A3 needs a TUNED path follower … and, for A3, a rehearsal with the partner".
+- The alliance banner stays the top line. Without a mouth sensor, three lines come right under the menu and its lock line: `!!!! NO MOUTH SENSOR ('mouthColor'): balls coming in are NOT counted and NECTAR is NOT refused (G407/G408) !!!!`, then two `!!` lines: the count starts at the preloads and drops by one per feed (an RB volley feeds 4 times); the drivers stop intaking at 4 by eye and steer around NECTAR, and an eject (LB) does not lower the count, so the operator presses back once per ball ejected.
+- Below them (right under the menu when a mouth sensor is fitted): `Place robot at (x, y), heading h = front faces … wall (front against the wall, square)` and "(the POSE line below only repeats this selection - check the placement with the jig)". It is **not** a placement check. With no Pinpoint: `!! NO ODOMETRY: paths are skipped (no LEAVE/PARK). From S1, A1 still fires from the start spot`. Before tuning: `NOTE: Pedro Foresight not tuned yet … paths capped at half speed`.
+- AUTO INIT moves nothing: the intake, carrier, wheels and flywheel stay unpowered until START. The selected alliance is saved to `/sdcard/FIRST/12303_alliance.txt` on every INIT change and at START, so TeleOp starts on the same colour even after an app restart.
 - Exact buttons are in the code README: `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/README-12303.md`.
 
 ---
@@ -310,24 +316,25 @@ Gamepad 1 menu during INIT of the one AUTO OpMode, **12303 Auto**. The coach may
 
 **Rule: (x, y, heading) → (-x, -y, heading + 180°).** Don't mirror. The code applies this one function to every red pose.
 
-| Name | Red | Blue | Blue: back against |
+| Name | Red | Blue | Blue: front against |
 |---|---|---|---|
-| S1 | (61.67, -12.75, 180°) | (-61.67, 12.75, 0°) | far wall (our start wall), on our HIVE axis |
-| S2 | (61.67, -37.5, 180°) | (-61.67, 37.5, 0°) | far wall, column E |
-| S3 | (45, -61.67, 90°) | (-45, 61.67, -90°) | blue wall, far side |
-| S4 | (0, -61.67, 90°) | (0, 61.67, -90°) | blue wall, centre |
-| S5 | (-61.67, -61.67, 0°) | (61.67, 61.67, 180°) | audience/blue corner |
-| S6 | (-61.67, -10.1, 0°) | (61.67, 10.1, 180°) | audience wall, on our HIVE axis, beside F-aud |
-| S7 | (-61.67, -40.0, 0°) | (61.67, 40.0, 180°) | audience wall, column E |
-| Zone A side spot | (55, -37, 147.8°) | (-55, 37, -32.2°) | |
+| S1 | (61.67, -12.75, 0°) | (-61.67, 12.75, 180°) | far wall (our start wall), on our HIVE axis |
+| S2 | (61.67, -37.5, 0°) | (-61.67, 37.5, 180°) | far wall, column E |
+| S3 | (45, -61.67, -90°) | (-45, 61.67, 90°) | blue wall, far side |
+| S4 | (0, -61.67, -90°) | (0, 61.67, 90°) | blue wall, centre |
+| S5 | (-61.67, -61.67, 180°) | (61.67, 61.67, 0°) | audience wall, audience/blue corner |
+| S6 | (-61.67, -10.1, 180°) | (61.67, 10.1, 0°) | audience wall, on our HIVE axis, beside F-aud |
+| S7 | (-61.67, -40.0, 180°) | (61.67, 40.0, 0°) | audience wall, column E |
+| Zone A side spot | (55, -37, -32.2°) | (-55, 37, 147.8°) | |
 | Spill escape | (52, -40) | (-52, 40) | |
 | Corridor points | (30, -42), (-30, -40) | (-30, 42), (30, 40) | |
 | Garden approach | (52, -40) → (51, -50) | (-52, 40) → (-51, 50) | |
 | Garden sweep | (60.5, -46) → (60.5, -60) | (-60.5, 46) → (-60.5, 60) | |
-| B2 | (-48, -12.75, 0°) | (48, 12.75, 180°) | |
-| A3 role-1 wait point | (-30, -40, 0°) | (30, 40, 180°) | |
+| Garden sweep heading | -90° | 90° | |
+| B2 | (-48, -12.75, 180°) | (48, 12.75, 0°) | |
+| A3 role-1 wait point | (-30, -40, 180°) | (30, 40, 0°) | |
 | Inner lane | (-31, -35.5) | (31, 35.5) | |
-| Role-1 spot | (-52, -30, 25.9°) | (52, 30, -154.1°) | |
+| Role-1 spot | (-52, -30, -154.1°) | (52, 30, 25.9°) | |
 | Role-1 exit | (-51.5, -36.5) → (-31, -36.5) | (51.5, 36.5) → (31, 36.5) | |
 | Far-wall escape (from S6) | (-50, y) | (50, y) | |
 | Corner slot / inner slot / solo | (-51, -56) / (-27, -56) / (-35.25, -55) | (51, 56) / (27, 56) / (35.25, 55) | |
@@ -344,7 +351,8 @@ Gamepad 1 menu during INIT of the one AUTO OpMode, **12303 Auto**. The coach may
 - **EFSG §7, §12.3** (tiles, tip calibration): https://ftc-resources.firstinspires.org/ftc/field/eventfieldguide
 - **CAD** (all poses, clearances and path lengths; derived by our research): https://ftc-resources.firstinspires.org/ftc/archive/2027/field/field-cad-step
 - **SDK v12.0** (cluster origin = CELL opening centre): https://github.com/FIRST-Tech-Challenge/FtcRobotController/blob/v12.0/README.md
-- **Code** (routes, timings, selector, as of 2026-10-20): `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/` (`config/FieldConstants.java`, `config/RobotConfig.java`, `opmodes/auto/`), checked by `TeamCode/src/test/.../RouteSweepTest`
+- **Code** (routes, timings, selector, aim): `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/` (`config/FieldConstants.java`, `config/RobotConfig.java`, `opmodes/auto/`, `subsystems/Aim.java`, `subsystems/Carrier.java`), checked by `TeamCode/src/test/.../RouteSweepTest` and `AutoTimingTest`
+- **Robot as built** (fixed rear shooter, carrier, no ball sensors): [R8-robot-v2.md](../research/R8-robot-v2.md)
 - **FTCScout** (US AUTO statistics): https://ftcscout.org
 - **MonaShores** (tip timing, volley spacing; community): https://github.com/Mona-Shores-FTC-Robotics/biobuzz
 - **R2 verify F15** (spill up to ~6 s): [R2-field-geometry.verify.md](../research/R2-field-geometry.verify.md)

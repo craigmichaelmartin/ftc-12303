@@ -24,8 +24,8 @@ import org.firstinspires.ftc.teamcode.util.MatchTimer;
  *   Light bar (PS4/PS5 pads only):
  *   driver:   RED = full (4), YELLOW = 1-3 balls, BLUE = empty
  *   operator: BLUE = shooting mode off, RED = target cell faces away (wrong zone, or the HIVE tipped:
- *             press Y), PURPLE = turret at its limit (turn the chassis), GREEN = ready to fire,
- *             YELLOW = spinning up / aiming
+ *             press Y), PURPLE = not aimed: the robot's back is not on the target (driver: hold RB),
+ *             GREEN = ready to fire, YELLOW = aimed, waiting (flywheel spinning up, robot moving, TIP pause)
  *
  * After a target switch shoot from the end the up cell faces (look at the HIVE, or the ">> ... <<"
  * telemetry banner); if you are already there, stay.
@@ -106,13 +106,13 @@ public class Feedback {
     }
 
     /** Light bars: driver shows ball state, operator shows shooter state. Only sent on change. */
-    public void updateLights(boolean full, int balls, boolean spinUpOn, boolean readyToFire, boolean targetReachable,
+    public void updateLights(boolean full, int balls, boolean spinUpOn, boolean readyToFire, boolean aimed,
                              boolean targetFacesAway) {
         Light d = full ? Light.RED : (balls > 0 ? Light.YELLOW : Light.BLUE);
         Light o;
         if (!spinUpOn) o = Light.BLUE;
         else if (targetFacesAway) o = Light.RED;          // wrong zone, or the HIVE tipped: press Y
-        else if (!targetReachable) o = Light.PURPLE;      // turret at its limit: turn the chassis
+        else if (!aimed) o = Light.PURPLE;                // not aimed: driver holds RB (aim-assist)
         else if (readyToFire) o = Light.GREEN;
         else o = Light.YELLOW;
         if (d != driverLight) {

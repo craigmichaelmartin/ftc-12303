@@ -10,7 +10,7 @@ import java.util.TreeMap;
  * (it does NOT extrapolate - shooting outside the measured range is a guess anyway).
  *
  * We use it for "horizontal distance to the CELL opening (in) -> flywheel RPM". Fill it from the
- * ShotMapLogger OpMode (strategy brief testing plan, experiment 2).
+ * ShotMapLogger OpMode (07 testing plan, Exp 2b: the shot map).
  *
  * No FTC imports: can be unit-tested on a laptop.
  */

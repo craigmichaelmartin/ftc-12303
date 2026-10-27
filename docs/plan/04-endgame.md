@@ -25,7 +25,7 @@ Coordinates are red; blue = rotate 180° ([02 blue poses](02-autonomous.md#blue-
 |---|---|
 | Coach | Watches the **field timer**. Says "**NECTAR, GO**" at 0:59 (one second of margin) |
 | Human player | Enters **all remaining NECTAR** into our LOADING ZONE ([human player script](#human-player-script-whole-match)). Rolls it toward a partner only if the partner can use NECTAR; otherwise drops it on the **wall strip** of the LZ, away from the parking slots |
-| Driver + operator | Keep tipping. Phase 1: the intake refuses all NECTAR at the mouth (always the opponent's; ours while `ACCEPT_OWN_NECTAR = false`, because our hood can't launch it yet). The sensor reacts on contact, so steer around NECTAR, especially in our LZ after 1:00 |
+| Driver + operator | Keep tipping. Phase 1: **steer around all NECTAR**, especially in our LZ after 1:00. A mouth sensor refuses NECTAR at the mouth (always the opponent's; ours while `ACCEPT_OWN_NECTAR = false`, because NECTAR through the tunnel, carrier and shooting wheel is untested), but it only reacts on contact; without a mouth sensor nothing refuses it |
 
 ---
 
@@ -104,7 +104,7 @@ Decide with [07 Exp 6](07-testing-and-practice.md#exp-6--nectar-go--no-go). The 
 | Our NECTAR per match | 8: 3 start in our up CELL and spill out with tip 1; 5 in the tray (one per tip, the rest at 1:00) | M p.83–84; G426 |
 | Safe ammo | The opponent may never control our NECTAR | G408 |
 | Saving | About 2 balls per tip, roughly half a load (≈ 7–10 s, est.) | |
-| Robot needs | Intake, indexer and hood pass a 3.6 in ball; its own RPM table (probably 5–20% higher than POLLEN, est.: measure it) | our ball-flight model |
+| Robot needs | The intake, ramp, tunnel, carrier and shooting wheel pass a 3.6 in ball; its own RPM table (probably 5–20% higher than POLLEN, est.: measure it) | our ball-flight model |
 
 ### (b) FLOWERS (last 60 seconds only)
 

@@ -3,7 +3,6 @@ package org.firstinspires.ftc.teamcode.subsystems;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
-import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.teamcode.config.RobotConfig;
 import org.firstinspires.ftc.teamcode.util.Clock;
@@ -14,7 +13,9 @@ import org.firstinspires.ftc.teamcode.util.OptionalHardware;
 import java.util.List;
 
 /**
- * Flywheel (goBILDA 5203 6000 rpm 1:1, 28 counts/rev) + optional hood servo.
+ * Shooting wheel ("flywheel": goBILDA 5203 6000 rpm 1:1 assumed, 28 counts/rev) at the top of the robot's
+ * back. It cannot turn and the ball's exit angle is fixed: the robot aims by turning (subsystems/Aim) and
+ * the distance is handled by the wheel speed (the shot table).
  *
  * Speed control: the REV hub's built-in velocity PIDF (setVelocity) with REV's starting recipe
  * F = 32767 / maxTicksPerSec, P = 0.1 F, I = 0.1 P (RobotConfig section 4). It runs inside the hub at
@@ -46,7 +47,6 @@ public class Shooter {
     }
 
     private final DcMotorEx motor;
-    private final Servo hood;
     private final InterpLUT rpmTable;
 
     private State state = State.DISABLED;
@@ -67,7 +67,6 @@ public class Shooter {
 
     public Shooter(HardwareMap hw, List<String> warnings) {
         motor = OptionalHardware.get(hw, DcMotorEx.class, RobotConfig.FLYWHEEL, warnings);
-        hood = OptionalHardware.getQuiet(hw, Servo.class, RobotConfig.HOOD);
         rpmTable = InterpLUT.fromRows(RobotConfig.SHOT_TABLE);
         if (motor != null) {
             // None of this moves the motor, so it is fine in TeleOp INIT (G403).
@@ -87,16 +86,10 @@ public class Shooter {
                 RobotConfig.FLYWHEEL_D, RobotConfig.flywheelF());
     }
 
-    /** Allow the flywheel to spin and set the hood (TeleOp: at START - G403). */
+    /** Allow the flywheel to spin (TeleOp and AUTO: at START - G403, G304.H). */
     public void arm() {
         armed = true;
         state = State.STOPPED;
-        if (hood != null) hood.setPosition(RobotConfig.HOOD_POSITION);
-    }
-
-    /** AUTO INIT: set the hood (a positional servo may hold the starting configuration, R103); flywheel stays off. */
-    public void armHoodOnly() {
-        if (hood != null) hood.setPosition(RobotConfig.HOOD_POSITION);
     }
 
     public boolean isPresent() {
@@ -138,14 +131,6 @@ public class Shooter {
 
     public double trimRpm() {
         return trimRpm;
-    }
-
-    public void setHoodPosition(double position) {
-        if (hood != null && armed) hood.setPosition(MathUtil.clamp(position, 0, 1));
-    }
-
-    public boolean hasHood() {
-        return hood != null;
     }
 
     // ---------------------------------------------------------------------------------------------

@@ -16,19 +16,19 @@ Written 2026-10-20 from the team's strategy brief. **The strategy decisions are 
 
 **The up CELL faces outward, toward its own end wall, tilted 30°.** You can only score from the half of the field it faces, so **our shooting zone flips after every tip** (CAD; M p.71). The tipped CELL spills toward the zone we were just shooting from, about 3 s after the threshold ball (allow up to 6 s; MonaShores).
 
-**Robot: we KEEP the current design and tune it.**
+**Robot: we tune the robot as built** ([R8](../research/R8-robot-v2.md)). The intake wheel is at the front and a fixed shooting wheel at the top of the back; a carrier wheel above the ball tunnel holds the balls and feeds them one at a time. The shooter cannot turn, so **the robot aims by turning its back to the up CELL** (driver: hold RB for aim-assist).
 - Fix the inspection blockers.
-- Add possession sensors.
-- Tune the flywheel and hood.
-- Give the turret more range (5-turn servo) and a calibrated zero.
-- Power the servos at 6 V.
+- Make sure the tunnel holds no more than 4 balls (add a stop if a 5th fits), then add the ball sensors.
+- Tune the shooting wheel's speed control and the carrier's feed timing.
+- Measure the fixed exit angle and where the ball leaves the robot, then build the distance → RPM table.
+- Mount the Limelight looking out of the back, pitched up 35–40°.
 
 Anything bigger is **OPTIONAL**.
 
 | Phase | What we do | Points |
 |---|---|---|
 | **AUTO** | **A1 Tip & Park** from S1: fire all 4 preloads, tip the start CELL, hold until the spill has landed, park off the wall in our LOADING ZONE slot. Stretch, for a tuned robot only: A2 (garden reload) and A3 (alliance double tip) | **28**; **36 + SWARM RP** with a partner that LEAVEs and PARKs |
-| **TELEOP** | **Two-zone loop**: shoot from the zone the up CELL faces · two loads = one tip · after the threshold ball stop; the operator presses Y on the human player's "TIP!"; wait until the spill has landed (usually ~3 s, up to ~6 s), sweep it, cross, fire | One 4-ball load every 15–20 s per robot |
+| **TELEOP** | **Two-zone loop, one turn per cycle**: shoot from the zone the up CELL faces · two loads = one tip · after the threshold ball stop; the operator presses Y on the human player's "TIP!"; wait until the spill has landed behind the robot (usually ~3 s, up to ~6 s), turn around once, sweep it intake-first, keep going to the other zone, arrive with the back already facing the new up CELL, fire | One 4-ball load every 15–20 s per robot |
 | **ENDGAME** | Keep tipping; final volley at ~0:12 (Zone B, the half next to our LZ) or ~0:15 (Zone A); human enters NECTAR at 1:00 on the field timer; both robots park | 10 (+ SWARM) |
 | **Phase 3** (only if NECTAR tests pass) | NECTAR to speed up tips (6 balls instead of 8); FLOWERS (~13 pts each) | |
 
@@ -79,34 +79,33 @@ Anything bigger is **OPTIONAL**.
 
 Owners left blank on purpose: fill them in at the next team meeting. Robot time is about 4–8 h per week (≈ 30–45 h total).
 
-### Week 1 · 10/20–10/26: blockers, sensors, flywheel, first tests
+### Week 1 · 10/20–10/26: blockers, tunnel, carrier, sensors, flywheel, first tests
 - [ ] Register and confirm league placement with FiM (Round 3 opens 10/21, 7 am). Owner: ____
-- [ ] Inspection blockers: Limelight **confirmed 3A** (coach, 10/21); main power switch, signs (a grounding strap is recommended, not required) ([05 §1](05-robot-tuning.md#1-inspection-blockers-fix-these-in-week-1)). Owner: ____
-- [ ] Possession sensors (mouth, slot 4, feed beam) + software auto-stop at 4 ([05 §2](05-robot-tuning.md#2-must-rules-and-inspection)). Owner: ____
-- [ ] Flywheel velocity control + "ready" gate ([06 §5](06-software.md#5-flywheel-control-and-the-distance--rpm-table)). Owner: ____
-- [ ] Set-up checks and HIVE calibration; Exp 1 tip threshold; Exp 2a hood angle; start Exp 2b shot map ([07](07-testing-and-practice.md)). Owner: ____
-- [ ] X/Y odometry pods are already on the robot (coach, 10/21): run **Check: Odometry** (push the robot 48 in forward, then 48 in left): it says whether a Pinpoint is found, names the pod from its counts per inch (goBILDA 4-bar ≈ 505, goBILDA swing-arm ≈ 337, SWYFT 38 mm ≈ 872) and prints the RobotConfig section 3 lines for pod type and directions; starter code on the robot; **Check: Sensors** passes; laptop tests pass ([06 §9](06-software.md#9-tests-tuning-and-logging)). Owner: ____
+- [ ] Inspection blockers: Limelight **confirmed 3A** (coach, 10/21); main power switch; signs; the robot inside the sizing box through the floating intake arm's whole swing (add a mechanical stop if it swings outside). A grounding strap is recommended, not required ([05 §1](05-robot-tuning.md#1-inspection-blockers-fix-these-in-week-1)). Owner: ____
+- [ ] **Exp 0a tunnel capacity first**: the tunnel must hold no more than 4 (add a mechanical stop if a 5th fits) ([07 Exp 0](07-testing-and-practice.md#exp-0--tunnel-capacity-and-carrier-feed-do-these-first)). Then the ball sensors (mouth, slot 4, feed beam) for the software auto-stop at 4 ([05 §2](05-robot-tuning.md#2-must-rules-and-inspection)). Owner: ____
+- [ ] Flywheel velocity control, the "ready" gate and the shot-dip check in **Tune: Flywheel** ([06 §5](06-software.md#5-flywheel-control-and-the-distance--rpm-table)), once Check: Sensors shows the carrier and flywheel directions are right. Then **Exp 0b carrier feed time**: set `CARRIER_FEED_MS` so exactly one ball leaves per push, using the Tune: Flywheel **timed push** (RB: the carrier runs for exactly `CARRIER_FEED_MS`, even when the shot is confirmed early) ([07 Exp 0](07-testing-and-practice.md#exp-0--tunnel-capacity-and-carrier-feed-do-these-first)). Owner: ____
+- [ ] Set-up checks and HIVE calibration; Exp 1 tip threshold; Exp 2a exit point, exit angle and speed ratio ([07](07-testing-and-practice.md)). Owner: ____
+- [ ] X/Y odometry pods are already on the robot (coach, 10/21): run **Check: Odometry** (push the robot 48 in forward, then 48 in left): it says whether a Pinpoint is found, names the pod from its counts per inch (goBILDA 4-bar ≈ 505, goBILDA swing-arm ≈ 337, SWYFT 38 mm ≈ 872) and prints the RobotConfig section 3 lines for pod type and directions; starter code on the robot; **Check: Sensors** passes (wheel, intake, carrier and flywheel directions); laptop tests pass ([06 §9](06-software.md#9-tests-tuning-and-logging)). Owner: ____
 - [ ] Order parts ([05 §6](05-robot-tuning.md#6-shopping-list)); some are out of stock. Owner: ____
-- [ ] Answer the robot questions ([05 §7](05-robot-tuning.md#7-questions-only-the-robot-can-answer-measure-in-week-1)): the "measure on robot" rows in the [07 set-up checks](07-testing-and-practice.md#set-up-checks-week-1-before-any-experiment) (ring and pinion teeth, flywheel drive ratio, hood contact surface, intake layout, 60 mm flywheel fit). Owner: ____
+- [ ] Answer the robot questions ([05 §7](05-robot-tuning.md#7-questions-only-the-robot-can-answer-measure-in-week-1)): the "measure on robot" rows in the [07 set-up checks](07-testing-and-practice.md#set-up-checks-week-1-before-any-experiment) (what drives the carrier, the shooting-wheel motor and ratio, where the ball leaves the shooter, intake gearing and arm swing, steel-flywheel fit), and ask the coach what the black L-shaped plate is for. Owner: ____
 
-### Week 2 · 10/27–11/2: turret, Limelight, A0/A1, Pedro
-- [ ] Turret: 5-turn servo (optional Through Bore Encoder on an idler gear, feedback only), plus hard stops and Tune: Turret Calibrator zero/ratio calibration ([05 §3.5](05-robot-tuning.md#35-turret-range-and-a-known-zero)). Owner: ____
-- [ ] Limelight on the turret (35–40° up), one pipeline set over USB (ID filter 30–45, 82.55 mm, Full 3D), vision bias working. Owner: ____
-- [ ] Pedro tuning at home (remove the 0.5 speed cap once tuned), then **AutoTune compiled out again** (`PEDRO_AUTOTUNE = false`, re-deploy; [06 §8](06-software.md#8-competition-rules-for-software-checklist)). Owner: ____
+### Week 2 · 10/27–11/2: Limelight, Pedro, aim-assist, shot map, A0/A1
+- [ ] Limelight on the back of the robot (looking out of the back, 35–40° up), one pipeline set over USB (ID filter 30–45, 82.55 mm, Full 3D), Check: Limelight calibrated, vision bias working ([05 §3.8](05-robot-tuning.md#38-limelight-3a-on-the-back)). Owner: ____
+- [ ] Pedro tuning at home (remove the 0.5 speed cap once tuned), then **AutoTune compiled out again** (`PEDRO_AUTOTUNE = false`, re-deploy; [06 §8](06-software.md#8-competition-rules-for-software-checklist)); then the driver aim-assist gains (`AIM_ASSIST_MIN_TURN`, `AIM_ASSIST_TURN_KP`): RB turns the robot onto the target without stopping short or hunting. Owner: ____
 - [ ] **A0 10/10 and A1 ≥ 8/10** ([02](02-autonomous.md), Exp 7). Owner: ____
-- [ ] Exp 2b/2c shot map and bounce-outs; Exp 3 flywheel recovery with and without the 60 mm steel flywheel. Owner: ____
+- [ ] Once the aim-assist gains are set: Exp 2b shot map (**Tune: Shot Map Logger**, hold RT for aim-assist) and Exp 2c bounce-outs. The shortest shots (B2 is a ≈ 24.5 in shot) decide whether B2 stays at (-48, -12.75) ([02 poses](02-autonomous.md#poses-red)). Exp 3 flywheel recovery (Tune: Flywheel, LB = a 4-feed volley) with and without a steel flywheel disc (if one fits). Owner: ____
 - [ ] Drills DR8 (human player) and DR9 (transition). Owner: ____
 
 ### Week 3 · 11/3–11/9: TELEOP automation and driving
 - [ ] Auto-aim, one-button volley, auto-stop at 4, rumble/LED cues, HIVE override ([06](06-software.md)). Owner: ____
-- [ ] Drills DR1–DR5; **load cycle ≤ 20 s** ([07](07-testing-and-practice.md#driver-drills)). Owner: ____
-- [ ] Bounce-out fixes: compliant hood, consistent squeeze ([05 §3.3](05-robot-tuning.md#33-hood-angle-and-bounce-outs)). Owner: ____
-- [ ] Servos on 6 V power ([05 §3.6](05-robot-tuning.md#36-intake-power-keep-the-servo-give-it-6-v)). Owner: ____
+- [ ] Drills DR1–DR5; **load cycle ≤ 20 s**, one turn per cycle ([07](07-testing-and-practice.md#driver-drills)). Owner: ____
+- [ ] Bounce-out fixes: a compliant lining where the ball is squeezed, a consistent squeeze ([05 §3.3](05-robot-tuning.md#33-exit-angle-and-bounce-outs)). Owner: ____
+- [ ] Intake motor direction and speed set (`INTAKE_DIRECTION`, `INTAKE_IN_POWER`; [05 §3.6](05-robot-tuning.md#36-intake-motor-direction-and-speed)). Owner: ____
 
 ### Week 4 · 11/10–11/16: stretch AUTOs and NECTAR decision
-- [ ] A2, A3 role 1, A3 role 2 routines (12303 Auto): only with a tuned follower; promote only at ≥ 8/10; A3 also needs a rehearsal with the partner. Owner: ____
+- [ ] A2, A3 role 1, A3 role 2 routines (12303 Auto): only with a tuned follower; promote only at ≥ 8/10; A3 also needs a rehearsal with the partner. If the shot map moved B2, change `ZONE_B_SHOOT_X` and re-run the laptop route test first ([02 poses](02-autonomous.md#poses-red)). Owner: ____
 - [ ] Exp 5 FLOWER extraction, Exp 6 NECTAR go/no-go, Exp 8 intake speed. Owner: ____
-- [ ] Decide on OPTIONAL changes (DC-motor intake, extractor) from the data. Owner: ____
+- [ ] Decide on OPTIONAL changes (FLOWER extractor, NECTAR path, hood adjustment) from the data. Owner: ____
 - [ ] Drills DR6 (endgame) and DR7 (defence). Owner: ____
 - [ ] Meet Purple 11/11, if registered. Owner: ____
 
@@ -132,11 +131,13 @@ Owners left blank on purpose: fill them in at the next team meeting. Robot time 
 
 | Metric | Target | By | Measured in |
 |---|---|---|---|
+| Tunnel capacity | Holds 4; a 5th ball never gets in | W1 | Exp 0a |
+| Carrier feed | Exactly one ball per push, 20/20 | W1 | Exp 0b |
 | A1 AUTO in practice | ≥ 8/10 runs | End of W2 | Exp 7 |
 | AUTO in matches | Tip + LEAVE + PARK in ≥ 80% of matches | League Tournament | Match log |
 | SWARM RP | ≥ 80% of matches (US average so far 50%, Saline 73%: FTCScout) | League Tournament | Match log |
 | Tips contributed by 12303 | **1 AUTO + 2–3 TELEOP per match** | League Tournament | Match log / scouting |
-| Load cycle | ≤ 20 s (stretch 15 s) | W3–W4 | DR1 |
+| Load cycle | ≤ 20 s (stretch 15 s) | W3–W4 | Exp 4, DR1 |
 | Shot accuracy | ≥ 8/10 clean from 3 spots per zone | W3 | DR2, Exp 2 |
 | Bounce-outs | ≤ 5% | W3 | Exp 2c |
 | Flywheel ready from idle | < 1.0 s | W2 | Exp 3 |
@@ -152,17 +153,18 @@ Owners left blank on purpose: fill them in at the next team meeting. Robot time 
 | # | Risk | Why it matters | What we do | Owner |
 |---|---|---|---|---|
 | 1 | Too few League Meet matches | Missing matches count as zero in the League Tournament ranking (M p.167) | Confirm FiM placement now; play ≥ 2 meets if at all possible | |
-| 2 | Inspection blockers (Limelight model, power switch, signs) | Robot can't play (G303) | Week-1 fixes ([05 §1](05-robot-tuning.md#1-inspection-blockers-fix-these-in-week-1)) | |
-| 3 | The indexer isn't finished | A1 needs the robot to hold and feed 4 balls | Build it first (W1–W2) | |
-| 4 | Inconsistent shots, bounce-outs (44% in one team's test, CD-14343) | Tips need balls to stay in | Speed-gated feeding, 60 mm flywheel, compliant hood, Exp 2–3 | |
-| 5 | G407/G408 fouls from the full-width roller (no momentary exception; QA34 pending) | MAJOR fouls and cards | Sensors + auto-stop + DR4 | |
-| 6 | Turret has only ~50–75° of travel and no feedback | Aim offset if the pinion skips a tooth after a hit | 5-turn servo (+ optional encoder feedback); re-check the zero after hits; chassis-aim fallback (`TURRET_PINNED`) | |
-| 7 | Slow servo intake | Too few loads per match | 6 V power, Exp 8, OPTIONAL DC-motor intake | |
+| 2 | Inspection blockers (Limelight model, power switch, signs, size through the intake arm's swing) | Robot can't play (G303) | Week-1 fixes ([05 §1](05-robot-tuning.md#1-inspection-blockers-fix-these-in-week-1)) | |
+| 3 | Tunnel capacity and carrier feed untested | A1 needs the robot to hold exactly 4 balls and feed them one at a time | Exp 0 first (W1): a stop if a 5th ball fits; `CARRIER_FEED_MS` set so one ball leaves per push | |
+| 4 | Inconsistent shots, bounce-outs (44% in one team's test, CD-14343); the fixed exit angle is not measured | Tips need balls to stay in | Speed-gated feeding, a steel flywheel disc if it fits, a compliant lining where the ball is squeezed, Exp 2–3 | |
+| 5 | G407/G408 fouls: no ball sensors fitted, so nothing counts balls coming in or refuses NECTAR; full-width roller (no momentary exception; QA34 pending) | MAJOR fouls and cards | Tunnel holds 4 at most; fit the sensors (MUST); without them the drivers stop at 4 by eye and steer around NECTAR; DR4 | |
+| 6 | Aiming means turning the whole robot | Slow aim or a robot pushed off target loses shots | Tune the RB aim-assist gains (W2); stop to shoot; manual aim as a fallback; DR2, DR7 | |
+| 7 | Intake speed and pickup unknown (motor on a floating arm) | Too few loads per match | Exp 8; intake direction and power; garden sweep test before A2/A3 | |
 | 8 | Our HIVE differs from event HIVEs (variation; dwell 0.25–3.4 s) | Wrong ball counts and timing | Calibrate to EFSG §12.3; fire full volleys; the coach keeps the count | |
 | 9 | Wi-Fi streaming at the venue (Dashboard, Panels, Pedro AutoTune) | Rule violation (R704.D, QA26) | `PEDRO_AUTOTUNE = false` and re-deploy before events; every 12303 OpMode shows an INIT warning line ([06 §8](06-software.md#8-competition-rules-for-software-checklist)) | |
-| 10 | Parts out of stock (Brushland sensor, 312 rpm motor) | Delays | Order alternatives now ([05 §6](05-robot-tuning.md#6-shopping-list)) | |
+| 10 | Parts out of stock (Brushland sensor) | Delays | Order alternatives now ([05 §6](05-robot-tuning.md#6-shopping-list)) | |
 | 11 | Only 4–8 h of robot time per week | The plan slips | Follow the time budget ([07](07-testing-and-practice.md#suggested-use-of-robot-time-48-h-per-week-est)); freeze in W6 | |
 | 12 | Plan and code drift apart (poses, buttons) | Confusion at events | The code README is the final word; update these docs when the code changes; the laptop route test checks every AUTO leg | |
+| 13 | Short shots: the ball leaves about 7 in behind the robot centre (placeholder), so B2, A2's volley-2 spot, is a ≈ 24.5 in shot, below the 30–92 in shot band | A2's second volley may miss | Measure where the ball leaves and the exit angle first (Exp 2a); then the shot map (Exp 2b) decides B2. If the short shot misses, move B2 back toward (-55, -12.75) (≈ 31.5 in), which is only ≈ 1.6 in from the F-far FLOWER on an approach that drives toward it ([02 poses](02-autonomous.md#poses-red)) | |
 
 ---
 
@@ -190,7 +192,11 @@ Owners left blank on purpose: fill them in at the next team meeting. Robot time 
 | Odometry, Pinpoint | Tracking position with small free-spinning wheels; Pinpoint is goBILDA's computer for it |
 | Pedro Pathing | The library that drives AUTO paths |
 | Limelight, AprilTag | Our camera; the printed square codes on the CELLS it recognises |
-| Turret / hood / flywheel / indexer | Rotating shooter base / curved guide that sets the launch angle / spinning wheel that throws the ball / internal ball conveyor |
+| Front / back | The robot's intake side / its shooter side. Heading = the way the front faces |
+| Intake wheel / tunnel / carrier wheel | The star-wheel roller on the floating front arm that pulls balls in / the channel inside the robot where up to 4 balls wait / the wheel above the tunnel that holds the balls while stopped and pushes one into the shooting wheel while spinning |
+| Shooting wheel (flywheel) / exit angle | The fast wheel at the top of the back that throws the ball / the fixed angle the ball leaves at |
+| Aim-assist / aim tolerance | Driver RB: the robot turns until its back points at the target CELL / how far off that heading a shot may still be fired (1.5–4°, worked out for each shot) |
+| Shot distance | Horizontal distance from where the ball leaves the robot (with the robot turned onto its aim) to the centre of the CELL opening: the number on the AIM telemetry line and the input to the RPM table. Until that exit point is measured (`SHOOTER_FORWARD_IN`), the code puts it 7 in behind the robot centre, so a shot distance is 7 in less than the distance from the robot centre |
 | PIDF / LUT | Speed controller / lookup table of measured settings |
 | MINOR / MAJOR / STRATEGIC | 5-point foul / 20-point foul / deliberate or reckless (makes penalties bigger) |
 

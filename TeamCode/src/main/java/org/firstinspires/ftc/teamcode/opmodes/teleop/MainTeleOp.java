@@ -22,21 +22,27 @@ import java.util.Locale;
 /**
  * 12303 match TeleOp.
  *
+ * The shooter is fixed and shoots out of the robot's BACK; the intake is at the FRONT. The robot aims by
+ * turning its back to the up cell (driver RB = aim-assist).
+ *
  * DRIVER (gamepad1)                          OPERATOR (gamepad2)
  *   left stick   drive (field-centric)         A / cross      SHOOTING MODE on/off (flywheel + auto-aim);
  *   right stick  turn                                         turning it OFF also cancels a requested volley
  *   LB (hold)    slow mode                     RB             FIRE VOLLEY (all balls, each when ready)
- *   RB (hold)    aim-assist: turn the chassis  X / square     fire ONE ball
- *                so the turret is centred      B / circle     stop firing
- *   RT (hold)    intake in (stops at 4)        Y / triangle   HIVE TIPPED - press on every "TIP!": flips the
- *   LT (hold)    intake out                                   target cell A <-> B; within 3 s of a camera
- *   back/share   heading reset: robot must                    switch it CONFIRMS that switch instead
- *                face straight AWAY from you   dpad up/down   flywheel RPM trim +-50
- *   LB + Y       "robot is at OUR S1"          dpad lft/rgt   turret trim (left = CCW)
- *                relocalize (red: back on the  right stick X  manual turret (whenever auto-aim is off)
- *                audience wall; blue: back on  R-stick click  MANUAL AIM on/off: RB/X then fire at the
- *                the far wall)                                manual angle once the flywheel is at speed
- *                                              LB (hold)      EJECT: intake + spinners backward
+ *   RB (hold)    aim-assist: turn the robot    X / square     fire ONE ball
+ *                so its back (the shooter)     B / circle     stop firing
+ *                points at the target cell     Y / triangle   HIVE TIPPED - press on every "TIP!": flips the
+ *   RT (hold)    intake in: stops at 4 with                   target cell A <-> B; within 3 s of a camera
+ *                the mouth or slot-4 sensor;                  switch it CONFIRMS that switch instead
+ *                without them stop at 4 BY EYE dpad up/down   flywheel RPM trim +-50
+ *   LT (hold)    intake out                    dpad lft/rgt   aim trim +-0.5 deg (left = the ball goes
+ *   back/share   heading reset: robot must                    further left, seen from the shooter looking
+ *                face straight AWAY from you                  toward the cell)
+ *   LB + Y       "robot is at OUR S1"          R-stick click  MANUAL AIM on/off: RB/X then fire as soon as
+ *                relocalize (red: front on the                the flywheel is at speed, wherever the robot
+ *                audience wall; blue: front on                points
+ *                the far wall)                 LB (hold)      EJECT: intake + carrier backward (no mouth
+ *                                                             sensor: press back once per ball ejected)
  *                                              back/share     ball count -1
  *                                              L-stick click  ball count +1
  * INIT: gamepad1 X = BLUE, B = RED (with AUTO data this rotates the hand-over pose to the other side);
@@ -60,7 +66,6 @@ public class MainTeleOp extends LinearOpMode {
     private boolean fromAuto;
     private boolean allianceFromMemory = false;
     private boolean manualAim = false;
-    private long lastLoopNs = 0;
     private long tipAtMs = -100000;
     private long lastShotMs = -100000;
     private long volleyCancelledAtMs = -100000;
@@ -87,7 +92,7 @@ public class MainTeleOp extends LinearOpMode {
 
         if (fromAuto) {
             robot.drive.setPose(PoseStorage.pose());
-            robot.indexer.setCount(PoseStorage.ballCount());
+            robot.carrier.setCount(PoseStorage.ballCount());
             robot.hive.restore(PoseStorage.hiveState());
         } else {
             setPracticeStart();
@@ -110,9 +115,8 @@ public class MainTeleOp extends LinearOpMode {
         gamepad2.resetEdgeDetection();
 
         while (opModeIsActive()) {
-            double dt = loopSeconds();
             driverControls();
-            operatorControls(dt);
+            operatorControls();
             robot.update();
             long now = System.currentTimeMillis();
 
@@ -131,11 +135,11 @@ public class MainTeleOp extends LinearOpMode {
                 unconfirmedFeedAtMs = now;
                 feedback.onUnconfirmedFeed();
             }
-            wasFiring = robot.indexer.isFiring();
+            wasFiring = robot.carrier.isFiring();
             feedback.updateTimeCues(timer);
             feedback.updateShooter(robot.spinUp(), robot.shooter.atSpeed());
-            feedback.updateLights(robot.indexer.isFull(), robot.indexer.count(), robot.spinUp(),
-                    robot.readyToFire(), robot.aim().reachable || !robot.autoAim(),
+            feedback.updateLights(robot.carrier.isFull(), robot.carrier.count(), robot.spinUp(),
+                    robot.readyToFire(), robot.aimReady(),
                     robot.autoAim() && robot.targetFacesAway());
 
             showMatchTelemetry(timer);
@@ -161,10 +165,9 @@ public class MainTeleOp extends LinearOpMode {
             turnLeft *= RobotConfig.DRIVE_SLOW_SCALE;
         }
         if (gamepad1.right_bumper && robot.drive.hasLocalizer()) {
-            // Aim-assist: turret travel is small (~+-28 deg; none when pinned), so the chassis does the
-            // coarse aiming.
-            turnLeft = MathUtil.clamp(RobotConfig.AIM_ASSIST_TURN_KP * robot.aim().chassisTurnDeg,
-                    -RobotConfig.AIM_ASSIST_MAX_TURN, RobotConfig.AIM_ASSIST_MAX_TURN);
+            // Aim-assist: the shooter is fixed, so the robot turns until its back points at the target
+            // (it stops inside half of the aim tolerance). The left stick still drives.
+            turnLeft = robot.aimAssistTurn();
         }
         robot.drive.driveFieldCentric(up, right, turnLeft, alliance.driverForwardHeadingDeg());
 
@@ -176,8 +179,8 @@ public class MainTeleOp extends LinearOpMode {
             robot.drive.setHeadingDeg(alliance.driverForwardHeadingDeg());
         }
         if (yPressed && gamepad1.left_bumper && robot.drive.isStill()) {
-            // Only when the robot is parked exactly on OUR S1 (red: back on the audience wall at
-            // (61.67, -12.75); blue: back on the far wall at (-61.67, 12.75)).
+            // Only when the robot is parked exactly on OUR S1 (red: front (intake) on the audience wall at
+            // (61.67, -12.75); blue: front on the far wall at (-61.67, 12.75)).
             robot.drive.setPose(FieldConstants.startPose(alliance, FieldConstants.StartSpot.S1));
         }
     }
@@ -185,7 +188,7 @@ public class MainTeleOp extends LinearOpMode {
     // ---------------------------------------------------------------------------------------------
     // Operator (gamepad2)
     // ---------------------------------------------------------------------------------------------
-    private void operatorControls(double dt) {
+    private void operatorControls() {
         boolean aPressed = gamepad2.aWasPressed();
         boolean rbPressed = gamepad2.rightBumperWasPressed();
         boolean xPressed = gamepad2.xWasPressed();
@@ -201,42 +204,36 @@ public class MainTeleOp extends LinearOpMode {
 
         if (rightStickPressed) {
             manualAim = !manualAim;
-            double keep = robot.turret.commandOffsetDeg();
             robot.setAutoAim(robot.spinUp() && !manualAim);
-            if (manualAim) robot.turret.setManualOffset(keep);   // start manual aim from the current angle
         }
         if (aPressed) {
             boolean on = !robot.spinUp();
             robot.setSpinUp(on);
             robot.setAutoAim(on && !manualAim);
-            if (!on) robot.indexer.cancelFiring();   // shooting mode OFF also cancels a requested volley
+            if (!on) robot.carrier.cancelFiring();   // shooting mode OFF also cancels a requested volley
         }
         if (rbPressed) {
             robot.setSpinUp(true);                   // firing needs the flywheel (and the aim) anyway
             robot.setAutoAim(!manualAim);
-            robot.indexer.requestVolley();
+            robot.carrier.requestVolley();
         }
         if (xPressed) {
             robot.setSpinUp(true);
             robot.setAutoAim(!manualAim);
-            robot.indexer.requestSingleShot();
+            robot.carrier.requestSingleShot();
         }
-        if (bPressed) robot.indexer.cancelFiring();
+        if (bPressed) robot.carrier.cancelFiring();
         if (yPressed) robot.hive.operatorTipped();
 
         if (upPressed) robot.shooter.adjustTrim(RobotConfig.FLYWHEEL_TRIM_STEP_RPM);
         if (downPressed) robot.shooter.adjustTrim(-RobotConfig.FLYWHEEL_TRIM_STEP_RPM);
-        if (leftPressed) robot.turret.addTrim(RobotConfig.TURRET_TRIM_STEP_DEG);
-        if (rightPressed) robot.turret.addTrim(-RobotConfig.TURRET_TRIM_STEP_DEG);
+        // CCW: the ball goes further left, seen from the shooter looking toward the cell
+        if (leftPressed) robot.addAimTrim(RobotConfig.AIM_TRIM_STEP_DEG);
+        if (rightPressed) robot.addAimTrim(-RobotConfig.AIM_TRIM_STEP_DEG);
 
-        if (!robot.autoAim()) {
-            double stick = MathUtil.deadband(-gamepad2.right_stick_x, 0.1);
-            if (stick != 0) robot.turret.nudgeManual(stick * RobotConfig.TURRET_MANUAL_DEG_PER_SEC * dt);
-        }
-
-        robot.indexer.setEjecting(gamepad2.left_bumper);
-        if (backPressed) robot.indexer.adjustCount(-1);
-        if (stickPressed) robot.indexer.adjustCount(+1);
+        robot.carrier.setEjecting(gamepad2.left_bumper);
+        if (backPressed) robot.carrier.adjustCount(-1);
+        if (stickPressed) robot.carrier.adjustCount(+1);
     }
 
     // ---------------------------------------------------------------------------------------------
@@ -249,7 +246,7 @@ public class MainTeleOp extends LinearOpMode {
      */
     private void setPracticeStart() {
         robot.drive.setPose(FieldConstants.startPose(alliance, FieldConstants.StartSpot.S1));
-        robot.indexer.setCount(RobotConfig.MAX_BALLS);
+        robot.carrier.setCount(RobotConfig.MAX_BALLS);
         robot.hive.restore(HiveState.A);
     }
 
@@ -270,20 +267,21 @@ public class MainTeleOp extends LinearOpMode {
                     Pose p = robot.drive.pose();
                     robot.drive.setPose(new Pose(-p.x(), -p.y(), MathUtil.wrapRad(p.heading() + Math.PI)));
                 } else {
-                    int balls = robot.indexer.count();
+                    int balls = robot.carrier.count();
                     setPracticeStart();
-                    robot.indexer.setCount(balls);
+                    robot.carrier.setCount(balls);
                 }
             }
         }
-        if (upPressed) robot.indexer.adjustCount(+1);
-        if (downPressed) robot.indexer.adjustCount(-1);
+        if (upPressed) robot.carrier.adjustCount(+1);
+        if (downPressed) robot.carrier.adjustCount(-1);
     }
 
     private void showInitTelemetry() {
         telemetry.addLine("=== 12303 TeleOp - INIT (nothing moves until START, G403) ===");
         String warning = CompetitionCheck.warning();
         if (warning != null) telemetry.addLine(warning);
+        robot.addBallSensorWarning(telemetry);
         if (fromAuto) {
             telemetry.addLine(String.format(Locale.US, "Alliance %s (from AUTO, %.0f s ago) - wrong? gamepad1 X = BLUE / B = RED",
                     alliance, PoseStorage.ageSeconds()));
@@ -297,7 +295,7 @@ public class MainTeleOp extends LinearOpMode {
                     + (allianceFromMemory ? " (from the last AUTO INIT)" : " (default)")
                     + ". Press gamepad1 X = BLUE / B = RED to change");
             telemetry.addLine("Robot assumed on OUR S1 (" + FieldConstants.StartSpot.S1.description(alliance)
-                    + "). Not there? After START: point it straight away from the drivers and press back; "
+                    + "). Not there? After START: point its front straight away from the drivers and press back; "
                     + "relocalize with LB+Y when it is on S1.");
             telemetry.addLine("Ball count starts at 4 (match preloads). Fewer: gamepad2 dpad down");
         }
@@ -312,7 +310,7 @@ public class MainTeleOp extends LinearOpMode {
         String mode = !robot.spinUp() ? "shooting mode OFF"
                 : (robot.readyToFire() ? "READY TO FIRE" : "spinning up / aiming");
         telemetry.addLine(String.format(Locale.US, "TIME %s | %s | BALLS %d/4 | %s%s",
-                timer.remainingText(), alliance, robot.indexer.count(), mode, manualAim ? " | MANUAL AIM" : ""));
+                timer.remainingText(), alliance, robot.carrier.count(), mode, manualAim ? " | MANUAL AIM" : ""));
         if (now - tipAtMs < BANNER_MS) {
             telemetry.addLine(">> TARGET SWITCHED: " + robot.hive.goText() + " (stay if you are already there) <<");
         }
@@ -330,15 +328,11 @@ public class MainTeleOp extends LinearOpMode {
         if (afterTip || afterOurVolley) {
             telemetry.addLine("!! IN THE SPILL LANDING BOX - a TIP may be spilling: back off until the balls land (G409)");
         }
-        if (robot.intake.refusedBecauseFull()) telemetry.addLine("Intake refused: FULL (4 balls, G407)");
+        if (robot.intake.refusedBecauseFull()) {
+            telemetry.addLine("Intake refused: FULL (4 balls, G407)" + (robot.carrier.hasMouthSensor() ? ""
+                    : " - no mouth sensor: after an eject, operator back = -1 per ball ejected"));
+        }
         robot.addTelemetry(telemetry);
         telemetry.update();
-    }
-
-    private double loopSeconds() {
-        long now = System.nanoTime();
-        double dt = (lastLoopNs == 0) ? 0.0 : (now - lastLoopNs) / 1e9;
-        lastLoopNs = now;
-        return dt;
     }
 }

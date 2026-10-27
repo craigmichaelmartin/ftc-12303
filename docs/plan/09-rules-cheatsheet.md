@@ -104,7 +104,7 @@ Source tags: see the [source key](00-master-plan.md#source-key).
 
 | Rule | Short version |
 |---|---|
-| R105 / G416 | 18 × 24 × 29 in after the start, **enforced mechanically** (software limits don't count); a turret must fit at every angle |
+| R105 / G416 | 18 × 24 × 29 in after the start, **enforced mechanically** (software limits don't count); a moving part must fit at every point of its travel (for us: the floating intake arm) |
 | R201 / R202 | No sharp edges, nothing that damages balls or tiles; no fake AprilTags; lights only briefly |
 | R401–R403 | ≥ 2 signs on surfaces ≥ 90° apart; ≥ 6.5 × 2.5 in, solid red or blue; white numerals about 2.25 in; not stacked or lit |
 | R501–R505 | Legal motors include the SWYFT Spike and goBILDA 520x. Servos ≤ 8 W and ≤ 4 A at 6 V. **≤ 8 motors and ≤ 8 servos** across all configurations. Approved power devices only (Servo Hub / 6 V injector OK) |
@@ -137,7 +137,7 @@ Board: https://game-qa.firstinspires.org/boards/2027/FTC/QA (question n is at `/
 | 16 | Any gamepad the DS supports, wired | Wired PS4/PS5 for rumble |
 | **17** | Balls bouncing off a robot under a tipping HIVE = **G409 violation** | Spill discipline |
 | **21** | LEAVE is judged at the end of AUTO; **touching any wall = no LEAVE** | Park poses 5.7–6.7 in off the wall |
-| 22 | A potentiometer taken from a servo, used as a sensor, is an allowed custom circuit | Option for turret feedback |
+| 22 | A potentiometer taken from a servo, used as a sensor, is an allowed custom circuit | Allowed if we ever need a position sensor |
 | **23** | **No momentary exception for G407 or G408**; routine design-based over-control is likely STRATEGIC | Possession is a design requirement |
 | 25 | Camera mirrors aren't pre-approved; inspectors judge safety | – |
 | **26** | **No Wi-Fi streaming anywhere in the venue** (R704.D) | Competition build; tune the Limelight over USB |
@@ -155,7 +155,7 @@ Check the answers feed weekly: https://game-qa.firstinspires.org/boards/2027/FTC
 | 31 | Joysticks / other USB input devices | – |
 | 32 | 2 in vs 2.25 in sign numerals | Make ours 2.25 in |
 | 33 | E510: cooling a hot motor | Flywheel and drive motors in long events |
-| **34** | **G407: a wide intake bar with extra balls underneath** | **Our full-width roller** |
+| **34** | **G407: a wide intake bar with extra balls underneath** | **Our full-width intake wheel** |
 | **35** | **G409: waiting with the intake on just outside the AUTO spill area** | AUTO and TELEOP spill sweeps |
 | 36 | G426: when NECTAR that left the field may be re-entered | Human player |
 | 37 | G405: a defender deflecting shots out of the field | Defence |
@@ -169,13 +169,13 @@ Ask at the drivers meeting; most important first. Write the answers here for nex
 
 | # | Question | Why | Answer at event |
 |---|---|---|---|
-| 1 | With 4 balls inside, is a 5th ball pressed against our spinning roller "controlled"? | G407; QA34 pending | |
+| 1 | With 4 balls inside, is a 5th ball pressed against our spinning intake wheel "controlled"? | G407; QA34 pending | |
 | 2 | How close may a robot wait to a tipping HIVE's spill? | G409; QA35 pending | |
 | 3 | May an opponent sit in our LOADING ZONE in the last seconds? Is blocking our NECTAR entry G411 or G204? | No rule protects the LZ | |
 | 4 | Which tips count for POLLINATOR (our own HIVE only)? Who gets the 20 if an opponent's ball tips our HIVE? | Table 10-3 wording; QA10 | |
 | 5 | Is POLLEN into a FLOWER before 1:00 penalized? (G410 names only NECTAR; the §10.5.2 box suggests otherwise) | Rule vs box text | |
 | 6 | G408: is it YELLOW only (manual) or MAJOR + YELLOW (QA23)? | Penalty level | |
-| 7 | Is the 18 × 24 in box re-oriented as our turret turns (Fig 12-6)? | R105 | |
+| 7 | Our intake arm floats on a hinge (no actuator) and rides over balls: must the robot fit inside 18 × 24 × 29 in at every point of the arm's swing (Fig 12-6)? | R105 | |
 | 8 | How may we tune the Limelight here: USB tether to a laptop? | R704.D, QA26, T405 | |
 | 9 | Did today's HIVEs pass their calibration checks (FAC 2.1–2.7)? | Tip counts | |
 | 10 | G421 cites "G421.D": does that mean B (2 ft from where the pin started)? | Typo | |

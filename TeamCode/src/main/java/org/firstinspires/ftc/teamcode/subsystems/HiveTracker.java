@@ -17,9 +17,9 @@ import org.firstinspires.ftc.teamcode.util.HiveState;
  *    and the OTHER cell comes up facing the OTHER end wall. The shooting zone flips.
  *  - Our alliance partner can tip our HIVE too, so we cannot just count our own balls.
  *  - After a TIP all 8 of our tags face the OTHER half of the field: the camera can NOT see our own TIP
- *    from the zone we fired from. It confirms the new state only once the robot faces the HIVE from the
- *    zone the new up cell faces. So in TELEOP the operator's Y on the human player's "TIP!" is the main
- *    signal; vision is the backup.
+ *    from the zone we fired from. It confirms the new state only once the robot's back (the camera) faces
+ *    the HIVE from the zone the new up cell faces. So in TELEOP the operator's Y on the human player's
+ *    "TIP!" is the main signal; vision is the backup.
  *
  * Ways the state changes:
  *  1. Operator Y ("HIVE tipped", operatorTipped()): flips A <-> B and keeps vision out for

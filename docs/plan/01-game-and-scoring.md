@@ -158,6 +158,7 @@ We use the official FTC field frame for BIOBUZZ (FTC docs field-coordinate page;
 - **+X points toward the AUDIENCE wall.** −X points toward the far wall (the scoring-table side).
 - **+Y points toward the BLUE wall.** Red is on the −Y side.
 - **Heading 0° = facing the audience wall**; angles increase counter-clockwise (90° faces blue, 180° faces the far wall).
+- A robot's heading is the way its **front** (our intake side) faces. Our shooter points out of the robot's back.
 - Inches everywhere.
 
 **Blue = red rotated 180°:** (x, y, heading) → (−x, −y, heading + 180°). The field is rotationally symmetric, **not mirrored**: a mirror puts FLOWERS where none exist (CAD).
@@ -212,15 +213,15 @@ We use the official FTC field frame for BIOBUZZ (FTC docs field-coordinate page;
 | FLOWER F-blue (blue wall) | (-23.39, 68.04) | | CAD |
 | HIVE footprint | X ±19.47, Y ±24.73 | Real obstacles at robot height: 4 molded feet (2.1 in tall) at the corners. The foot bars are flat 0.07 in plates you can drive over | CAD |
 | Under-HIVE lane (TELEOP only) | robot centre between Y -9.5 and +9.5 | For an 18 in tall robot; narrower if taller (about ±6.6 at 29 in). Risky: G409/G417 | CAD (derived) |
-| **Start S1** | **(61.67, -12.75), heading 180°** | Back touching our start wall (red: audience wall), 45.2 in in front of the red audience opening. Every start spot is square to its wall | CAD (derived) |
-| Start S2 | (61.67, -37.5), heading 180° | 51.5 in from the opening, 29° off-axis (151° is the aim bearing, not the placement heading). Shoot-first routines drive to the Zone A side spot (55, -37) before firing | CAD (derived); code |
-| Starts S3, S4 | (45, -61.67) and (0, -61.67), heading 90° | Back on the red wall. Shoot-first routines drive straight off the wall to y = -48, then to the side spot | code |
-| Start S5 | (-61.67, -61.67), heading 0° | Far/red corner, 6 in from the LZ (A0 only) | CAD (derived) |
-| **Start S6** | **(-61.67, -10.1), heading 0°** | Same spot as S1 but on the end wall opposite our start, for the second (far) CELL. **Only 1.35 in from F-far** | CAD (derived) |
-| Start S7 | (-61.67, -40.0), heading 0° | Backup for S6 only with > ±32° turret travel: from here the far CELL is 31.1° off the turret centre (as built ±28°) | CAD (derived); code |
-| Zone A centre "A2" | (48, -12.75) | Shooting zone while the red audience CELL is up. Its front edge is about 3 in inside the tip-1 landing box (TELEOP only; AUTO uses the side spot (55, -37)) | strategy brief; code |
-| Zone B centre "B2" | (-48, -12.75) | Shooting zone while the red far CELL is up; 44 in from the solo park pose. Its front edge is about 3 in inside the TIP-2 landing box | strategy brief; code |
-| Corridor between zones | (30, -42) → (-30, -40) | Clears the HIVE feet and legs by about 6 in at heading 180° (less for a robot still turning on it: ≥ 3.7 in for A2), and a robot parked in the corner slot by 3 in. Leaving S1, go through (52, -40) first to stay out of the spill landing box | CAD (derived); code route test |
+| **Start S1** | **(61.67, -12.75), heading 0°** | Front (intake) touching our start wall (red: audience wall), back toward the HIVE, straight in front of the red audience opening: a 38.2 in shot, measured from where the ball leaves the robot (45.2 in from the robot centre). Every start spot is square to its wall, with the robot's front against it | CAD (derived) |
+| Start S2 | (61.67, -37.5), heading 0° | 29° off-axis, 51.5 in from the robot centre to the opening (aiming from here would need heading -29°; the placement stays square). Shoot-first routines drive to the Zone A side spot (55, -37) before firing | CAD (derived); code |
+| Starts S3, S4 | (45, -61.67) and (0, -61.67), heading -90° | Front on the red wall. Shoot-first routines drive straight off the wall to y = -48, then to the side spot | code |
+| Start S5 | (-61.67, -61.67), heading 180° | Far/red corner, front on the far wall, 6 in from the LZ (A0 only) | CAD (derived) |
+| **Start S6** | **(-61.67, -10.1), heading 180°** | Like S1, but on the end wall opposite our start (front on the far wall, back toward the HIVE), for the second (far) CELL: a 38.3 in shot, 3.3° off-axis. **Only 1.35 in from F-far** | CAD (derived) |
+| Start S7 | (-61.67, -40.0), heading 180° | A0 only. A3 role 2 starts on S6 only: from S7 it would have to turn about 31° with its front against the far wall, so the code treats S7 + A3 role 2 as an invalid start (the robot does not move) | CAD (derived); code |
+| Zone A centre "A2" | (48, -12.75) | Shooting zone while the red audience CELL is up: a 24.5 in shot, below the 30–92 in shot band. A robot there with its back to the CELL has that back edge about 3 in inside the tip-1 landing box (TELEOP only; AUTO uses the side spot (55, -37)) | strategy brief; code |
+| Zone B centre "B2" | (-48, -12.75) | Shooting zone while the red far CELL is up (A2's second volley); 44 in from the solo park pose. A 24.5 in shot, below the 30–92 in shot band: the shot map decides whether B2 stays here ([02 poses](02-autonomous.md#poses-red)). A robot there with its back to the CELL has that back edge about 3 in inside the TIP-2 landing box | strategy brief; code |
+| Corridor between zones | (30, -42) → (-30, -40) | Clears the HIVE feet and legs by about 6 in for a square robot (less for a robot still turning on it: ≥ 4.7 in for A2 and A3 role 1), and a robot parked in the corner slot by 3 in. Leaving S1, go through (52, -40) first to stay out of the spill landing box | CAD (derived); code route test |
 | **Solo park pose (one robot)** | **(-35.25, -55)** | 4.3–4.9 in inside the LZ, 6.7 in off the red wall: earns PARK **and** LEAVE. It touches both two-robot slots, so use it only when the partner does not park in AUTO | CAD (derived); QA21 |
 | Park slots (two robots) | corner slot (-51, -56), inner slot (-27, -56) | The corner slot is the LZ end nearer the field corner (red: far-wall end; blue (51, 56): audience end). Robots 6 in apart, 5.67 in off the wall, each 5.3 in into the LZ from its edge on an event field. The first robot to park takes the corner slot | derived ([02](02-autonomous.md#poses-red)) |
 

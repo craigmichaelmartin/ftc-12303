@@ -1,6 +1,10 @@
 package org.firstinspires.ftc.teamcode;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import org.firstinspires.ftc.teamcode.config.FieldConstants;
 import org.firstinspires.ftc.teamcode.config.FieldConstants.ParkSlot;
@@ -8,6 +12,7 @@ import org.firstinspires.ftc.teamcode.config.FieldConstants.StartSpot;
 import org.firstinspires.ftc.teamcode.config.RobotConfig;
 import org.firstinspires.ftc.teamcode.opmodes.auto.AutoRoutine;
 import org.firstinspires.ftc.teamcode.opmodes.auto.AutoRoutineType;
+import org.firstinspires.ftc.teamcode.opmodes.auto.AutoSelector;
 import org.firstinspires.ftc.teamcode.util.Alliance;
 import org.firstinspires.ftc.teamcode.util.Clock;
 import org.junit.After;
@@ -17,7 +22,7 @@ import org.junit.Test;
 /**
  * The REAL AutoRoutine + Robot on an empty fake hardware map, on a manual clock, loop by loop (10 ms) like
  * MainAuto. No Pinpoint: paths are skipped, so only the step TIMING runs. No flywheel: a volley never fires,
- * which is the worst case for the A3 time budget (a stalled volley).
+ * which is the worst case for the A3 time budget (a stalled volley). Also: A3 role 2 starts on S6 only.
  */
 public class AutoTimingTest {
 
@@ -39,7 +44,7 @@ public class AutoTimingTest {
     private static double[] runAuto(AutoRoutineType type, StartSpot start, double delaySec) {
         Robot robot = new Robot(new FakeHardware.Map2(), Alliance.RED);
         robot.drive.setPose(FieldConstants.startPose(Alliance.RED, start));
-        robot.indexer.setCount(4);
+        robot.carrier.setCount(4);
         robot.arm();
         AutoRoutine routine = new AutoRoutine(robot, type, start, ParkSlot.CORNER, delaySec);
         routine.start(0.0);
@@ -85,5 +90,33 @@ public class AutoTimingTest {
     public void otherRoutinesKeepTheNormalParkDeadline() {
         double[] t = runAuto(AutoRoutineType.A1_TIP_AND_PARK, StartSpot.S1, 25);
         assertEquals(RobotConfig.AUTO_PARK_DEADLINE_SEC, t[1], 0.02);
+    }
+
+    @Test
+    public void a3Role2StartsOnS6Only() {
+        // From S7 it would have to turn ~31 deg with its front against the far wall: an invalid pair.
+        for (StartSpot s : StartSpot.values()) {
+            assertEquals("A3 role 2 from " + s, s == StartSpot.S6, AutoRoutineType.A3_ROLE2.canStartFrom(s));
+        }
+        assertEquals("!! INVALID START S7 FOR A3_ROLE2: ROBOT WILL NOT MOVE (use S6)",
+                AutoSelector.invalidStartWarning(AutoRoutineType.A3_ROLE2, StartSpot.S7));
+        assertNull(AutoSelector.invalidStartWarning(AutoRoutineType.A3_ROLE2, StartSpot.S6));
+        // Like every invalid pair: the no-motion plan, and the preloads stay inside.
+        Robot robot = new Robot(new FakeHardware.Map2(), Alliance.RED);
+        robot.drive.setPose(FieldConstants.startPose(Alliance.RED, StartSpot.S7));
+        robot.carrier.setCount(4);
+        robot.arm();
+        AutoRoutine routine = new AutoRoutine(robot, AutoRoutineType.A3_ROLE2, StartSpot.S7, ParkSlot.CORNER, 0);
+        assertFalse(routine.isValid());
+        assertTrue(routine.note(), routine.note().startsWith("!! INVALID START S7 FOR A3_ROLE2"));
+        routine.start(0.0);
+        for (int i = 0; i <= 3000; i++) {
+            routine.update(i / 100.0);
+            robot.update();
+            assertNotEquals(AutoRoutine.Step.VOLLEY_2, routine.step());
+            Clock.advanceForTests(10);
+        }
+        assertEquals("START_DELAY > [PARKED]", routine.planText());
+        assertEquals("nothing fired", 4, robot.carrier.count());
     }
 }

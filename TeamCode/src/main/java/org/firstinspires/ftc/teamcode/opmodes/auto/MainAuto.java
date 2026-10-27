@@ -19,12 +19,13 @@ import java.util.Locale;
  * 12303 AUTO - one OpMode, everything chosen in INIT with gamepad1 (see AutoSelector).
  *
  * Match procedure (drive team):
- *  1. Place the robot on OUR alliance's start spot with the jig, touching the wall, 4 POLLEN preloads.
+ *  1. Place the robot on OUR alliance's start spot with the jig: FRONT (intake) against the wall, back
+ *     (shooter) toward the field, 4 POLLEN preloads.
  *  2. Select "12303 Auto", press INIT. Set ALLIANCE to this match's colour FIRST, then check start /
  *     routine / park / delay / preloads; compare the "Place robot at" line with the jig placement (that
  *     line only repeats the selection - nothing on the robot can see a misplaced robot). Press A to lock.
- *     Do not touch the robot after INIT (G304.H): INIT holds the turret centre, gate and hood only; the
- *     intake, spinners, wheels and flywheel stay unpowered until START.
+ *     Do not touch the robot after INIT (G304.H): INIT moves nothing - the intake, carrier, wheels and
+ *     flywheel stay unpowered until START.
  *  3. The 30 s timer must be enabled on the Driver Station (G305). TeleOp "12303 TeleOp" is
  *     queued automatically (preselectTeleOp, recommended by the G305 box).
  *
@@ -41,9 +42,7 @@ public class MainAuto extends LinearOpMode {
         AutoSelector selector = new AutoSelector();
         Robot robot = new Robot(hardwareMap, selector.alliance());
 
-        // AUTO INIT may hold positional servos (turret centre, gate closed, hood) - they must be done
-        // moving before the match starts (G304.H). The CR intake/spinners, wheels and flywheel stay off.
-        robot.armForAutoInit();
+        // AUTO INIT moves nothing (G304.H): the intake, carrier, wheels and flywheel stay off until START.
 
         while (opModeInInit()) {
             selector.handle(gamepad1);
@@ -83,15 +82,16 @@ public class MainAuto extends LinearOpMode {
     private static void applySelection(Robot robot, AutoSelector selector) {
         robot.setAlliance(selector.alliance());
         robot.drive.setPose(FieldConstants.startPose(selector.alliance(), selector.start()));
-        robot.indexer.setCount(selector.preloads());
+        robot.carrier.setCount(selector.preloads());
         robot.hive.restore(HiveState.A);     // every match starts in state A
     }
 
     private void showInitTelemetry(Robot robot, AutoSelector selector) {
         selector.addTelemetry(telemetry);
+        robot.addBallSensorWarning(telemetry);
         Pose start = FieldConstants.startPose(selector.alliance(), selector.start());
         double h = Math.toDegrees(start.heading());
-        telemetry.addLine(String.format(Locale.US, "Place robot at (%.1f, %.1f), heading %.0f = %s (square to the wall)",
+        telemetry.addLine(String.format(Locale.US, "Place robot at (%.1f, %.1f), heading %.0f = %s (front against the wall, square)",
                 start.x(), start.y(), h, FieldConstants.frontFacesText(h)));
         telemetry.addLine("  (the POSE line below only repeats this selection - check the placement with the jig)");
         for (String w : selector.sanityWarnings()) telemetry.addLine("CHECK: " + w);

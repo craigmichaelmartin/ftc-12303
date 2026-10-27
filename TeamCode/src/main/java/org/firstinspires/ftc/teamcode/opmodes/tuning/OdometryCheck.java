@@ -6,6 +6,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 
 import org.firstinspires.ftc.teamcode.config.RobotConfig;
+import org.firstinspires.ftc.teamcode.util.CompetitionCheck;
 import org.firstinspires.ftc.teamcode.util.OdometryPods;
 import org.firstinspires.ftc.teamcode.util.OptionalHardware;
 
@@ -75,6 +76,8 @@ public class OdometryCheck extends LinearOpMode {
 
     private void show(GoBildaPinpointDriver pinpoint) {
         telemetry.addLine("=== Check: Odometry === nothing moves: push the robot by hand");
+        String competition = CompetitionCheck.warning();
+        if (competition != null) telemetry.addLine(competition);
         telemetry.addLine(String.format(Locale.US, "Push distance %.0f in (dpad up/down). A = zero, then push STRAIGHT:",
                 pushInches));
         telemetry.addLine("  FORWARD for the X pod line, then A again and LEFT for the Y pod line.");

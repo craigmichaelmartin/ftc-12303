@@ -34,7 +34,8 @@ android {
         }
     }
 
-    // FTC 12303: laptop unit tests (TeamCode/src/test): route sweeps, ball handling, HIVE tracker.
+    // FTC 12303: laptop unit tests (TeamCode/src/test): route sweeps, ball handling, aim, vision geometry,
+    // HIVE tracker, shot dips, AUTO timing, odometry pods.
     // Run: ./gradlew :TeamCode:testDebugUnitTest   (nothing here goes into the robot app)
     testOptions {
         unitTests.returnDefaultValues = true

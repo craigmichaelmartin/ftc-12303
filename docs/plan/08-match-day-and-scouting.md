@@ -24,12 +24,12 @@ Ask the FTA or Head Referee whether the HIVEs passed their calibration checks th
 
 - [ ] Fresh battery: labelled, voltage written down (fresh packs read above 13 V), strapped in its cradle.
 - [ ] Main power switch reachable; XT30s seated; RS485 and hub power plugged; ferrites on.
-- [ ] Limelight boots (green light after 15–20 s); lens clean; mount tight.
+- [ ] Limelight boots (green light after 15–20 s); lens clean; mount tight, still looking out of the back at its pitch.
 - [ ] Pinpoint pods touching the floor; springs OK.
-- [ ] Intake, indexer and feeder gate run in **Check: Sensors**; colour sensors read POLLEN / red / blue correctly.
+- [ ] In **Check: Sensors**: intake in (A), carrier toward the shooting wheel (B) and backward (X) run the right way; once fitted, the colour sensors read POLLEN / red / blue correctly.
 - [ ] Flywheel spin test (ready in under 1 s); nothing rubbing; **bolts checked**.
-- [ ] Turret centres on its zero mark after START (re-run Tune: Turret Calibrator A if not); hard stops intact; cables in their service loop.
-- [ ] Guards on (turret centre, flywheel). **Signs in the right colour** for the next match.
+- [ ] Intake arm swings freely on its hinge and drops back to the floor; star wheels and the side gear/pulley tight. Tunnel stop in place (if one is fitted): the tunnel holds 4.
+- [ ] Guard on the shooting wheel. **Signs in the right colour** for the next match.
 - [ ] Competition build: **INIT telemetry shows no AutoTune / Dashboard / Panels warning** (`PEDRO_AUTOTUNE = false`; every 12303 OpMode warns in INIT; [06 §8](06-software.md#8-competition-rules-for-software-checklist)).
 - [ ] Driver Station charged; 2 **wired** gamepads (R904, QA16); spare cable.
 - [ ] Queue bag: start jig, spare battery, tools, scouting notes on the next partner and opponents.
@@ -43,25 +43,25 @@ Ask the FTA or Head Referee whether the HIVEs passed their calibration checks th
 ## On-field checklist (set-up)
 
 - [ ] Robot at the agreed start, placed with the jig:
-  - [ ] touching the wall;
+  - [ ] front (intake) touching the wall, back (shooter) into the field (S1, S6: back toward the HIVE);
   - [ ] **not touching a FLOWER** (check S6: red F-far, blue F-aud!);
   - [ ] not in the LZ;
   - [ ] fully on our side (G304).
 - [ ] **Exactly 4 POLLEN** preloads touching the robot (G304.G).
 - [ ] AUTO OpMode **12303 Auto** selected, **30 s timer on** (G305). Selector: **Alliance = THIS match's colour, set first** (it shows RED after any app restart or battery swap, otherwise the previous AUTO's value: read the top line `##### RED ALLIANCE #####` / `BLUE` aloud and compare it with our signs), then start / routine / park / delay / **preloads 4** → **LOCKED**. Every line carries over from the last run until the app restarts, and the values shown run whether or not they are locked: check every line.
-- [ ] INIT. Telemetry: selector lines right, own tags seen ("vision: N tags" with N > 0), AIM bias near 0, no `CHECK:` / `WARN:` / `!!` lines. The "Place robot at" and POSE lines only repeat the selected spot: the jig is the placement check. **Nothing moves** after INIT (G304.H); INIT holds only the turret centre, feeder gate and hood.
+- [ ] INIT. Telemetry: selector lines right, own tags seen ("vision: N tags" with N > 0), AIM bias near 0, no `CHECK:` lines except the FLOWER reminder that always shows on S6 (then check by eye that the robot does not touch the FLOWER), and no `WARN:` / `!!` lines except, while the robot has no mouth sensor, the `!!!! NO MOUTH SENSOR` lines right under the selection menu and the `WARN: no mouth sensor` line (then the drivers stop at 4 by eye in TELEOP). The "Place robot at" and POSE lines only repeat the selected spot: the jig is the placement check. **Nothing moves** after INIT (G304.H): AUTO INIT moves nothing.
 - [ ] Hands off from the countdown (G401).
 
 ## During the match: who does what
 
 | Person | Job |
 |---|---|
-| Driver (gamepad 1) | Drives, runs the intake, calls "Crossing far / audience" |
-| Operator (gamepad 2) | Flywheel, aim and fire; **presses Y on every "TIP!"** and checks the target on arrival in the new zone (operator light not RED); calls "4 in", "Empty", "Full" |
+| Driver (gamepad 1) | Drives, runs the intake (without a mouth sensor: stops at 4 balls by eye), **holds RB to aim** (the robot turns its back onto the CELL), calls "Crossing far / audience" |
+| Operator (gamepad 2) | Shooting mode, volleys and trims; **presses Y on every "TIP!"** and checks the target on arrival in the new zone (operator light not RED; PURPLE = the driver must hold RB); fixes the ball count (without a mouth sensor an eject does not lower it: press back once per ball ejected); calls "4 in", "Empty", "Full" |
 | Human player (a student) | NECTAR ([04 script](04-endgame.md#human-player-script-whole-match)); calls "TIP!" (the operator's cue for Y) |
 | Drive coach | Watches the **field timer**; keeps the CELL count and calls "8, it's going"; makes the endgame calls ("NECTAR, GO" at 0:59, "0:25", "0:12, last volley", "Park"); presses stop / INIT / start on the DS (allowed by G423). **May not touch balls** (G424) **or handle gamepads once the match starts** (G423) |
 
-- **Transition:** INIT TELEOP (it moves nothing). **Read the INIT Alliance line**: with AUTO data it shows `Alliance X (from AUTO …)`; without it, `!! NO AUTO DATA - ALLIANCE = X …` (after an app restart or reboot, or if AUTO was not run). If the colour is wrong, the driver presses gamepad 1 X (blue) or B (red) now. Press **START at the TELEOP bells** (G403). In the no-AUTO-data case the driver then points the robot straight away from the drivers and presses back, and relocalizes with LB + Y once it is on our S1. After an A3 double tip (INIT says "AUTO says HIVE state B …"), the operator presses Y at START.
+- **Transition:** INIT TELEOP (it moves nothing). **Read the INIT Alliance line**: with AUTO data it shows `Alliance X (from AUTO …)`; without it, `!! NO AUTO DATA - ALLIANCE = X …` (after an app restart or reboot, or if AUTO was not run). If the colour is wrong, the driver presses gamepad 1 X (blue) or B (red) now. Press **START at the TELEOP bells** (G403). In the no-AUTO-data case the driver then points the robot's front straight away from the drivers and presses back, and relocalizes with LB + Y once it is on our S1. After an A3 double tip (INIT says "AUTO says HIVE state B …"), the operator presses Y at START.
 - **End:** press ■ at 0:00 and put the controllers down (G404). Wait for the field-reset signal before collecting the robot (M p.97).
 
 ## After the match
@@ -80,7 +80,7 @@ Ask the FTA or Head Referee whether the HIVEs passed their calibration checks th
 
 ## Partner conversation script (about 2 minutes, in the queue)
 
-1. **Hello.** "We're 12303. We shoot POLLEN from a turret, tip the start CELL in AUTO, and park."
+1. **Hello.** "We're 12303. We shoot POLLEN out of the back of our robot, tip the start CELL in AUTO, and park."
 2. **AUTO.** "What's your AUTO? Where do you start? Do you end **off the wall** and **in our LOADING ZONE**?"
    - Pick roles: A1 / A2 / A3 ([02 scripts](02-autonomous.md#coordination-scripts)).
    - Decide who takes S1. Only one robot fits there. If the partner takes it, we can still run A1 from S2–S4 (the robot first drives to the Zone A side spot).
@@ -145,8 +145,8 @@ Before the event, pull each team's non-penalty OPR, TIPS OPR and AUTO OPR from F
 
 | # | Trap | Rule (penalty) | How we avoid it |
 |---|---|---|---|
-| 1 | A 5th ball in the intake, or one riding on top of the robot | G407 (warning → MAJOR + YELLOW if STRATEGIC); no momentary exception (QA3) | Auto-stop at 4; top guard; don't push piles |
-| 2 | Opponent NECTAR in the intake | G408 (warning → YELLOW if STRATEGIC; QA23 says MAJOR + YELLOW: plan for the stricter one) | The mouth sensor refuses it (it reacts on contact); drivers steer clear |
+| 1 | A 5th ball in the intake, or one riding on top of the robot | G407 (warning → MAJOR + YELLOW if STRATEGIC); no momentary exception (QA3) | The tunnel holds 4 at most; auto-stop at 4 (with the mouth sensor; without it the driver stops at 4 by eye); top guard; don't push piles |
+| 2 | Opponent NECTAR in the intake | G408 (warning → YELLOW if STRATEGIC; QA23 says MAJOR + YELLOW: plan for the stricter one) | Drivers steer clear; a mouth sensor (when fitted) refuses it, but only on contact |
 | 3 | Spill bouncing off our robot | G409 (warning → YELLOW); QA17 | Stay out of the landing box until the balls land (usually ~3 s, up to ~6 s) |
 | 4 | Touching the HIVE, or shooting at the opponent's HIVE | G417 (warning → MAJOR + YELLOW if STRATEGIC) | Keep a minimum distance; aim at own tags only |
 | 5 | NECTAR into a FLOWER before 1:00 | G410 (**MAJOR per NECTAR**, no warning) | Use the field timer, keep a 1 s margin, code lockout |

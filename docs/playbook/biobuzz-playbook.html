@@ -142,6 +142,8 @@ section > .wrap { display: grid; gap: 1.3rem; }
 .route.alt { stroke-dasharray: 2 1.4; }
 .robot { fill: var(--surface); stroke: var(--ink); stroke-width: 0.7; }
 .robot.ghost { fill-opacity: 0.4; stroke-dasharray: 1.2 0.8; }
+.front { fill: var(--pollen-ink); }
+.front.ghost { fill-opacity: 0.6; }
 .wp { fill: var(--ink); }
 
 /* tables */
@@ -215,8 +217,8 @@ footer ul { margin: 0; padding-left: 1.1rem; display: grid; gap: 0.25rem; }
   <div class="wrap">
     <div class="eyebrow">FTC 12303 · 2026–27 BIOBUZZ presented by RTX</div>
     <h1>Tip the HIVE early, tip it often, then park.</h1>
-    <p class="lede">Our robot is a turret pollen shooter, which suits a game decided by HIVE TIPS. This page lays out how to play it in AUTO, TELEOP and the last minute, which parts of the robot to tune, and what to test first. It's grounded in the TU05 manual, the official field setup guide, the Q&amp;A board and early-season match data.</p>
-    <div class="meta"><span>Field frame: +X toward audience, +Y toward blue, inches</span><span>Coordinates are red; blue = rotate 180°: (x, y, h) → (−x, −y, h + 180)</span><span>Robot design: keep it, tune it</span></div>
+    <p class="lede">Our robot takes POLLEN in at the front and shoots it out of the back with a fixed shooting wheel, so it aims by turning its back to the target. That suits a game decided by HIVE TIPS. This page lays out how to play it in AUTO, TELEOP and the last minute, which parts of the robot to tune, and what to test first. It's grounded in the TU05 manual, the official field setup guide, the Q&amp;A board and early-season match data.</p>
+    <div class="meta"><span>Field frame: +X toward audience, +Y toward blue, inches</span><span>Coordinates are red; blue = rotate 180°: (x, y, h) → (−x, −y, h + 180)</span><span>Heading h = the way the robot's front (intake) faces; the shooter faces the other way</span><span>Robot design: keep it, tune it</span></div>
     <div class="facts" role="list">
       <div class="fact" role="listitem"><span class="big y num">3</span><span class="lbl">POLLEN tip the starting cell, because it already holds 3 NECTAR</span></div>
       <div class="fact" role="listitem"><span class="big y num">8</span><span class="lbl">POLLEN tip every cell after that (or 3 NECTAR + 3 POLLEN)</span></div>
@@ -229,7 +231,7 @@ footer ul { margin: 0; padding-left: 1.1rem; display: grid; gap: 0.25rem; }
         <ul>
           <li><b>Win with TIPS.</b> Each TIP is worth 20 points, and TIPS decide matches.</li>
           <li><b>AUTO:</b> our 4 preloads tip the start cell, then we leave and park. That's 28 points, or 36 and the SWARM RP with a partner that also leaves and parks.</li>
-          <li><b>TELEOP:</b> the two-zone loop. Shoot, sweep the spill, cross to the other end, shoot again. Two loads of 4 make each TIP after the first.</li>
+          <li><b>TELEOP:</b> the two-zone loop, one turn per cycle. Shoot out of the back, turn around once, sweep the spill intake-first and keep driving to the other end, where the back already faces the new up cell. Two loads of 4 make each TIP after the first.</li>
           <li><b>Last minute:</b> fire what's on board at about 0:12, then both robots park. POLLEN only until NECTAR passes its tests.</li>
         </ul>
       </div>
@@ -237,9 +239,9 @@ footer ul { margin: 0; padding-left: 1.1rem; display: grid; gap: 0.25rem; }
         <h2>Robot and code highlights</h2>
         <ul>
           <li><b>Pedro Pathing 3</b> drives the AUTO paths, on <b>goBILDA Pinpoint</b> odometry with X/Y pods.</li>
-          <li><b>Limelight 3A</b> AprilTags aim the turret at the cell opening. Position comes from odometry, because the HIVE tags move when it tips.</li>
-          <li><b>Turret flywheel shooter</b>, kept and tuned: feeding gated on flywheel speed, a steel flywheel, more turret travel.</li>
-          <li><b>Never more than 4 balls:</b> sensors count every ball, stop the intake at 4 and refuse NECTAR at the mouth.</li>
+          <li><b>Fixed rear shooter:</b> the robot aims by turning its back to the cell opening. The driver holds RB to turn it there, and AUTO turns itself. The <b>Limelight 3A</b> looks out of the back too: its AprilTags correct the aim, and position comes from odometry, because the HIVE tags move when it tips.</li>
+          <li><b>One carrier wheel</b> holds the balls and feeds them into the shooting wheel one at a time, only when the flywheel is at speed and the robot is aimed. To tune: the fixed exit angle, the feed time and a steel flywheel.</li>
+          <li><b>Never more than 4 balls:</b> a sensor at the mouth counts every ball in, stops the intake at 4 and refuses NECTAR. Without it, the drivers count by eye and the tunnel must not fit a 5th ball.</li>
           <li><b>One INIT menu</b> sets alliance, start, routine, park slot and delay. Laptop tests sweep every AUTO route on both alliances.</li>
         </ul>
       </div>
@@ -255,7 +257,7 @@ footer ul { margin: 0; padding-left: 1.1rem; display: grid; gap: 0.25rem; }
         <div class="clock">AUTO · 2:30 → 2:00</div>
         <h3>Fire the preloads, tip once, leave, park</h3>
         <ul>
-          <li>Start at S1: back on our start wall (red: audience wall; blue: far wall), square in front of our up cell.</li>
+          <li>Start at S1: front (intake) against our start wall (red: audience wall; blue: far wall), square, with the back toward our up cell.</li>
           <li>Fire all 4 preloads. Three should tip it; the fourth is insurance against a bounce-out (it may also shorten the wait, but that is weak evidence).</li>
           <li>Hold at S1 until the spill has landed, then take the corridor to our park slot: inside the LOADING ZONE, off the wall.</li>
           <li>28 points for us. With a partner that leaves and parks: 36 and the SWARM RP.</li>
@@ -267,7 +269,7 @@ footer ul { margin: 0; padding-left: 1.1rem; display: grid; gap: 0.25rem; }
         <ul>
           <li>The up cell faces its own end wall, so only one half of the field can score it.</li>
           <li>After every TIP, the target swaps ends and the spill lands where we just were.</li>
-          <li>Loop: shoot → sweep the spill → cross → shoot. Two loads of 4 make one TIP.</li>
+          <li>Loop: shoot out of the back → turn around once → sweep the spill intake-first → keep going to the other zone, where the back already faces the new up cell → shoot. Two loads of 4 make one TIP.</li>
           <li>On the human player's "TIP!", the operator presses Y: our camera can't see our own TIP from the zone we shot from.</li>
           <li>Goal: a load every 15–20 s and 2–3 TELEOP TIPS from us per match.</li>
         </ul>
@@ -290,7 +292,7 @@ footer ul { margin: 0; padding-left: 1.1rem; display: grid; gap: 0.25rem; }
 <section id="field">
   <div class="wrap">
     <div class="sechead"><div class="eyebrow">Interactive field map</div><h2>Where the up cell faces decides where we stand</h2>
-      <p class="muted prose">The cell opening is the outer end of a tilted box. It faces its own end wall and leans back 30°, so a robot has to be in front of it, within about 40° of head-on (with auto-aim the robot won't fire from more than 75° off). The field is really 141.3 in between walls. Use the buttons to switch alliance, HIVE state, route and park slot. The routes are the ones the code drives, and the steps beside the map switch to blue coordinates and wall names with the Blue button.</p></div>
+      <p class="muted prose">The cell opening is the outer end of a tilted box. It faces its own end wall and leans back 30°, so a robot has to be in front of it, within about 40° of head-on (with auto-aim the robot won't fire from more than 75° off). Our robot shoots out of its back, so at every shooting spot its back faces the cell; the thick edge on each robot marks its front (the intake). The field is really 141.3 in between walls. Use the buttons to switch alliance, HIVE state, route and park slot. The routes are the ones the code drives, and the steps beside the map switch to blue coordinates and wall names with the Blue button.</p></div>
     <div class="mapgrid">
       <div class="mapbox">
         <div class="controls">
@@ -320,7 +322,7 @@ footer ul { margin: 0; padding-left: 1.1rem; display: grid; gap: 0.25rem; }
           <span><i class="sw" style="border:1px dashed var(--warn)"></i>Spill landing box</span>
           <span><i class="sw" style="background:var(--surface);border:1px solid var(--good)"></i>Flower</span>
           <span><i class="sw" style="background:var(--pollen)"></i>Garden POLLEN</span>
-          <span><i class="sw" style="border:1px solid var(--ink)"></i>Robot pose (18 in)</span>
+          <span><i class="sw" style="border:1px solid var(--ink);border-bottom:3px solid var(--pollen-ink)"></i>Robot pose (18 in), thick edge = front (intake)</span>
           <span><i class="sw" style="width:18px;height:0;border-radius:0;border-top:2px dashed var(--ink)"></i>Corridor / partner robot's path</span>
         </div>
       </div>
@@ -335,9 +337,9 @@ footer ul { margin: 0; padding-left: 1.1rem; display: grid; gap: 0.25rem; }
       <p class="muted prose"><span>Build these in order. A rung goes to competition only after it works in 8 of 10 practice runs. Every routine is in the one OpMode <span class="mono">12303 Auto</span>: the robot takes alliance, start spot, routine, park slot, start delay and preload count from a gamepad menu during INIT.</span></p></div>
     <div class="ladder">
       <div class="rung"><div class="tag">A0</div><div class="desc"><h3>Safe <span class="pill">any start</span></h3><p>Drive off the wall into the LOADING ZONE, to the Park slot set in INIT. Fallback when the shooter is down or a partner needs our start spot.</p></div><div class="pts"><b>8</b>LEAVE 3 + PARK 5</div></div>
-      <div class="rung"><div class="tag">A1</div><div class="desc"><h3>Tip &amp; Park <span class="pill must">primary</span></h3><p>From S1, spin up and aim with odometry, refined by AprilTags, and fire the 4 preloads. Hold there until the spill has landed: the start cell's tags seen up and then gone for 1 s, or 6 s after the last shot. Then drive the corridor to our Park slot and stop off the wall. From S2–S4 it first drives to the Zone A side spot (red (55, −37); blue (−55, 37)) and fires there.</p></div><div class="pts"><b>28</b>TIP 20 + 3 + 5</div></div>
-      <div class="rung"><div class="tag">A2</div><div class="desc"><h3>Tip, Reload, Volley <span class="pill stretch">stretch</span></h3><p>A1's volley, then no hold: sweep our 4 GARDEN POLLEN along our start wall, cross to B2 in Zone B and fire them into the second cell (still empty, so 4 can't tip it), then park in the Park slot. Alone that's 4 of the 8 needed for TIP 2. Needs a tuned path follower.</p></div><div class="pts"><b>28+</b>4 balls toward TIP 2</div></div>
-      <div class="rung"><div class="tag">A3</div><div class="desc"><h3>Alliance double-tip <span class="pill stretch">needs a shooter partner</span></h3><p>Robot 1 runs <b>"A3 role 1"</b>: A2, but it waits at the corridor end until 17 s, shoots from the role-1 spot (red (−52, −30); blue (52, 30)) and parks in the inner slot. Robot 2 runs <b>"A3 role 2"</b> from S6, on the end wall opposite our S1 (red: far wall; blue: audience wall). It fires its 4 preloads into our second cell only if it sees TIP 1 by 9 s, and parks in the corner slot before Robot 1 moves at 17 s (a partner robot in this role fires only after it sees TIP 1, or not before about 10 s if it has no vision, and is parked by 16 s). Robot 1's 4 garden POLLEN complete the 8, for TIP 2 in AUTO. Both roles are in the 12303 Auto menu. Tuned robots only, after a rehearsal with the partner. No US alliance had two AUTO TIPS as of Oct 20.</p></div><div class="pts"><b>56</b>alliance: 2 TIPS + 16</div></div>
+      <div class="rung"><div class="tag">A1</div><div class="desc"><h3>Tip &amp; Park <span class="pill must">primary</span></h3><p>From S1, with its back already toward the start cell, the robot spins up and fires the 4 preloads; during the volley it turns itself onto the exact aim (odometry, refined by AprilTags). Hold there until the spill has landed: the start cell's tags seen up and then gone for 1 s, or 6 s after the last shot. Then drive the corridor to our Park slot and stop off the wall. From S2–S4 it first drives to the Zone A side spot (red (55, −37); blue (−55, 37)), back toward the cell, and fires there.</p></div><div class="pts"><b>28</b>TIP 20 + 3 + 5</div></div>
+      <div class="rung"><div class="tag">A2</div><div class="desc"><h3>Tip, Reload, Volley <span class="pill stretch">stretch</span></h3><p>A1's volley, then no hold: sweep our 4 GARDEN POLLEN intake-first along our start wall, cross to B2 in Zone B, back toward the second cell, and fire them into it (still empty, so 4 can't tip it), then park in the Park slot. Alone that's 4 of the 8 needed for TIP 2. Needs a tuned path follower.</p></div><div class="pts"><b>28+</b>4 balls toward TIP 2</div></div>
+      <div class="rung"><div class="tag">A3</div><div class="desc"><h3>Alliance double-tip <span class="pill stretch">needs a shooter partner</span></h3><p>Robot 1 runs <b>"A3 role 1"</b>: A2, but it waits at the corridor end until 17 s, shoots from the role-1 spot (red (−52, −30); blue (52, 30)) and parks in the inner slot. Robot 2 runs <b>"A3 role 2"</b> from S6 (its only start), front against the end wall opposite our S1 (red: far wall; blue: audience wall), back toward the HIVE. It fires its 4 preloads into our second cell only if it sees TIP 1 by 9 s, and parks in the corner slot before Robot 1 moves at 17 s (a partner robot in this role fires only after it sees TIP 1, or not before about 10 s if it has no vision, and is parked by 16 s). Robot 1's 4 garden POLLEN complete the 8, for TIP 2 in AUTO. Both roles are in the 12303 Auto menu. Tuned robots only, after a rehearsal with the partner. No US alliance had two AUTO TIPS as of Oct 20.</p></div><div class="pts"><b>56</b>alliance: 2 TIPS + 16</div></div>
     </div>
 
     <div class="card">
@@ -346,30 +348,30 @@ footer ul { margin: 0; padding-left: 1.1rem; display: grid; gap: 0.25rem; }
         <thead><tr><th>Line</th><th>Values</th><th>First run</th></tr></thead>
         <tbody>
           <tr><td>Alliance</td><td>RED, BLUE. <b>Set it first.</b> The top line <span class="mono">##### RED ALLIANCE #####</span> must show this match's colour.</td><td class="n">RED</td></tr>
-          <tr><td>Start</td><td>S1–S7. A0: any. A1, A2 and A3 role 1: S1–S4. A3 role 2: S6 (S7 is accepted with a CHECK warning: the second cell is 31° off our turret centre there, so use S6 or skip A3).</td><td class="n">S1</td></tr>
+          <tr><td>Start</td><td>S1–S7, always front (intake) against the wall. A0: any. A1, A2 and A3 role 1: S1–S4. A3 role 2: S6 only (from S7 it would have to turn about 31° with its front against the wall). Any other start for the chosen routine gets a <span class="mono">CHECK: !! INVALID START …</span> line naming the spots to use, for example <span class="mono">(use S6)</span>, and the robot doesn't move.</td><td class="n">S1</td></tr>
           <tr><td>Routine</td><td>A0, A1, A2, A3 role 1, A3 role 2. Changing it moves Start to the routine's home spot (S1; S6 for A3 role 2).</td><td class="n">A1</td></tr>
           <tr><td>Park</td><td>INNER, CORNER, SOLO. A3 role 1 always parks INNER and role 2 CORNER (the line says so and is ignored).</td><td class="n">INNER</td></tr>
           <tr><td>Delay</td><td>0–15 s, in 1 s steps.</td><td class="n">0 s</td></tr>
           <tr><td>Preloads</td><td>0–4. Always 4 in a match (G304.G): the ball count starts here.</td><td class="n">4</td></tr>
         </tbody>
       </table></div>
-      <p class="muted" style="font-size:.9rem">D-pad ↑/↓ picks a line, ←/→ changes it, and A locks or unlocks (B does nothing). The values shown run whether or not they are locked, and every line is remembered until the Robot Controller app restarts (a battery swap or reboot puts back the first-run values). Read every <span class="mono">CHECK:</span> line: <span class="mono">!! INVALID START … ROBOT WILL NOT MOVE</span> means the robot will sit still. The "Place robot at" line only repeats the selection, so place the robot with the jig. INIT holds only the turret, the feeder gate and the hood; the intake, spinners, wheels and flywheel stay off until START.</p>
+      <p class="muted" style="font-size:.9rem">D-pad ↑/↓ picks a line, ←/→ changes it, and A locks or unlocks (B does nothing). The values shown run whether or not they are locked, and every line is remembered until the Robot Controller app restarts (a battery swap or reboot puts back the first-run values). Read every <span class="mono">CHECK:</span> line: <span class="mono">!! INVALID START … ROBOT WILL NOT MOVE</span> means the robot will sit still. The <span class="mono">Place robot at … front faces … wall</span> line only repeats the selection, so place the robot with the jig: front against the wall, square. Without a mouth sensor, the lines right under the menu start with <span class="mono">!!!! NO MOUTH SENSOR</span>: the count starts at Preloads and drops by one per feed, and the drivers count balls coming in by eye. INIT moves nothing: the intake, carrier, wheels and flywheel stay off until START (G304.H).</p>
     </div>
 
     <div class="card">
       <h3>Timing budget (estimates to beat in practice)</h3>
       <div class="tl" id="timelines"></div>
       <div class="tlaxis"><div></div><div><span>0 s</span><span>10</span><span>20</span><span>30</span></div></div>
-      <p class="muted" style="font-size:.9rem">The first ball leaves about 0.3–0.6 s after START. Balls are at least 0.33 s apart (gate 0.18 s + 0.15 s), plus the flywheel's recovery, so 4 take about 1.5 s when every shot is confirmed and about 3 s when none is. The HIVE can sit 0.25–3.4 s after the threshold ball before it swings, then takes about 0.75 s to swing (up to about 2.2 s). That was measured at the Saline preview. Overloading the cell may shorten the wait (weak evidence); A1 fires all four mainly as insurance against bounce-outs.</p>
+      <p class="muted" style="font-size:.9rem">The first ball leaves about 0.3–0.6 s after START, once the flywheel is at speed. The carrier pushes one ball per spin and stops as soon as the shot is confirmed (a flywheel speed dip or the feed beam); the next push waits at least 0.15 s, and until the flywheel is back at speed and the robot is aimed. An unconfirmed push stops after 0.4 s and waits 0.25 s more, so 4 balls take about 1.5 s when every shot is confirmed and about 3 s when none is. The HIVE can sit 0.25–3.4 s after the threshold ball before it swings, then takes about 0.75 s to swing (up to about 2.2 s). That was measured at the Saline preview. Overloading the cell may shorten the wait (weak evidence); A1 fires all four mainly as insurance against bounce-outs.</p>
       <p class="muted" style="font-size:.9rem">The bars assume a tuned path follower. At the shipped 0.5 speed cap the drives take about twice as long (S1 → park about 5–6 s, garden → Zone B about 6.5–8 s), so A2 and A3 wait for tuning. Some limits are fixed times from START: every routine drops everything and parks at 23 s, A3 role 2 fires only if it saw TIP 1 by 9 s and leaves for its park slot by 13 s, and A3 role 1 stays out of Zone B until 17 s.</p>
     </div>
 
     <div class="two">
       <div class="card"><h3>Partner script (say it at the field)</h3>
         <ol>
-          <li>"We start at S1, our back on the [red: audience / blue: far] wall on our HIVE axis, and tip our cell with our preloads. The tip usually finishes about 3–9 s after START (allow up to 10 s)."</li>
+          <li>"We start at S1, our front on the [red: audience / blue: far] wall on our HIVE axis, and tip our cell with our preloads. The tip usually finishes about 3–9 s after START (allow up to 10 s)."</li>
           <li>"Can you LEAVE and end in the LOADING ZONE, off the wall? That makes 16 and the SWARM RP. Who parks first? The first robot to arrive takes the <b>corner slot</b>, at the field-corner end of our LOADING ZONE [red: far-wall end / blue: audience end]; the other takes the <b>inner slot</b>." Poses: red corner (−51, −56) and inner (−27, −56); blue corner (51, 56) and inner (27, 56). Both are partly in the zone, about 6 in off the wall and 6 in apart. Set our Park line to match (SOLO only if they don't park in AUTO).</li>
-          <li>If they shoot (A3, tuned robots and a rehearsal only): "Start at S6, your back on the [red: far / blue: audience] wall, centred on our HIVE, not touching the FLOWER beside you [red: F-far / blue: F-aud]. Fire your 4 into our second cell only after our start cell has swung, when you see the second cell come up [red: tags 30–33 / blue: 38–41]. Without vision, not before about 10 s. Be parked in the corner slot by 16 s. We wait at the corridor end until 17 s, then shoot from your end of the field and park in the inner slot."</li>
+          <li>If they shoot (A3, tuned robots and a rehearsal only): "Start at S6, against the [red: far / blue: audience] wall, centred on our HIVE with your shooter toward it, not touching the FLOWER beside you [red: F-far / blue: F-aud]. Fire your 4 into our second cell only after our start cell has swung, when you see the second cell come up [red: tags 30–33 / blue: 38–41]. Without vision, not before about 10 s. Be parked in the corner slot by 16 s. We wait at the corridor end until 17 s, then shoot from your end of the field and park in the inner slot."</li>
           <li>If they don't move in AUTO: "We'll run A1. Please don't start on or in front of our S1 spot ([red: audience / blue: far] wall, on our HIVE axis)."</li>
         </ol></div>
       <div class="card"><h3>AUTO traps</h3>
@@ -377,9 +379,9 @@ footer ul { margin: 0; padding-left: 1.1rem; display: grid; gap: 0.25rem; }
           <li><b>Touching any wall at the end of AUTO loses LEAVE</b>, even inside the LOADING ZONE (Q&amp;A 21).</li>
           <li>Stay on our half in AUTO (red: columns A–C, Y ≤ 0; blue: columns D–F, Y ≥ 0); interfering with the other side is a MAJOR foul (G402).</li>
           <li>Stay out of the spill landing box until the balls have landed: the first can land about 1.2 s after the threshold ball, usually about 3 s, sometimes 6 s. Any deflection of a falling ball counts (G409, Q&amp;A 17).</li>
-          <li>The ball count starts at the INIT Preloads value: set it to 4 every match. The intake must stop at 4 (G407, no momentary exception per Q&amp;A 3 and 23).</li>
+          <li>The ball count starts at the INIT Preloads value: set it to 4 every match. The intake must stop at 4 (G407, no momentary exception per Q&amp;A 3 and 23). Without a mouth sensor nothing counts the A2 garden sweep, so the tunnel itself must stop a 5th ball (experiment 0a).</li>
           <li>Set Park with the partner before the match. A robot in the inner slot blocks the corridor end, so the first robot to arrive takes the corner slot.</li>
-          <li>If S6 is blocked, skip A3: from S7 the second cell is 31° off our turret centre, outside its ±28° limits (unless the turret travels more than ±32°, e.g. with the 5-turn servo).</li>
+          <li>A3 role 2 starts on S6 only. If S6 is blocked, skip A3: from S7 the robot would have to turn about 31° with its front against the wall, so the code won't run role 2 there and the robot sits still.</li>
           <li>The human player may enter the NECTAR unlocked by an AUTO TIP during AUTO (Q&amp;A 11).</li>
         </ul></div>
     </div>
@@ -389,48 +391,49 @@ footer ul { margin: 0; padding-left: 1.1rem; display: grid; gap: 0.25rem; }
 <section id="teleop">
   <div class="wrap">
     <div class="sechead"><div class="eyebrow">TELEOP · 2:00 → 1:00</div><h2>The two-zone loop</h2>
-      <p class="muted prose">An empty cell needs 8 POLLEN, but a robot may hold only 4. So every TIP after the first takes two loads, from us, our partner, or both. The spill from a TIP lands in the zone we shot from, and the next up cell faces the other way. That makes the loop: shoot, sweep the spill, cross, shoot.</p></div>
+      <p class="muted prose">An empty cell needs 8 POLLEN, but a robot may hold only 4. So every TIP after the first takes two loads, from us, our partner, or both. The spill from a TIP lands in the zone we shot from, and the next up cell faces the other way. That makes the loop: shoot, sweep the spill, cross, shoot. Our shooter points out of the back, so the spill lands behind the robot, between it and the HIVE. Turn around once, sweep the spill intake-first and keep driving the same way to the other zone: the robot arrives with its back already toward the new up cell. That is one turn per cycle.</p></div>
     <pre class="mermaid">
 flowchart LR
-  A["Zone A: fire 4 into the up cell"] --> T{"8 in? HIVE tipping"}
+  A["Zone A: back to the up cell, fire 4"] --> T{"8 in? HIVE tipping"}
   T -- "not yet" --> R["Reload: loose balls, garden, flower bottoms"] --> A
   T -- "tipping" --> W["Hold fire. Operator: Y on TIP! Stay out of the spill box until the balls land"]
-  W --> S["Sweep the spill: POLLEN only, up to 4"] --> C["Cross via our corridor (red y -40, blue y +40)"]
-  C --> B["Zone B: operator light not red? Fire 4 into the new up cell"]
+  W --> S["Turn around once. Sweep the spill intake-first: POLLEN only, up to 4"] --> C["Keep going: cross via our corridor (red y -40, blue y +40)"]
+  C --> B["Zone B: back already toward the new up cell. Operator light not red? Fire 4"]
   B --> T2{"8 in? HIVE tipping"}
-  T2 -- "tipping" --> W2["Hold fire. Y on TIP! Sweep the spill in Zone B"] --> C2["Cross back"] --> A
+  T2 -- "tipping" --> W2["Hold fire. Y on TIP! Turn once, sweep the spill in Zone B"] --> C2["Keep going: cross back"] --> A
   T2 -- "not yet" --> R2["Reload near Zone B / loading zone"] --> B
     </pre>
     <div class="two">
       <div class="card"><h3>Where the ammo comes from, in order</h3>
         <ol>
-          <li><b>Our own spill.</b> It's predictable and lands in our zone, usually about 3 s after the threshold ball (up to about 6 s). The first spill also holds our 3 staged NECTAR: the intake refuses NECTAR, but steer around it anyway.</li>
+          <li><b>Our own spill.</b> It's predictable and lands in our zone, behind the robot, usually about 3 s after the threshold ball (up to about 6 s). The first spill also holds our 3 staged NECTAR: steer around it (only the mouth sensor can refuse NECTAR, and only on contact).</li>
           <li><b>Loose balls in our zone,</b> from misses and partner spills.</li>
           <li><b>GARDEN POLLEN.</b> Either garden is fair game in TELEOP (1 pt each if left, worth much more as ammo).</li>
-          <li><b>Flower bottoms.</b> 16 of the 24 non-preload POLLEN start inside flowers. Test whether our roller can pull through the 3.55 in retrieval opening.</li>
+          <li><b>Flower bottoms.</b> 16 of the 24 non-preload POLLEN start inside flowers. Test whether our intake wheel can pull them through the 3.55 in retrieval opening.</li>
           <li><b>The opponent's spill,</b> without herding or taking their NECTAR (G408, G411).</li>
         </ol></div>
       <div class="card"><h3>Pace and call-outs</h3>
         <ul>
           <li>Target: one 4-ball load every 15–20 s. That's a TIP every 30–40 s alone, or about 20 s with a shooting partner.</li>
+          <li>To shoot, stop and hold driver RB: the robot turns until its back points at the cell. The operator light is PURPLE until the robot is aimed and GREEN when it is ready to fire; the operator's RB then fires the load, each ball only when ready.</li>
           <li>Call it out loud: <i>"Four in. Eight, it's going."</i> The second robot stops firing until the swing finishes. Launching at a moving HIVE can spoil the TIP. <b>On the human player's "TIP!", the operator presses Y</b>: our camera can't see our own TIP from the zone we shot from.</li>
           <li>Two long buzzes mean the camera already switched the target, and a Y within 3 s then only confirms it (one strong short buzz). One long buzz means Y switched it. Pressed Y by mistake? Press it again.</li>
           <li>After any switch, shoot from the end the up cell faces (stay if you're already there). A red operator light means the target cell faces away: wrong zone, or the HIVE tipped and nobody pressed Y.</li>
           <li>The robot's 1 s pause after a target switch only retargets, and it cancels a queued volley (press RB again). It can't protect a tipping HIVE, so fire each load as one volley and start no new volley after "8, it's going".</li>
-          <li>Defense: blocking shots is legal (Q&amp;A 2). Reposition inside the ±40° cone and use the turret to shoot from another spot. With auto-aim the robot fires only while nearly still (under 6 in/s and 20°/s) and doesn't hold its position, so a push pauses firing. Never pin longer than 3 s (G421).</li>
-          <li>Never control 5 balls or any opponent NECTAR. There is no momentary allowance. A ball counts once it has passed the mouth sensor, and the intake stops at 4. The roller reverses for as long as NECTAR is at the mouth: always the opponent's, and ours too while <span class="mono">ACCEPT_OWN_NECTAR = false</span> (phase 1). The sensor only reacts on contact, so still steer around NECTAR.</li>
+          <li>Defense: blocking shots is legal (Q&amp;A 2). Reposition inside the ±40° cone, and the driver holds RB to turn the back onto the cell from the new spot. With auto-aim the robot fires only while nearly still (under 6 in/s and 20°/s) and aimed, and doesn't hold its position, so a push pauses firing: re-aim with RB. Never pin longer than 3 s (G421).</li>
+          <li>Never control 5 balls or any opponent NECTAR. There is no momentary allowance. With the mouth sensor, a ball counts once it has passed the sensor, the intake stops at 4, and the intake wheel reverses for as long as NECTAR is at the mouth: always the opponent's, and ours too while <span class="mono">ACCEPT_OWN_NECTAR = false</span> (phase 1). The sensor only reacts on contact, so still steer around NECTAR. Without it (TeleOp INIT shows <span class="mono">!!!! NO MOUTH SENSOR</span> at the top), nothing counts balls in or refuses NECTAR. The count goes down by one per feed and never goes up by itself, so after a volley RT doesn't stop on its own (only the mouth sensor, or a slot-4 sensor that sees the 4th ball in the tunnel, stops it at 4): the driver stops intaking at 4 by eye. An eject (operator LB) doesn't lower the count: the operator presses back once per ball that went out, or the intake keeps refusing. The operator fixes the count with back (−1) and left-stick click (+1).</li>
         </ul></div>
     </div>
     <div class="tablewrap">
       <table>
         <thead><tr><th>Control</th><th>Driver · gamepad 1</th><th>Operator · gamepad 2</th></tr></thead>
         <tbody>
-          <tr><td>Sticks</td><td>Field-centric drive (left = move, "up" = away from the drivers; right = turn)</td><td>Right stick X: manual turret whenever auto-aim is off · right-stick click: <b>manual aim</b> on/off (RB or X then fires at the manual angle as soon as the flywheel is at speed)</td></tr>
-          <tr><td>Triggers</td><td><kbd>RT</kbd> intake in (stops at 4) · <kbd>LT</kbd> intake out</td><td>—</td></tr>
-          <tr><td>Bumpers</td><td><kbd>LB</kbd> hold: slow mode · <kbd>RB</kbd> hold: aim-assist, which turns the chassis toward the target</td><td><kbd>RB</kbd> fire volley (each ball only when at speed and aimed) · <kbd>LB</kbd> hold: eject</td></tr>
-          <tr><td>Face buttons</td><td><kbd>LB</kbd>+<kbd>Y</kbd> relocalize, only with the robot still and exactly on OUR S1 (red: back on the audience wall at (61.67, −12.75); blue: back on the far wall at (−61.67, 12.75))</td><td><kbd>A</kbd> shooting mode on/off (off also cancels a requested volley) · <kbd>X</kbd> fire one (works even at count 0) · <kbd>B</kbd> stop firing · <kbd>Y</kbd> "HIVE tipped": press on every "TIP!" (flips the target; within 3 s of a camera switch it only confirms it)</td></tr>
-          <tr><td>D-pad</td><td>—</td><td><kbd>↑</kbd>/<kbd>↓</kbd> RPM trim ±50 · <kbd>←</kbd>/<kbd>→</kbd> turret trim ±0.5° (← = counter-clockwise)</td></tr>
-          <tr><td>Back / stick click</td><td><kbd>Back</kbd> reset heading (robot facing straight away from the drivers)</td><td><kbd>Back</kbd> ball count −1 · left-stick click +1</td></tr>
+          <tr><td>Sticks</td><td>Field-centric drive (left = move, "up" = away from the drivers; right = turn)</td><td>Right-stick click: <b>manual aim</b> on/off (RB or X then fires as soon as the flywheel is at speed, wherever the robot points) · the right stick itself does nothing</td></tr>
+          <tr><td>Triggers</td><td><kbd>RT</kbd> intake in (stops at 4 with the mouth or slot-4 sensor; without them, stop at 4 by eye) · <kbd>LT</kbd> intake out</td><td>—</td></tr>
+          <tr><td>Bumpers</td><td><kbd>LB</kbd> hold: slow mode · <kbd>RB</kbd> hold: <b>aim-assist</b>, which turns the robot until its back (the shooter) points at the target cell; the left stick still drives</td><td><kbd>RB</kbd> fire volley (each ball only when at speed and aimed; 4 feeds without a mouth sensor) · <kbd>LB</kbd> hold: eject (intake and carrier run backward; without a mouth sensor the count doesn't drop, so press back once per ball ejected)</td></tr>
+          <tr><td>Face buttons</td><td><kbd>LB</kbd>+<kbd>Y</kbd> relocalize, only with the robot still and exactly on OUR S1 (red: front on the audience wall at (61.67, −12.75); blue: front on the far wall at (−61.67, 12.75))</td><td><kbd>A</kbd> shooting mode on/off (off also cancels a requested volley) · <kbd>X</kbd> fire one (works even at count 0) · <kbd>B</kbd> stop firing · <kbd>Y</kbd> "HIVE tipped": press on every "TIP!" (flips the target; within 3 s of a camera switch it only confirms it)</td></tr>
+          <tr><td>D-pad</td><td>—</td><td><kbd>↑</kbd>/<kbd>↓</kbd> RPM trim ±50 · <kbd>←</kbd>/<kbd>→</kbd> aim trim ±0.5° (← = the ball goes further left, seen from the shooter looking toward the cell)</td></tr>
+          <tr><td>Back / stick click</td><td><kbd>Back</kbd> reset heading (the robot's front facing straight away from the drivers)</td><td><kbd>Back</kbd> ball count −1 · left-stick click +1</td></tr>
           <tr><td>In INIT</td><td><kbd>X</kbd> BLUE · <kbd>B</kbd> RED (with AUTO data this also turns the handed-over pose 180°)</td><td><kbd>↑</kbd>/<kbd>↓</kbd> ball count</td></tr>
         </tbody>
       </table>
@@ -441,7 +444,7 @@ flowchart LR
         <thead><tr><th>Rumble / light</th><th>Who</th><th>Means</th></tr></thead>
         <tbody>
           <tr><td>2 short blips</td><td>driver</td><td>4 balls loaded (full)</td></tr>
-          <tr><td>1 short buzz</td><td>driver</td><td>NECTAR refused at the mouth</td></tr>
+          <tr><td>1 short buzz</td><td>driver</td><td>NECTAR refused at the mouth (needs the mouth sensor)</td></tr>
           <tr><td>1 light short buzz</td><td>operator</td><td>Flywheel at speed (again after every shot)</td></tr>
           <tr><td>1 strong short buzz</td><td>operator</td><td>Your Y confirmed the camera's switch (nothing changed)</td></tr>
           <tr><td>4 blips</td><td>operator</td><td>A feed was not confirmed: jam? Check the balls and the count (LB eject; back −1, left-stick click +1). On every shot, it means dip detection isn't tuned and there's no feed beam.</td></tr>
@@ -450,11 +453,11 @@ flowchart LR
           <tr><td>3 blips</td><td>both</td><td>1:00 left, on our own TeleOp clock (the field timer is the authority)</td></tr>
           <tr><td>1 s continuous</td><td>both</td><td>0:20 left</td></tr>
           <tr><td>Light bar</td><td>driver</td><td>RED full · YELLOW 1–3 balls · BLUE empty</td></tr>
-          <tr><td>Light bar</td><td>operator</td><td>GREEN ready to fire · YELLOW spinning up or aiming · PURPLE turret at its limit (turn the chassis) · RED target cell faces away (wrong zone, or the HIVE tipped: press Y) · BLUE shooting mode off</td></tr>
+          <tr><td>Light bar</td><td>operator</td><td>GREEN ready to fire · YELLOW aimed but waiting (flywheel spinning up, robot moving, TIP pause) · PURPLE not aimed (driver: hold RB) · RED target cell faces away (wrong zone, or the HIVE tipped: press Y) · BLUE shooting mode off</td></tr>
         </tbody>
       </table>
     </div>
-    <p class="muted" style="font-size:.9rem">Light bars work on PS4/PS5 pads; use wired pads (R904). Telemetry for the coach: <span class="mono">&gt;&gt; TARGET SWITCHED: GO TO OUR FAR END (stay if you are already there) &lt;&lt;</span>, <span class="mono">!! TARGET CELL FACES AWAY</span>, <span class="mono">!! FEED NOT CONFIRMED</span> and <span class="mono">!! IN THE SPILL LANDING BOX</span>. The AIM line names the zone to shoot from, for example <span class="mono">ZONE B (FAR half)</span>.</p>
+    <p class="muted" style="font-size:.9rem">Light bars work on PS4/PS5 pads; use wired pads (R904). Telemetry for the coach: <span class="mono">&gt;&gt; TARGET SWITCHED: GO TO OUR FAR END (stay if you are already there) &lt;&lt;</span>, <span class="mono">!! TARGET CELL FACES AWAY</span>, <span class="mono">!! FEED NOT CONFIRMED</span> and <span class="mono">!! IN THE SPILL LANDING BOX</span>. The AIM line names the zone to shoot from, for example <span class="mono">ZONE B (FAR half)</span>, and the shot distance, measured from where the ball leaves the robot once it is aimed (outside 30–92 in, a <span class="mono">!! distance … outside the reliable shot band</span> line appears). Then it shows the heading error against the aim tolerance, and <span class="mono">ON TARGET</span> or <span class="mono">TURN +12 deg (driver RB)</span>. Without a mouth sensor the BALLS line says <span class="mono">mouth NO SENSOR (count drops per feed)</span>.</p>
   </div>
 </section>
 
@@ -465,10 +468,10 @@ flowchart LR
       <table>
         <thead><tr><th>Field timer</th><th>Robot</th><th>Coach and human player</th></tr></thead>
         <tbody>
-          <tr><td class="n">1:00</td><td>Keep cycling. Flowers unlock now, but a pollen-only robot ignores them, and the intake keeps refusing NECTAR (phase 1).</td><td>Coach: "NECTAR, GO" at 0:59 on the field timer (the chime is only a courtesy). Human player: drop all remaining NECTAR into our LOADING ZONE. It must touch the zone's tile first, and may then roll toward a robot (Q&amp;A 6, 7).</td></tr>
+          <tr><td class="n">1:00</td><td>Keep cycling. Flowers unlock now, but a pollen-only robot ignores them. The mouth sensor keeps refusing NECTAR (phase 1); without it, the driver steers around the NECTAR that rolls in.</td><td>Coach: "NECTAR, GO" at 0:59 on the field timer (the chime is only a courtesy). Human player: drop all remaining NECTAR into our LOADING ZONE. It must touch the zone's tile first, and may then roll toward a robot (Q&amp;A 6, 7).</td></tr>
           <tr><td class="n">~0:25</td><td>Start the last cycle in the half next to our LOADING ZONE (red: far half; blue: audience half), 44 in from the zone.</td><td>Coach: "0:25", last cycle.</td></tr>
           <tr><td class="n">~0:12</td><td>Fire everything on board into the up cell (by 0:15 if we're in the half away from our LOADING ZONE). Each ball left there is 2 pts if it doesn't tip.</td><td>Coach: "0:12, last volley".</td></tr>
-          <tr><td class="n">~0:10</td><td>Drive into the LOADING ZONE after the volley (about 3 s from Zone B). After a tipping volley, don't cut straight across: the spill lands where we just shot from, and at the Zone B centre spot B2 (red (−48, −12.75); blue (48, 12.75)) the robot's front edge is already 3 in inside the landing box (G409). Wait until the balls have landed, or first drive toward our alliance wall until the robot is clear of the box (red y ≤ −38, blue y ≥ +38), then across. Make it obvious: well inside, not just touching the tape. Be in by 0:05 if SWARM depends on our PARK.</td><td>Coach: "Park".</td></tr>
+          <tr><td class="n">~0:10</td><td>Drive into the LOADING ZONE after the volley (about 3 s from Zone B). After a tipping volley, don't cut straight across: the spill lands where we just shot from, and at the Zone B centre spot B2 (red (−48, −12.75); blue (48, 12.75)) the robot's back edge, the side toward the HIVE, is already 3 in inside the landing box (G409). Wait until the balls have landed, or first drive toward our alliance wall until the robot is clear of the box (red y ≤ −38, blue y ≥ +38), then across. Make it obvious: well inside, not just touching the tape. Be in by 0:05 if SWARM depends on our PARK.</td><td>Coach: "Park".</td></tr>
           <tr><td class="n">0:00</td><td>Stop. No powered movement after the buzzer (G404).</td><td>Coach or driver presses stop. Hands off.</td></tr>
         </tbody>
       </table>
@@ -478,7 +481,7 @@ flowchart LR
         <ul>
           <li><b>NECTAR as tip accelerant:</b> 3 NECTAR + 3 POLLEN tips an empty cell, 6 balls instead of 8. Our 3 staged NECTAR spill out with our first tip, and the human player can add one more per tip (all remaining at 1:00).</li>
           <li><b>Flowers:</b> the first NECTAR in a flower gets +5. The top-most NECTAR owns the flower at 2 pts per element inside. A flower still holding its staged POLLEN is worth about 13 pts for one NECTAR (15 if 4 POLLEN count, e.g. after we add one). About 40% of flowers still do at match end, and almost nobody scores them yet.</li>
-          <li>The cost: the hood gap is set for 2.8 in POLLEN, and NECTAR is 3.6 in. Until the NECTAR tests pass, the intake refuses all NECTAR (<span class="mono">ACCEPT_OWN_NECTAR = false</span>). Test before committing.</li>
+          <li>The cost: the ball path is built for 2.8 in POLLEN, and NECTAR is 3.6 in. A NECTAR through the tunnel, the carrier and the shooting wheel is untested. Until the NECTAR tests pass, the mouth sensor refuses all NECTAR (<span class="mono">ACCEPT_OWN_NECTAR = false</span>). Test before committing.</li>
         </ul></div>
       <div class="card"><h3>Point check for one full match (our robot)</h3>
         <ul>
@@ -494,29 +497,29 @@ flowchart LR
 <section id="robot">
   <div class="wrap">
     <div class="sechead"><div class="eyebrow">Robot · keep the design, tune it</div><h2>Refinements, in priority order</h2>
-      <p class="muted prose">The robot: SWYFT mecanum drive with X/Y odometry pods, a turret flywheel shooter fed up through the hollow turret center, a full-width intake, and a Limelight 3A camera (the only legal programmable vision coprocessor, R702). The design is right for this game. The list below is about making it legal, consistent and countable. Anything larger is marked optional.</p></div>
+      <p class="muted prose">The robot: a SWYFT mecanum drive with X/Y odometry pods on a goBILDA Pinpoint. At the front, a full-width intake wheel of star wheels on a floating arm, driven by a DC motor, pulls balls in over a clear ramp into a tunnel. A carrier wheel above the tunnel holds the balls while it is stopped and pushes one at a time into the shooting wheel when it spins. The shooting wheel is fixed at the top of the back, so the robot aims by turning its back to the target. A Limelight 3A camera (the only legal programmable vision coprocessor, R702) looks out of the back too. With the carrier on a motor, that is 7 motors (R503 allows 8), and no servos are needed. The design is right for this game. The list below is about making it legal, consistent and countable. Anything larger is marked optional.</p></div>
     <div class="tablewrap">
       <table>
         <thead><tr><th>Priority</th><th>Change</th><th>Why</th></tr></thead>
         <tbody>
-          <tr><td><span class="pill must">must</span></td><td>Main power switch and robot signs (plus a listed grounding strap, recommended)</td><td>Inspection blockers (R603, R401–R403). The strap is optional under R605, but it protects the Limelight from static.</td></tr>
-          <tr><td><span class="pill must">must</span></td><td>Ball sensors: a REV Color Sensor V3 at the intake mouth (a Brushland in I2C mode also works; its digital outputs aren't read), a "slot 4 full" sensor, and a beam-break at the feed (strongly recommended: it confirms every shot)</td><td>Count to 4 and stop the intake; refuse NECTAR at the mouth. Every ball, garden balls too, must pass within 4 cm of the mouth sensor. G407 and G408 have no momentary exception.</td></tr>
-          <tr><td><span class="pill tune">measure</span></td><td>Measure on the robot: count the turret ring and pinion teeth; confirm the flywheel's right-angle (bevel/miter) drive and its ratio; check the hood contact surface, the intake roller layout and whether the 60 mm flywheel fits</td><td>The photos only give estimates. The ratios go into <span class="mono">RobotConfig</span>: <span class="mono">TURRET_GEAR_RATIO</span> (5 is a guess) and <span class="mono">FLYWHEEL_TICKS_PER_REV</span> = 28 × motor turns per wheel turn.</td></tr>
-          <tr><td><span class="pill tune">tune</span></td><td>Flywheel velocity control, and feed only when back to speed (within 2.5% or 60 rpm, whichever is larger, for 3 loops)</td><td>Each shot slows the 72 mm wheel by about 18–19%. The 28-count encoder reads speed coarsely, and it counts motor turns, not wheel turns.</td></tr>
-          <tr><td><span class="pill tune">tune</span></td><td>Add the goBILDA <b>60 mm steel flywheel</b> (551 g·cm², made for the 72 mm Hogback), if it fits our drive</td><td>More stored energy means less speed drop per ball, so 4-ball volleys land the same.</td></tr>
-          <tr><td><span class="pill tune">tune</span></td><td>Set the hood for a <b>~64° actual exit angle</b>; fight bounce-outs</td><td>A fixed hood covers lip distances of about 27–90 in (30–92 in to the opening centre: the robot warns outside that band). One team measured 44% bounce-outs with a solid fixed hood, so test foam or compliant surfaces and spin.</td></tr>
-          <tr><td><span class="pill tune">tune</span></td><td>Turret: a goBILDA <b>5-turn Dual Mode Servo</b> in the same mount (optional: a REV Through Bore Encoder on an idler gear meshing with the ring, for feedback only); calibrate the zero with Tune: Turret Calibrator and add hard stops</td><td>As built, the 300° servo through a ~4–6:1 ring gives only about 50–75° of turret travel (300° ÷ ratio) and no feedback; the 5-turn servo gives about 300–450°. The ring centre is the ball path, so no encoder fits on the turret axis. The code drives the servo by position only: never put it in continuous mode, and measure <span class="mono">TURRET_ENCODER_TICKS_PER_DEG</span> before turning the encoder on. No home switch is needed: a positional servo is absolute. If the turret fails, set <span class="mono">TURRET_PINNED = true</span>: it holds its centre and the chassis does the aiming (driver RB aim-assist; AUTO turns the robot).</td></tr>
-          <tr><td><span class="pill tune">tune</span></td><td>Power servos at 6 V (REV Servo Hub or goBILDA Servo Power Injector)</td><td>Hub servo ports are 5 V and share 2 A per pair, and a stalled servo draws 2–2.5 A.</td></tr>
-          <tr><td><span class="pill tune">tune</span></td><td>Identify the X/Y odometry pods with <b>Check: Odometry</b> (pod type, Pinpoint wiring, directions) and set RobotConfig. Put the Limelight on the turret, pitched ~35–40° up</td><td>The HIVE tags face down from about 50 in high, and they move when the HIVE tips, so they're for aiming, not for finding the robot's position.</td></tr>
-          <tr><td><span class="pill tune">tune</span></td><td>Protect the hubs and wiring, cradle the battery, guard the turret's open center and the flywheel</td><td>Defense is "everywhere in TELEOP" in Michigan. A ball landing on the robot near a spill risks G409. Inspection doesn't require a battery cradle, but a loose battery can get the robot disabled (G412.B).</td></tr>
-          <tr><td><span class="pill opt">optional</span></td><td>Move the intake to a spare DC motor: a goBILDA 5203 picked after measuring the roller. If the photo estimate holds (≈96 mm wheels, ≈1.2:1 step-up), 435 rpm gives ≈8.6 ft/s and 312 rpm ≈6.2 ft/s at the surface; 1150 rpm would give ≈23 ft/s with the least torque.</td><td>A servo makes about 2–3 W against about 22 W for a motor. If pickup is the bottleneck, this is the fix. The code runs <span class="mono">intake</span> as a servo or a motor.</td></tr>
-          <tr><td><span class="pill opt">optional</span></td><td>NECTAR path: a compliant or adjustable hood gap</td><td>Only after POLLEN cycles are reliable. Then set <span class="mono">ACCEPT_OWN_NECTAR = true</span> so the intake takes our NECTAR.</td></tr>
+          <tr><td><span class="pill must">must</span></td><td>Ball sensors: a REV Color Sensor V3 at the intake mouth (a Brushland in I2C mode also works; its digital outputs aren't read), a sensor that sees the 4th ball in the tunnel (the slot-4 sensor), and a break-beam where balls enter the shooting wheel (strongly recommended: it confirms every shot)</td><td>Count to 4 and stop the intake; refuse NECTAR at the mouth. Every ball, garden balls too, must pass within 4 cm of the mouth sensor. Without it the robot can't count balls coming in or refuse NECTAR, so the drivers count by eye. G407 and G408 have no momentary exception.</td></tr>
+          <tr><td><span class="pill must">must</span></td><td>Main power switch, robot signs, and the robot inside the sizing box through the floating intake arm's whole swing (plus a listed grounding strap, recommended)</td><td>Inspection blockers (R603, R401–R403, R102/R105). Swing the arm by hand from its lowest to its highest point: the robot must fit 18 × 18 × 18 in at the start and 18 × 24 × 29 in at every point, so add a mechanical stop if the arm swings outside. The strap is optional under R605, but it protects the Limelight from static.</td></tr>
+          <tr><td><span class="pill must">must</span></td><td>Confirm the tunnel holds no more than 4 balls; if a 5th fits, add a mechanical stop</td><td>Without a mouth sensor nothing else stops a 5th ball (G407). Test it first, by hand, with the carrier stopped (experiment 0a).</td></tr>
+          <tr><td><span class="pill tune">tune</span></td><td>Flywheel velocity control, and feed only when back to speed (within 2.5% or 60 rpm, whichever is larger, for 3 loops)</td><td>Each shot slows the wheel (about 18–19% for a 72 mm wheel in the physics model). The 28-count encoder reads speed coarsely, and it counts motor turns, not wheel turns: check the motor label (a goBILDA 5203 6000 rpm driving the wheel 1:1 is assumed) and multiply <span class="mono">FLYWHEEL_TICKS_PER_REV</span> by any gear or belt ratio.</td></tr>
+          <tr><td><span class="pill tune">tune</span></td><td>Add the goBILDA <b>60 mm steel flywheel</b> (551 g·cm²) to the shooting-wheel shaft, if it fits</td><td>More stored energy means less speed drop per ball, so 4-ball volleys land the same. Keep it if experiment 3 shows more made shots and spin-up stays under 1 s.</td></tr>
+          <tr><td><span class="pill tune">tune</span></td><td>Measure where the ball leaves the shooting wheel, the wheel's size and its <b>fixed exit angle</b>, then build the RPM table with Tune: Shot Map Logger; fight bounce-outs (experiments 2a–2c)</td><td>The starting table below is a physics model for a 72 mm wheel at about 65°, not our shooter. The exit point goes into <span class="mono">SHOOTER_FORWARD_IN</span> / <span class="mono">SHOOTER_LEFT_IN</span>: shot distances are measured from it. The 30–92 in shot band comes from the same model, so re-check it. One team measured 44% bounce-outs with a solid fixed hood, so test foam or compliant surfaces and spin.</td></tr>
+          <tr><td><span class="pill tune">tune</span></td><td>Carrier feed timing: with 2 balls inside, set <span class="mono">CARRIER_FEED_MS</span> so exactly one ball leaves per push (Tune: Flywheel: RB is a timed push of exactly that length; experiment 0b)</td><td>Stopped, the carrier wheel holds the balls; spinning, it pushes one into the shooting wheel. Too long a push sends two balls, too short sends none. A flywheel speed dip or the feed beam stops it as soon as the ball has gone; <span class="mono">CARRIER_FEED_MS</span> is the push it makes when nothing confirms the shot, which is why the timed push ignores the dip. If a servo turns the carrier, configure that port as a Continuous Rotation Servo named <span class="mono">carrier</span>.</td></tr>
+          <tr><td><span class="pill tune">tune</span></td><td>Mount the Limelight on the back, looking out the same way as the shooter, pitched ~35–40° up; set its position and angles with Check: Limelight</td><td>From the back it sees the target cell's tags while the robot aims. The HIVE tags face down from about 50 in high, and they move when the HIVE tips, so they're for aiming, not for finding the robot's position.</td></tr>
+          <tr><td><span class="pill tune">tune</span></td><td>Intake motor direction and speed (Check: Sensors, A = intake in)</td><td>The intake wheel runs on a goBILDA Yellow Jacket motor on the floating front arm. Set <span class="mono">INTAKE_DIRECTION</span> so balls go in, then the <span class="mono">INTAKE_IN_POWER</span> that picks up fastest without knocking balls away, garden balls along the wall too (experiment 8).</td></tr>
+          <tr><td><span class="pill tune">tune</span></td><td>Protect the hubs and wiring, cradle the battery, guard the shooting wheel</td><td>Defense is "everywhere in TELEOP" in Michigan. A ball landing on the robot near a spill risks G409. Inspection doesn't require a battery cradle, but a loose battery can get the robot disabled (G412.B).</td></tr>
+          <tr><td><span class="pill opt">optional</span></td><td>NECTAR path: a 3.6 in NECTAR through the intake, tunnel, carrier and shooting wheel</td><td>Only after POLLEN cycles are reliable, and only if experiment 6 passes. Then set <span class="mono">ACCEPT_OWN_NECTAR = true</span> so the mouth sensor lets our NECTAR in.</td></tr>
+          <tr><td><span class="pill opt">optional</span></td><td>Hood adjustment: a way to change the exit angle (shims or slots)</td><td>Only if the measured fixed angle can't reach every distance we shoot from.</td></tr>
         </tbody>
       </table>
     </div>
     <div class="card">
-      <h3>Starting RPM table (to tune from, 72 mm wheel, 64–65° hood)</h3>
-      <p class="muted" style="font-size:.92rem">This is a physics estimate that assumes ball exit speed = 0.40 × wheel surface speed. Measure the real ratio first and scale the whole table, then refine each row by test. Lip distance is measured from the cell opening's bottom edge; the code's table uses the distance to the opening centre (lip + 2.8 in). Ticks/s = rpm × 28 / 60, which assumes the motor turns once per wheel turn (a 1:1 bevel pair): if not, multiply by the measured ratio.</p>
+      <h3>Starting RPM table (a model to tune from: 72 mm wheel, ~65° exit)</h3>
+      <p class="muted" style="font-size:.92rem">This is a physics estimate for a 72 mm wheel with a ~65° exit angle that assumes ball exit speed = 0.40 × wheel surface speed. Our shooter's exit angle is fixed: measure it, the wheel's size and the real speed ratio, scale the whole table, then refine each row by test. Lip distance is measured from the cell opening's bottom edge; the code's table uses the distance from where the ball leaves the shooting wheel to the opening centre (lip + 2.8 in). Ticks/s = rpm × 28 / 60, which assumes the motor turns once per wheel turn (1:1): if not, multiply by the measured ratio.</p>
       <div class="tablewrap"><table>
         <thead><tr><th>Lip distance</th><th>Exit speed</th><th>Window</th><th>72 mm rpm</th><th>Ticks/s</th></tr></thead>
         <tbody>
@@ -539,37 +542,40 @@ flowchart LR
       <p class="muted prose"><span>The starter project lives in the team's GitHub repo <span class="mono">github.com/craigmichaelmartin/ftc-12303</span>, a public fork of FIRST's FtcRobotController, on branch <span class="mono">main</span>. Plan documents are in <span class="mono">docs/plan/</span>, and setup and tuning order are in <span class="mono">TeamCode/…/README-12303.md</span>.</span></p></div>
     <pre class="mermaid">
 flowchart TB
-  P["Pinpoint odometry: robot pose"] --> AIM["Fused aim: bearing to the active cell + Limelight bias"]
-  LL["Limelight 3A: one pipeline, ID filter 30-45, code keeps our 8 tags"] --> AIM
+  P["Pinpoint odometry: robot pose"] --> AIM["Aim: the heading that points the robot's back at the active cell, + Limelight bias, aim tolerance"]
+  LL["Limelight 3A on the back: one pipeline, ID filter 30-45, code keeps our 8 tags"] --> AIM
   LL --> HT["HiveTracker: which cell is up"]
   OP["Operator: Y on every TIP!"] --> HT
   HT --> AIM
-  AIM --> TUR["Turret: positional servo, soft limits"]
+  AIM --> TURN["Turn the robot: driver RB aim-assist, AUTO turns itself"]
   AIM --> SH["Shooter: distance to RPM table, at-speed gate"]
-  IDX["Indexer: count starts at Preloads (4), stops at 4, refuses NECTAR"] --> FEED["Feed one ball when at speed and aimed"]
+  INT["Intake: stops at 4, refuses NECTAR (with the mouth sensor)"] --> CAR["Carrier: count starts at Preloads (4), holds the balls, one push per ball"]
+  CAR --> FEED["Feed one ball when at speed, aimed and still"]
+  AIM --> FEED
   SH --> FEED
   PED["Pedro Pathing 3: AUTO paths"] --> P
     </pre>
     <div class="two">
       <div class="card"><h3>Decisions</h3>
         <ul>
-          <li><b>Pinpoint for position, AprilTags for aim.</b> SDK 12.0 says BIOBUZZ tags move and are "not suitable for absolute Field Localization". Each tag cluster's origin is the center of the cell opening, which is exactly what we aim at.</li>
+          <li><b>Pinpoint for position, AprilTags for aim.</b> SDK 12.0 says BIOBUZZ tags move and are "not suitable for absolute Field Localization". Each tag cluster's origin is the center of the cell opening, which is exactly what we aim at. The camera is fixed to the chassis and looks out of the back, so it sees the target cell's tags while the robot aims; its bias corrects odometry heading error and is learned only while the robot is still.</li>
+          <li><b>Aim by turning the robot.</b> The shooter is fixed, so a ball is fed only when the robot's heading is inside an aim tolerance. It is worked out for every shot from the 20 in opening and the distance from the robot's centre to the cell, because the robot turns about its centre and a heading error swings the shot about it. It is 4° (the cap) for every straight-on shot up to about 54 in and at every AUTO shooting spot, 3.2° for a 70 in shot and 2.5° for a 92 in shot (both straight on), and 1.8° for a 92 in shot 40° off-axis (40° to the side of head-on). Shot distances (on the AIM line, in the RPM table and for the 30–92 in band) are measured from where the ball leaves the robot once it is aimed, so they don't change while it turns. Driver RB turns the robot there and stops inside half the tolerance; in AUTO the robot turns itself during every volley whenever it is more than half the tolerance off. Operator d-pad ←/→ trims the aim by 0.5°.</li>
           <li><b>Pedro Pathing 3</b> for AUTO paths. Its AutoTune is the fastest route to reliable paths once the odometry pods are on, but use it at home only: its Wi-Fi web server is illegal anywhere in an event venue (R704.D, Q&amp;A 26). Until Foresight is tuned, paths are capped at half speed, which is why A2 and A3 wait for tuning.</li>
           <li><b>Flywheel:</b> start with the hub's <span class="mono">setVelocity</span> PIDF (F = 32767 / max ticks/s, P = 0.1·F, I = 0.1·P). Call it "ready" only after 3 loops within 2.5% or 60 rpm, whichever is larger.</li>
-          <li><b>Which cell is up:</b> red starts with the audience cell up, blue with the far cell up. The operator presses Y on every TIP. The camera sees the up cell only from the zone it faces, so it confirms a TIP only after we reach the new zone (0.5 s of unbroken evidence); a Y within 3 s of a camera switch only confirms it.</li>
-          <li><b>Laptop tests:</b> <span class="mono">./gradlew :TeamCode:testDebugUnitTest</span> runs the JUnit tests with no robot: every AUTO leg swept for walls, FLOWERS, HIVE legs, partners and spill boxes, plus ball handling, the HIVE tracker and shot dips.</li>
+          <li><b>Which cell is up:</b> red starts with the audience cell up, blue with the far cell up. The operator presses Y on every TIP. The camera sees the up cell only from the zone it faces, so it confirms a TIP only after we reach the new zone with the back, and the camera, toward the cell (0.5 s of unbroken evidence); a Y within 3 s of a camera switch only confirms it.</li>
+          <li><b>Laptop tests:</b> <span class="mono">./gradlew :TeamCode:testDebugUnitTest</span> runs the JUnit tests with no robot: every AUTO leg swept for walls, FLOWERS, HIVE legs, partners and spill boxes, every start with the front against its wall and every shooting pose with the back on its cell, plus ball handling (carrier and intake), aim, camera geometry, the HIVE tracker and shot dips.</li>
         </ul></div>
       <div class="card"><h3>Competition hygiene</h3>
         <ul>
           <li>Panels, FTC Dashboard and Pedro AutoTune must be <b>out of the build at events</b>. Wi-Fi streaming is banned anywhere in the venue, pits included (R704.D, Q&amp;A 26). Set <span class="mono">PEDRO_AUTOTUNE = false</span> in <span class="mono">build.dependencies.gradle</span> and re-deploy over USB before every event: every 12303 OpMode warns in INIT if AutoTune, Dashboard or Panels is still in the app. Tune the Limelight over USB too.</li>
-          <li>TeleOp INIT must not move anything during the 8 s transition (G403). AUTO INIT holds only the turret, the feeder gate and the hood (G304.H).</li>
+          <li>TeleOp INIT must not move anything during the 8 s transition (G403). AUTO INIT moves nothing either (G304.H).</li>
           <li><span class="mono">12303 Auto</span> preselects <span class="mono">12303 TeleOp</span>, so the drive team can't forget it.</li>
           <li>Pose, ball count and HIVE state hand off from AUTO to TELEOP, so field-centric drive and aiming start correct. Don't restart the robot between them.</li>
         </ul></div>
       <div class="card"><h3>Loading code onto the robot</h3>
         <ol>
           <li><b>Once per laptop:</b> Android Studio (Narwhal 3 Feature Drop or newer), then <span class="mono">File › New › Project from Version Control</span> with <span class="mono">github.com/craigmichaelmartin/ftc-12303.git</span>. To push changes, the coach adds you as a collaborator.</li>
-          <li><b>Once per robot:</b> Driver Station app 12.0, the same version as the code. A Robot Configuration with the exact names from the README. The Limelight pipeline, set on the camera over USB at <span class="mono">limelight.local:5801</span>.</li>
+          <li><b>Once per robot:</b> Driver Station app 12.0, the same version as the code. A Robot Configuration with the exact names from the README: <span class="mono">fl fr bl br flywheel intake carrier pinpoint limelight</span>, plus <span class="mono">mouthColor slot4 feedBeam</span> when the ball sensors are fitted (<span class="mono">carrier</span> as a motor or a CR servo). The Limelight pipeline, set on the camera over USB at <span class="mono">limelight.local:5801</span>.</li>
           <li><b>Every time:</b> pull the latest code, plug the laptop into the Control Hub's USB-C port, pick <span class="mono">TeamCode</span> and press Run.</li>
           <li><b>At events:</b> USB only, and Pedro AutoTune out of the build.</li>
         </ol>
@@ -585,22 +591,27 @@ flowchart TB
       <table>
         <thead><tr><th>#</th><th>Experiment (use our HIVE)</th><th>What we learn</th></tr></thead>
         <tbody>
-          <tr><td class="n">1</td><td>Count POLLEN to tip, both placed and launched: from the 3-NECTAR start and from empty. 5 runs each; time the wait before it swings.</td><td>Whether our HIVE matches the official 3 / 8 calibration. If not, recalibrate it per the field setup guide §12.3.</td></tr>
-          <tr><td class="n">2</td><td>Film 10 shots at 3 RPMs, perpendicular, at 240 fps</td><td>The real exit-speed ratio and shot-to-shot spread. Targets: speed within 2–3%, angle within 1–1.5°.</td></tr>
-          <tr><td class="n">3</td><td>Shot map with Tune: Shot Map Logger: 33–57 in from the turret axis to the aim point, 0°/20°/40° off-axis, 10 shots per spot (head-on shots beyond about 45 in don't fit in Zone A). Record made / bounce-out / miss.</td><td>The distance-to-RPM table and the shooting cone we can trust.</td></tr>
-          <tr><td class="n">4</td><td>RPM trace of a 4-ball volley, with and without the steel flywheel</td><td>Feed interval and the gate tolerance.</td></tr>
-          <tr><td class="n">5</td><td>Drive the roller into a flower's retrieval opening</td><td>Whether flower POLLEN, 16 of the 24 non-preload balls, becomes ammo for us.</td></tr>
-          <tr><td class="n">6</td><td>NECTAR through intake, indexer and hood</td><td>Go/no-go for phase 3.</td></tr>
+          <tr><td class="n">0a</td><td>Tunnel capacity, before anything else: with the carrier stopped, push POLLEN into the tunnel by hand until no more go in (3 times). Once the intake's direction is right, let it pull balls in until it can't take another (Check: Sensors, hold A).</td><td>Whether the tunnel holds no more than 4. If a 5th fits, add a mechanical stop: without a mouth sensor nothing else stops a 5th ball (G407). Where ball 4 sits is the place for the slot-4 sensor.</td></tr>
+          <tr><td class="n">0b</td><td>Carrier feed time, in Tune: Flywheel. A spins the flywheel up (about 3,500 rpm). Load 2 POLLEN, press Y until <span class="mono">FEED_MS</span> is selected, change it with d-pad ↑/↓ (10 ms steps) and press RB: a timed push of exactly that length, which doesn't stop at the flywheel dip. Then load 4 and press B four times.</td><td><span class="mono">CARRIER_FEED_MS</span>: halfway between the shortest push that always sends one ball out and the longest that never sends a second. Copy it into <span class="mono">RobotConfig</span>: a value changed in the OpMode lasts only until the app restarts. Then each B must send exactly one ball.</td></tr>
+          <tr><td class="n">1</td><td>Count POLLEN to tip, both placed and launched (Test: Tip Counter): from the 3-NECTAR start and from empty. 5 runs each; time the wait before it swings.</td><td>Whether our HIVE matches the official 3 / 8 calibration. If not, recalibrate it per the field setup guide §12.3.</td></tr>
+          <tr><td class="n">2a</td><td>Measure where the ball leaves the shooting wheel (tape measure, from the robot's centre), then film 10 shots at each of 3 RPMs (Tune: Flywheel), perpendicular, at 240 fps.</td><td>The fixed exit angle, the real exit-speed ratio and shot-to-shot spread. Targets: speed within 2–3%, angle within 1–1.5°. The exit point goes into <span class="mono">SHOOTER_FORWARD_IN</span> / <span class="mono">SHOOTER_LEFT_IN</span>, and the speed ratio scales the whole RPM table.</td></tr>
+          <tr><td class="n">2b</td><td>Shot map with Tune: Shot Map Logger: 5 distances, 0°/20°/40° off-axis, 10 shots per spot, measured from where the ball leaves the shooter to the aim point (hold RT: the robot turns its back onto the cell). Include our AUTO spots. With the shooter 7 in behind the robot's centre (until it is measured) they are S1 38.2 in, the Zone A side spot 38.5 in, the role-1 spot 32.5 in, S6 38.3 in and B2 24.5 in. Record made / bounce-out / miss.</td><td>The distance-to-RPM table, the shooting cone we can trust, and where B2 goes: it is the one AUTO spot under the 30 in band. If its short shot misses, move B2 back toward red (−55, −12.75) / blue (55, 12.75), a 31.5 in shot. That spot is only 1.6 in from the FLOWER beside it (red F-far, blue F-aud), and the drive in heads toward it.</td></tr>
+          <tr><td class="n">2c</td><td>Bounce-out check at the table settings: 20 shots into an empty cell, 20 into a cell holding 3 NECTAR.</td><td>The bounce-out rate. Over 5%: slow the ball, soften the lining where it is squeezed, or change the exit angle a few degrees (optional), then retest.</td></tr>
+          <tr><td class="n">3</td><td>Flywheel recovery: Tune: Flywheel with 4 balls loaded, LB = a 4-feed volley. 3 volleys each with and without the steel flywheel, on a fresh and a used battery.</td><td>How much speed each shot costs and how fast the wheel recovers (the RPM trace is in the CSV log). Keep the steel flywheel if made shots go up and spin-up stays under 1 s.</td></tr>
+          <tr><td class="n">4</td><td>Load-cycle timing: scatter 8 POLLEN where a Zone A spill lands. From the Zone A shooting spot, on "GO": turn around once, sweep 4 intake-first, cross by the corridor and volley from Zone B. 5 trials.</td><td>Our time per load: 20 s or less (stretch 15 s), with one big turn per cycle.</td></tr>
+          <tr><td class="n">5</td><td>Drive the intake wheel into a flower's retrieval opening, 10 tries</td><td>Whether flower POLLEN, 16 of the 24 non-preload balls, becomes ammo for us. Pass: 8 of 10, each in 3 s or less, never pulled out through the side.</td></tr>
+          <tr><td class="n">6</td><td>NECTAR through the intake, tunnel, carrier and shooting wheel</td><td>Go/no-go for phase 3.</td></tr>
           <tr><td class="n">7</td><td>10 runs of each AUTO rung (A2 and A3 only after Pedro tuning; A3 rehearsed with the partner)</td><td>Promote a rung at 8 of 10.</td></tr>
+          <tr><td class="n">8</td><td>Intake pickup speed: drive into single POLLEN at 1, 2 and 4 ft/s (10 tries each), then time the code's garden sweep.</td><td>Whether the intake is fast enough (8 of 10 at 2 ft/s), and whether the garden sweep gets 4 balls in 3 s or less, 8 of 10 times: A2 and A3 need it.</td></tr>
         </tbody>
       </table>
     </div>
     <div class="two">
       <div class="card"><h3>Six-week timeline</h3>
-        <div class="week"><b>W1</b><div>Inspection blockers, sensors, measure-on-robot checks (gear teeth, flywheel drive), flywheel control and gating, experiments 1–3, odometry pods identified (Check: Odometry), starter code running.</div></div>
-        <div class="week"><b>W2</b><div>Turret range and calibration, Limelight mounted and aiming, A0 and A1 reliable, Pedro tuning.</div></div>
-        <div class="week"><b>W3</b><div>TELEOP automation (auto-aim, one-button volley, stop at 4), driver drills, bounce-out fixes.</div></div>
-        <div class="week"><b>W4</b><div>A2 and A3 with the tuned follower (rehearse A3 with a partner), NECTAR go/no-go, flower-bottom test.</div></div>
+        <div class="week"><b>W1</b><div>Experiment 0 (tunnel capacity, then the carrier feed time), inspection blockers (with a tunnel stop if a 5th ball fits), ball sensors, set-up checks (odometry pods with Check: Odometry, flywheel motor and ratio, where the ball leaves the wheel, the intake arm's swing), flywheel control and gating, experiments 1 and 2a, starter code running.</div></div>
+        <div class="week"><b>W2</b><div>Limelight mounted on the back and aiming, Pedro tuning, then the aim-assist gains, then the shot map, the bounce-out check and flywheel recovery (experiments 2b, 2c and 3), A0 and A1 reliable.</div></div>
+        <div class="week"><b>W3</b><div>TELEOP automation (aim-assist, one-button volley, stop at 4), driver drills for the one-turn loop (timed as in experiment 4), bounce-out fixes.</div></div>
+        <div class="week"><b>W4</b><div>A2 and A3 with the tuned follower (rehearse A3 with a partner), the flower-bottom test, NECTAR go/no-go and intake pickup speed (experiments 5, 6 and 8).</div></div>
         <div class="week"><b>W5</b><div>Full timed match practice, scouting sheet, reliability work, portfolio.</div></div>
         <div class="week"><b>W6</b><div>Freeze the code. Practice, checklists, spares.</div></div>
       </div>
@@ -620,7 +631,7 @@ flowchart TB
       <table>
         <thead><tr><th>Rule</th><th>What it means for us</th><th>Penalty</th></tr></thead>
         <tbody>
-          <tr><td class="n">G407</td><td>Never control more than 4 elements. There is no momentary exception (Q&amp;A 3, 23), and pushing a pile with a flat face counts.</td><td>Verbal warning; MAJOR + yellow card if strategic</td></tr>
+          <tr><td class="n">G407</td><td>Never control more than 4 elements. There is no momentary exception (Q&amp;A 3, 23), and pushing a pile with a flat face counts. Without a mouth sensor the drivers stop at 4 by eye, and the tunnel must not fit a 5th. If a 5th gets in, eject at once (operator LB; without the mouth sensor, then press back once per ball ejected).</td><td>Verbal warning; MAJOR + yellow card if strategic</td></tr>
           <tr><td class="n">G408</td><td>Never control opponent NECTAR. A built-in "grab then reject" is likely judged strategic (TU05).</td><td>Verbal warning; yellow card if strategic</td></tr>
           <tr><td class="n">G409</td><td>Don't catch or deflect balls falling out of a tipping HIVE until they touch something else (Q&amp;A 17).</td><td>Verbal warning; yellow card if strategic</td></tr>
           <tr><td class="n">G417</td><td>Only launching into the up cell may tip a HIVE. Don't ram the frame, and don't shoot at the opponent's HIVE to stop their tip.</td><td>Verbal warning; MAJOR + yellow card if strategic</td></tr>
@@ -645,6 +656,7 @@ flowchart TB
       <li>Official Q&amp;A board: <a href="https://game-qa.firstinspires.org/boards/2027/FTC/QA" target="_blank" rel="noopener">game-qa.firstinspires.org/boards/2027/FTC/QA</a>. Tip calibration comes from the Event Field Setup Guide §12 on FIRST's Playing Field Resources page.</li>
       <li>FTC SDK v12.0 release notes (AprilTag clusters, BIOBUZZ tag library): <a href="https://github.com/FIRST-Tech-Challenge/FtcRobotController/releases" target="_blank" rel="noopener">github.com/FIRST-Tech-Challenge/FtcRobotController</a></li>
       <li>Early-season data: FTCScout and FTC Events, e.g. <a href="https://ftc-events.firstinspires.org/2026/USMISAS/rankings" target="_blank" rel="noopener">Saline Preview rankings</a> and the <a href="https://ftc-events.firstinspires.org/2026/region/USMI/league/MD" target="_blank" rel="noopener">Metro Detroit league page</a>. FiM events: <a href="https://firstinmichigan.us/FTC/events/" target="_blank" rel="noopener">firstinmichigan.us/FTC/events</a></li>
+      <li>Our robot: the coach's walk-through video (intake wheel, carrier wheel, shooting wheel) and the team's code, <span class="mono">README-12303.md</span>.</li>
       <li>Field coordinates come from the official field CAD. Launch numbers are physics estimates with drag, to be checked by experiments 2–3.</li>
     </ul>
     <p>For the 12303 drive team and coaches. Routes, timings, buttons and cues come from the team's starter code. Detailed plans live in <span class="mono">docs/plan/</span> in the team repo.</p>
@@ -760,10 +772,15 @@ flowchart TB
   }
   function robot(x, y, label, ghost, headingDeg) {
     const [sx, sy] = Q(x, y);
-    const r = el("rect", { x: sx - 9, y: sy - 9, width: 18, height: 18, rx: 1.5, class: "robot" + (ghost ? " ghost" : "") }, overlay);
-    // A field heading h (counter-clockwise from +X) draws as an SVG rotation of -h. A square looks the same
-    // turned 180°, so the red heading also serves blue.
-    if (headingDeg) r.setAttribute("transform", `rotate(${-headingDeg} ${sx} ${sy})`);
+    const g = el("g", {}, overlay);
+    el("rect", { x: sx - 9, y: sy - 9, width: 18, height: 18, rx: 1.5, class: "robot" + (ghost ? " ghost" : "") }, g);
+    if (headingDeg !== undefined) {
+      // The thick strip is the front (intake). At heading 0 the front faces +X, which is down on screen.
+      // A field heading h (counter-clockwise from +X) draws as an SVG rotation of -h; blue headings are red + 180.
+      el("rect", { x: sx - 7.5, y: sy + 6.6, width: 15, height: 1.8, rx: 0.6, class: "front" + (ghost ? " ghost" : "") }, g);
+      const h = headingDeg + (flip < 0 ? 180 : 0);
+      g.setAttribute("transform", `rotate(${-h} ${sx} ${sy})`);
+    }
     const t = el("text", { x: sx, y: sy, class: "f-lbl-b", "text-anchor": "middle", "dominant-baseline": "middle" }, overlay);
     t.textContent = label;
   }
@@ -813,7 +830,7 @@ flowchart TB
     if (state.ov === "zones") return {
       title: "Zones (state-dependent)",
       items: [
-        ["A", `At the start our ${c.startCell} (tags ${c.startTags}) is up and faces the ${c.startWall}. Score from the yellow cone in front of it: 30–92 in from the aim point and within ±40° of head-on.`],
+        ["A", `At the start our ${c.startCell} (tags ${c.startTags}) is up and faces the ${c.startWall}. Score from the yellow cone in front of it, with the robot's back toward the cell: 30–92 in from the aim point to where the ball leaves the shooter, within ±40° of head-on.`],
         ["B", `After a TIP our ${c.secondCell} (tags ${c.secondTags}) is up and faces the ${c.oppWall}. The cone moves to the ${c.zoneBHalf}, next to our LOADING ZONE.`],
         ["Spill", "A TIP pours the cell's balls toward the wall it faced. They first touch the floor about 24–42 in from center: the earliest about 1.2 s after the threshold ball, usually about 3 s, sometimes 6 s. Stay out of the box until they land (G409)."],
         ["Lane", `The corridor ${c.pt(30, -42)} → ${c.pt(-30, -40)} crosses between the zones and stays on our side. The under-HIVE lane is TELEOP only and risky (G409, G417).`],
@@ -824,10 +841,10 @@ flowchart TB
     if (state.ov === "A1") return {
       title: "A1 · Tip & Park (28 pts)",
       items: [
-        ["0 s", `Start at S1 ${c.pt(61.67, -12.75)}, heading ${c.hd(180)}: back on our ${c.startWall}, square in front of the start cell. The flywheel spins up at START. (From S2–S4 the robot first drives to the Zone A side spot ${c.pt(55, -37)}, heading ${c.hd(147.8)}, and fires there.)`],
-        ["~0.5 s", "First ball out. It fires all 4, each once the flywheel is back at speed: at least 0.33 s apart, about 1.5 s for all 4 when the shots are confirmed and about 3 s when they are not."],
-        ["~2–9 s", `Hold at the firing spot (S1 is 10.7 in outside the spill box, the side spot 6.8 in) while the HIVE waits 0.25–3.4 s and swings. Leave when the start cell's tags (${c.startTags}) were seen up and then gone for 1 s, or 6 s after the last shot. If the cell is still up at the end, the robot records no TIP.`],
-        ["~5–13 s", `Drive ${c.pt(52, -40)} → ${c.pt(30, -42)} → ${c.pt(-30, -40)} → park ${parkText(c, "A1")}: inside the LOADING ZONE, off the wall. From S1, ${c.pt(52, -40)} keeps the robot about 2 in outside the spill box. From the side spot the robot still faces ${c.hd(147.8)} until ${c.pt(30, -42)}, so one corner passes only about 0.2 in from the box; it leaves only after the hold, when the spill has normally landed.`],
+        ["0 s", `Start at S1 ${c.pt(61.67, -12.75)}, heading ${c.hd(0)}: front (intake) against our ${c.startWall}, square, back toward the start cell. The flywheel spins up at START. (From S2–S4 the robot first drives to the Zone A side spot ${c.pt(55, -37)}, heading ${c.hd(-32.2)}, back toward the cell, and fires there.)`],
+        ["~0.5 s", "First ball out. The carrier pushes one ball at a time, each once the flywheel is back at speed and the robot is aimed: about 1.5 s for all 4 when the shots are confirmed and about 3 s when they are not."],
+        ["~2–9 s", `Hold at the firing spot (S1 is 10.7 in outside the spill box, the side spot 6.8 in) while the HIVE waits 0.25–3.4 s and swings. The camera looks out of the back at the start cell: the robot leaves when its tags (${c.startTags}) were seen up and then gone for 1 s, or 6 s after the last shot. If the cell is still up at the end, the robot records no TIP.`],
+        ["~5–13 s", `Drive ${c.pt(52, -40)} → ${c.pt(30, -42)} → ${c.pt(-30, -40)} → park ${parkText(c, "A1")}: inside the LOADING ZONE, off the wall. From S1, ${c.pt(52, -40)} keeps the robot about 2 in outside the spill box. From the side spot the robot keeps its firing heading (${c.hd(-32.2)}) until ${c.pt(30, -42)}, so one corner passes only about 0.2 in from the box; it leaves only after the hold, when the spill has normally landed.`],
         ["30 s", "Scored: TIP 20 + LEAVE 3 + PARK 5, with plenty of slack."]
       ],
       tot: "Times assume a tuned path follower. At the shipped 0.5 speed cap the drive takes about 5–6 s (parked by about 9–15 s). Promote to competition at 8 of 10 practice runs."
@@ -836,10 +853,10 @@ flowchart TB
       title: "A2 · Tip, Reload, Volley",
       items: [
         ["0–2.5 s", "Same volley as A1: four shots from S1 (or the Zone A side spot from S2–S4). The robot assumes TIP 1 after 3 balls."],
-        ["2.5–4.5 s", `No hold: it leaves at once via ${c.pt(52, -40)} → ${c.pt(51, -50)} → sweep start ${c.pt(60.5, -46)}, turning to face our alliance wall between the two waypoints. The turning robot stays about 2 in outside the spill box.`],
-        ["4.5–6.5 s", `Sweep ${c.pt(60.5, -46)} → ${c.pt(60.5, -60)} at 0.3 speed, intake on: the roller's outer edge takes our 4 GARDEN POLLEN along the ${c.startWall}. It stops at 4 balls, or 0.6 s after the sweep path ends.`],
-        ["6.5–11 s", `Corridor ${c.pt(30, -42)} → ${c.pt(-30, -40)} to B2 ${c.pt(-48, -12.75)}, heading ${c.hd(0)}, facing the second cell (our ${c.secondCell}).`],
-        ["11–13.5 s", "Fire into the second cell: 4 of the 8 for TIP 2. Four can't tip it, so B2 (3 in inside its landing box) is fine. The gate cycles at least 4 times in case a garden ball missed the mouth sensor. If the robot doesn't think the second cell is up, it waits 1 s for vision, then keeps the balls."],
+        ["2.5–4.5 s", `No hold: it leaves at once via ${c.pt(52, -40)} → ${c.pt(51, -50)} → sweep start ${c.pt(60.5, -46)}, turning between the two waypoints to heading ${c.hd(-90)} so it drives intake-first, front toward our alliance wall. The turning robot stays about 2 in outside the spill box.`],
+        ["4.5–6.5 s", `Sweep ${c.pt(60.5, -46)} → ${c.pt(60.5, -60)} at 0.3 speed, intake on: the outer edge of the intake wheel takes our 4 GARDEN POLLEN along the ${c.startWall}. The sweep ends 0.6 s after its path, or at 4 balls when a mouth sensor counts them.`],
+        ["6.5–11 s", `Corridor ${c.pt(30, -42)} → ${c.pt(-30, -40)} to B2 ${c.pt(-48, -12.75)}, heading ${c.hd(180)}, back toward the second cell (our ${c.secondCell}).`],
+        ["11–13.5 s", `Fire into the second cell: 4 of the 8 for TIP 2. Four can't tip it, so B2 (3 in inside its landing box) is fine. The carrier feeds at least 4 times: without a mouth sensor nothing counted the garden balls in, and with one a garden ball may have slipped past it. If the robot doesn't think the second cell is up, it waits 1 s for vision, then keeps the balls. B2 is a short shot, about 24.5 in from where the ball leaves (under the 30–92 in band), so the shot map (experiment 2b) decides where it goes. If the short shot misses, move B2 back toward ${c.pt(-55, -12.75)} (a 31.5 in shot): that spot is only 1.6 in from the ${c.flower} FLOWER, and the drive in heads toward it, so an overshoot touches it.`],
         ["13.5–16 s", `Park ${parkText(c, "A2")}.`]
       ],
       tot: "Needs a tuned path follower: at the 0.5 speed cap A2 takes about 17–20 s. Alone it sets up TIP 2 for TELEOP. With a partner's 4 it becomes A3: then select \"A3 role 1\", not A2."
@@ -847,24 +864,24 @@ flowchart TB
     if (state.ov === "A3") return {
       title: "A3 · Alliance double-tip (needs a shooter partner)",
       items: [
-        ["R1 0–13 s", `Robot 1 runs "A3 role 1" from S1: TIP 1 and the garden sweep as in A2, then the corridor to its end ${c.pt(-30, -40)}, heading ${c.hd(0)}.`],
-        ["R2 0–10 s", `Robot 2 runs "A3 role 2" from S6 ${c.pt(-61.67, -10.1)}, heading ${c.hd(0)}: back on the ${c.oppWall}, 1.35 in from the ${c.flower} FLOWER. It aims at the second cell and waits until it sees it come up (tags ${c.secondTags} up for 0.5 s). It fires only if that happens by 9 s; at 10 s it stops waiting and keeps its preloads. Whatever happens, it leaves for the corner slot by 13 s. A partner robot in this role fires only after it sees the second cell come up; without vision, not before about 10 s.`],
-        ["R2 ≤16.5 s", `After a 1 s pause it fires its 4 preloads into the second cell, drives straight out from the wall to ${c.pt(-50, -10.1)} (clear of the FLOWER) and parks in the CORNER slot ${c.pt(-51, -56)}: parked by about 16 s, before Robot 1 moves at 17 s. A partner robot in this role must be parked by 16 s.`],
+        ["R1 0–13 s", `Robot 1 runs "A3 role 1" from S1: TIP 1 and the garden sweep as in A2, then the corridor to its end ${c.pt(-30, -40)}, heading ${c.hd(180)}.`],
+        ["R2 0–10 s", `Robot 2 runs "A3 role 2" from S6 ${c.pt(-61.67, -10.1)}, heading ${c.hd(180)}: front against the ${c.oppWall}, back toward the HIVE, 1.35 in from the ${c.flower} FLOWER. It aims at the second cell and waits until it sees it come up (tags ${c.secondTags} up for 0.5 s). It fires only if that happens by 9 s; at 10 s it stops waiting and keeps its preloads. Whatever happens, it leaves for the corner slot by 13 s. A partner robot in this role fires only after it sees the second cell come up; without vision, not before about 10 s.`],
+        ["R2 ≤16.5 s", `After a 1 s pause it turns about 3° onto the aim (stepping about 1 in off the wall) and fires its 4 preloads into the second cell. Then it drives straight out from the wall to ${c.pt(-50, -10.1)} (clear of the FLOWER) and parks in the CORNER slot ${c.pt(-51, -56)}: parked by about 16 s, before Robot 1 moves at 17 s. A partner robot in this role must be parked by 16 s.`],
         ["R1 ≤17 s", "Robot 1 waits at the corridor end until 17 s after START, out of Robot 2's path."],
-        ["R1 17–21 s", `It drives via the lane ${c.pt(-31, -35.5)} to the role-1 spot ${c.pt(-52, -30)}, heading ${c.hd(25.9)}, and fires the 4 garden POLLEN: 8 in, so TIP 2.`],
+        ["R1 17–21 s", `It drives via the lane ${c.pt(-31, -35.5)} to the role-1 spot ${c.pt(-52, -30)}, heading ${c.hd(-154.1)}, back toward the second cell, and fires the 4 garden POLLEN: 8 in, so TIP 2.`],
         ["R1 21–23 s", `It leaves at once: it turns square while dropping to ${c.pt(-51.5, -36.5)}, runs along the bottom edge of the TIP-2 landing box to ${c.pt(-31, -36.5)} and parks in the INNER slot ${c.pt(-27, -56)}. At 23 s every routine drops everything and parks.`],
         ["30 s", "Both robots end inside the LOADING ZONE and off the wall: 16 LEAVE+PARK points and the SWARM RP. A3 ignores the Park line."]
       ],
-      tot: "Tuned robots and a rehearsal only. The code doesn't record TIP 2: if the start cell is up again, the operator presses Y at TeleOp START. If S6 is blocked, skip A3 unless the turret travels more than ±32° (from S7 the second cell is 31° off our turret centre, limit ±28°). Two AUTO TIPS = 40 pts of TIPS; as of Oct 20, no US alliance had done it."
+      tot: "Tuned robots and a rehearsal only. The code doesn't record TIP 2: if the start cell is up again, the operator presses Y at TeleOp START. Role 2 starts on S6 only: if S6 is blocked, skip A3 (from S7 the robot doesn't move). Two AUTO TIPS = 40 pts of TIPS; as of Oct 20, no US alliance had done it."
     };
     return {
       title: "TeleOp loop",
       items: [
-        ["1", "Shoot from the cone in front of the up cell. Two loads of 4 make one TIP."],
+        ["1", "Shoot from the cone in front of the up cell, back toward it: the driver holds RB to aim. Two loads of 4 make one TIP."],
         ["2", "Threshold ball in (\"Eight, it's going\"): start no new volley. On the human player's \"TIP!\", the operator presses Y: our camera can't see our own TIP from here."],
-        ["3", "Stay out of the spill box until the balls land (usually about 3 s, up to about 6 s), then sweep the spill, which lands in the zone we just shot from. The intake takes POLLEN only."],
-        ["4", `Cross through the corridor (Y ≈ ${c.corridorY}) to the other zone, check that the operator light isn't red, then shoot into the new up cell.`],
-        ["5", `Repeat. Finish the last cycle in the ${c.zoneBHalf}, next to our LOADING ZONE, 44 in from it.`]
+        ["3", "Stay out of the spill box until the balls land (usually about 3 s, up to about 6 s). The spill lands behind the robot, between it and the HIVE: turn around once and sweep it intake-first, steering around NECTAR."],
+        ["4", `Keep driving the same way, through the corridor (Y ≈ ${c.corridorY}), to the other zone. The robot arrives with its back already toward the new up cell: check that the operator light isn't red, then shoot.`],
+        ["5", `Repeat, one turn per cycle. Finish the last cycle in the ${c.zoneBHalf}, next to our LOADING ZONE, 44 in from it.`]
       ],
       tot: "Target pace: one 4-ball load every 15–20 s."
     };
@@ -878,29 +895,30 @@ flowchart TB
     if (state.ov === "zones") {
       if (!B) { cone(16.5, -12.74, 1); spill(24, 42); } else { cone(-16.48, -12.74, -1); spill(-42, -24); }
       route([[30, -42], [-30, -40]], true);
-      robot(61.67, -12.75, "S1", B); robot(-61.67, -10.1, "S6", !B);
-      robot(61.67, -37.5, "S2", true);
+      robot(61.67, -12.75, "S1", B, 0); robot(-61.67, -10.1, "S6", !B, 180);
+      robot(61.67, -37.5, "S2", true, 0);
       robot(-51, -56, "C", true); robot(-27, -56, "I", true);
     } else if (state.ov === "A1") {
       cone(16.5, -12.74, 1); spill(24, 42);
       route([[61.67, -12.75], [52, -40], [30, -42], [-30, -40], pk]);
-      robot(61.67, -12.75, "S1"); robot(pk[0], pk[1], "P", true);
+      robot(61.67, -12.75, "S1", false, 0); robot(pk[0], pk[1], "P", true, 0);
     } else if (state.ov === "A2") {
       cone(-16.48, -12.74, -1); spill(24, 42);
       const toPark = state.park === "INNER" ? [[-31, -35.5], pk] : [pk];
       route([[61.67, -12.75], [52, -40], [51, -50], [60.5, -46], [60.5, -60], [30, -42], [-30, -40], [-48, -12.75]].concat(toPark));
-      robot(61.67, -12.75, "S1"); robot(-48, -12.75, "B2", true); robot(pk[0], pk[1], "P", true);
+      robot(61.67, -12.75, "S1", false, 0); robot(-48, -12.75, "B2", true, 180); robot(pk[0], pk[1], "P", true, 180);
     } else if (state.ov === "A3") {
       cone(-16.48, -12.74, -1); spill(24, 42); spill(-42, -24);
       route([[61.67, -12.75], [52, -40], [51, -50], [60.5, -46], [60.5, -60], [30, -42], [-30, -40], [-31, -35.5], [-52, -30], [-51.5, -36.5], [-31, -36.5], [-27, -56]]);
       route([[-61.67, -10.1], [-50, -10.1], [-51, -56]], true);
-      robot(61.67, -12.75, "R1"); robot(-61.67, -10.1, "R2");
-      robot(-30, -40, "W", true); robot(-52, -30, "B", true, 25.9);
-      robot(-27, -56, "P1", true); robot(-51, -56, "P2", true);
+      robot(61.67, -12.75, "R1", false, 0); robot(-61.67, -10.1, "R2", false, 180);
+      robot(-30, -40, "W", true, 180); robot(-52, -30, "B", true, -154.1);
+      robot(-27, -56, "P1", true, 180); robot(-51, -56, "P2", true, 180);
     } else if (state.ov === "loop") {
       cone(16.5, -12.74, 1); cone(-16.48, -12.74, -1); spill(24, 42); spill(-42, -24);
-      route([[52, -12.75], [40, -40], [-40, -40], [-52, -12.75]]);
-      robot(52, -12.75, "A", true); robot(-52, -12.75, "B", true);
+      // One turn per cycle: shoot (back to the cell), turn around, sweep the spill, cross, arrive back-first.
+      route([[56, -12.75], [36, -16], [30, -40], [-40, -40], [-56, -12.75]]);
+      robot(56, -12.75, "A", true, 0); robot(-56, -12.75, "B", true, 180);
     }
     const parkUsed = state.ov === "A1" || state.ov === "A2";
     ["INNER", "CORNER", "SOLO"].forEach((k) => { document.getElementById("pk-" + k).disabled = !parkUsed; });

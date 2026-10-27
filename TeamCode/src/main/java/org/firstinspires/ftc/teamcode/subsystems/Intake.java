@@ -11,19 +11,21 @@ import org.firstinspires.ftc.teamcode.util.OptionalHardware;
 import java.util.List;
 
 /**
- * Full-width compliant roller intake on a continuous-rotation servo (Dual Mode servo in CR mode) - or a
- * DC motor: configure "intake" as either one (both are a DcMotorSimple to the SDK).
+ * Intake wheel: a full-width roller of compliant star wheels on a floating arm at the robot's FRONT,
+ * driven by a DC motor (goBILDA Yellow Jacket). A continuous-rotation servo also works: configure
+ * "intake" as either one (both are a DcMotorSimple to the SDK). Balls go up the ramp into the tunnel,
+ * where the stopped carrier holds them.
  *
  * The driver asks for IN or OUT; this class decides what really happens:
  *  - FULL (4 balls, G407): "in" is refused. When we first become full the roller runs backward
  *    briefly to push a 5th ball away from the mouth. Ball 4 is counted once it has passed the mouth
- *    sensor - or at once when a 5th ball shows up right behind it (Indexer, MOUTH_ONE_BALL_MAX_MS) - so
- *    the pulse hits the 5th ball, not ball 4.
+ *    sensor - or at once when a 5th ball shows up right behind it (Carrier, MOUTH_ONE_BALL_MAX_MS) - so
+ *    the pulse hits the 5th ball, not ball 4. Without a mouth sensor only the count from the preloads
+ *    and the shots (and the operator's +1 / -1) can say "full".
  *  - Refused NECTAR at the mouth (G408: always the opponent's; ours too while ACCEPT_OWN_NECTAR = false):
  *    the roller runs backward for as long as that ball is still at the mouth, plus INTAKE_REJECT_MS,
- *    whenever the drivers (or AUTO) want the intake to pull. It never pulls a refused ball in.
- * Servo power note (R5): hub servo ports are 5 V and share 2 A per port pair; a Servo Power Module /
- * Servo Hub at 6 V gives ~20% more speed and torque.
+ *    whenever the drivers (or AUTO) want the intake to pull. It never pulls a refused ball in. This needs
+ *    the mouth sensor.
  *
  * G403 / G304.H: no power until arm() (TeleOp START; AUTO arms it at START, not in INIT).
  */
@@ -77,8 +79,8 @@ public class Intake {
     }
 
     /**
-     * @param full               Indexer says we hold 4 balls
-     * @param refusedBallAtMouth Indexer sees a refused NECTAR at the mouth right now (level, not an edge)
+     * @param full               Carrier says we hold 4 balls
+     * @param refusedBallAtMouth Carrier sees a refused NECTAR at the mouth right now (level, not an edge)
      */
     public void update(boolean full, boolean refusedBallAtMouth) {
         long now = Clock.nowMs();
@@ -129,7 +131,7 @@ public class Intake {
         return state;
     }
 
-    /** True while the roller pulls balls IN (the Indexer only counts balls pulled in). */
+    /** True while the roller pulls balls IN (the Carrier only counts balls pulled in). */
     public boolean isIntaking() {
         return state == State.INTAKING;
     }

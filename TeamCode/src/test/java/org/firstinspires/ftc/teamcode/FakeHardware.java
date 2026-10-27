@@ -1,6 +1,8 @@
 package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.hardware.CRServo;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.DigitalChannelController;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
@@ -8,11 +10,11 @@ import com.qualcomm.robotcore.hardware.HardwareDevice;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.NormalizedColorSensor;
 import com.qualcomm.robotcore.hardware.NormalizedRGBA;
-import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.ServoController;
 
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
+import java.lang.reflect.Proxy;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -32,25 +34,55 @@ public final class FakeHardware {
 
     public static class CR extends Dev implements CRServo {
         public double power;
+        /** How many times setPower was called (0 = never commanded). */
+        public int writes;
         private Direction dir = Direction.FORWARD;
         public ServoController getController() { return null; }
         public int getPortNumber() { return 0; }
         public void setDirection(Direction d) { dir = d; }
         public Direction getDirection() { return dir; }
-        public void setPower(double p) { power = p; }
+        public void setPower(double p) {
+            power = p;
+            writes++;
+        }
         public double getPower() { return power; }
     }
 
-    public static class Pos extends Dev implements Servo {
-        public double pos = -1;
-        private Direction dir = Direction.FORWARD;
-        public ServoController getController() { return null; }
-        public int getPortNumber() { return 0; }
-        public void setDirection(Direction d) { dir = d; }
-        public Direction getDirection() { return dir; }
-        public void setPosition(double p) { pos = p; }
-        public double getPosition() { return pos; }
-        public void scaleRange(double a, double b) { }
+    /** What a fake DC motor was told. */
+    public static final class MotorState {
+        public double power;
+        public int writes;
+        public DcMotorSimple.Direction direction = DcMotorSimple.Direction.FORWARD;
+        public DcMotor.RunMode mode;
+        public DcMotor.ZeroPowerBehavior zeroPower;
+    }
+
+    /** A fake DC motor (a DcMotor proxy): records power, direction, run mode and zero-power behaviour. */
+    public static DcMotor motor(MotorState st) {
+        return (DcMotor) Proxy.newProxyInstance(DcMotor.class.getClassLoader(), new Class<?>[]{DcMotor.class},
+                (proxy, method, args) -> {
+                    switch (method.getName()) {
+                        case "setPower": st.power = (Double) args[0]; st.writes++; return null;
+                        case "getPower": return st.power;
+                        case "setDirection": st.direction = (DcMotorSimple.Direction) args[0]; return null;
+                        case "getDirection": return st.direction;
+                        case "setMode": st.mode = (DcMotor.RunMode) args[0]; return null;
+                        case "getMode": return st.mode;
+                        case "setZeroPowerBehavior": st.zeroPower = (DcMotor.ZeroPowerBehavior) args[0]; return null;
+                        case "getZeroPowerBehavior": return st.zeroPower;
+                        case "equals": return proxy == args[0];
+                        case "hashCode": return System.identityHashCode(proxy);
+                        case "toString": return "FakeMotor";
+                        default: break;
+                    }
+                    Class<?> r = method.getReturnType();
+                    if (r == boolean.class) return false;
+                    if (r == int.class) return 0;
+                    if (r == double.class) return 0.0;
+                    if (r == float.class) return 0f;
+                    if (r == long.class) return 0L;
+                    return null;
+                });
     }
 
     /** Colour + distance sensor: call none() / pollen() / red() / blue(). */

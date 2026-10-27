@@ -2,6 +2,8 @@
 
 The plan for the middle minute of the match: **the two-zone loop.** Shoot from the zone the up CELL faces. After the tip, let the spill land, sweep it up, cross to the other zone, and shoot again. **Two loads = one tip.**
 
+Our robot has its intake at the **front** and a fixed shooter at the **back**. It aims by turning its back to the up CELL: the driver holds RB (aim-assist) and the robot turns itself onto the target.
+
 Coordinates are red, in the [01 §6](01-game-and-scoring.md#6-the-field-in-our-coordinate-frame) frame; blue = rotate 180°. Source tags: see the [source key](00-master-plan.md#source-key). **est.** = estimate.
 
 ---
@@ -18,44 +20,48 @@ Coordinates are red, in the [01 §6](01-game-and-scoring.md#6-the-field-in-our-c
 
 ## The two-zone loop
 
-1. **Shoot from the zone the up CELL faces.** Red starts in Zone A (audience half); after an odd number of red tips, Zone B (far half). Blue is the reverse ([01 §7](01-game-and-scoring.md#7-which-way-the-cells-face-read-this-twice)). The turret fine-aims; the **chassis gives the coarse heading**, because the turret only turns about 50–75° in total as built ([05 §3.5](05-robot-tuning.md#35-turret-range-and-a-known-zero)).
+1. **Shoot from the zone the up CELL faces.** Red starts in Zone A (audience half); after an odd number of red tips, Zone B (far half). Blue is the reverse ([01 §7](01-game-and-scoring.md#7-which-way-the-cells-face-read-this-twice)). Stop with the robot's back toward the CELL, then the driver holds **RB**: the robot turns until its back points at the target, and the operator's volley fires each ball once the heading is inside the aim tolerance.
 2. **Each tip of an empty CELL needs 8 POLLEN = 2 robot loads** (G407 caps a robot at 4; EFSG §12.3). Both robots feed the same CELL. Call the loads out loud: "4 in" … "8, it's going".
 3. **After the threshold ball:**
    - **stop firing**: launching at a moving HIVE can stop the tip (M p.87, QA12). The HIVE may sit still for 0.25–3.4 s before it moves (MonaShores). The robot's own 1 s pause starts only when the target switches, which is after the swing, so it does not protect a tipping HIVE: fire each load as one volley and start no new volley after "8, it's going";
    - **Operator: press Y ("HIVE tipped") once when the human player calls "TIP!"** The camera cannot see our own tip from the zone we fired from (all our tags then face the other half, [01 §7](01-game-and-scoring.md#7-which-way-the-cells-face-read-this-twice)); without Y the robot keeps aiming at the old CELL. If the camera already switched the target (both pads buzzed twice), a Y within 3 s only confirms that switch (one strong short buzz on the operator pad), so pressing on "TIP!" is always right;
    - **stay out of the landing box until the balls have landed**: usually ~3 s, up to ~6 s after the threshold ball ([01 §8](01-game-and-scoring.md#8-spill-where-the-balls-go-after-a-tip));
-   - then **sweep the spill**: it lands in your own zone. Take up to 4;
-   - **cross to the other zone and fire.** On arrival, if the operator light is **RED** (target CELL faces away) or the AIM line doesn't name this zone (red after an odd number of tips: "ZONE B (FAR half)"), press Y once before firing.
+   - then **sweep the spill**: it lands in your own zone, behind the robot. **Turn around once** and sweep it intake-first. Take up to 4;
+   - **cross to the other zone and fire.** Keep driving the same way: you arrive with the back already facing the new up CELL, so RB only has the last few degrees to turn. On arrival, if the operator light is **RED** (target CELL faces away) or the AIM line doesn't name this zone (red after an odd number of tips: "ZONE B (FAR half)"), press Y once before firing.
 4. Keep moving. Use different spots in the shooting cone when someone is in your way.
+
+**One turn per cycle.** The shooter is at the back and the intake at the front, so a whole cycle needs only one big turn. While we shoot, the robot's back faces the HIVE, so the spill lands **behind** it, between the robot and the HIVE (and rolls on toward the end wall, so some balls stop against the robot). Once the balls have landed, turn around once, sweep them intake-first while driving toward the HIVE, keep going past it (corridor, or the under-HIVE lane in TELEOP) to the other zone, and stop there: the robot's back is already toward the new up CELL. Balls that rolled all the way to the end wall cost a second turn: leave them for the partner or the next cycle unless you need them.
 
 ### Shooting spots
 
-Distances are horizontal, from the robot centre to the aim point. Headings assume the shooter's zero points out of the robot's front. **The shot map ([07 Exp 2](07-testing-and-practice.md#exp-2--shot-map-and-hood-angle)) decides which spots we actually use.**
+A *shot distance* is horizontal, from where the ball leaves the robot (with the robot turned onto its aim) to the aim point. The AIM telemetry line shows it, and the shot table uses it. Until `SHOOTER_FORWARD_IN` is measured, the code puts that point 7 in behind the robot centre, so each shot distance is 7 in shorter than the distance from the robot centre (in brackets). Heading = the way the robot's front faces; at every spot the robot's back points at the CELL. **The shot map ([07 Exp 2](07-testing-and-practice.md#exp-2--shot-map-and-exit-angle)) decides which spots we actually use.**
 
 **Zone A** (red audience CELL up; aim point (16.50, -12.74, 58.27)):
 
-| Spot | X | Y | Heading | Distance | Off-axis | Notes |
+| Spot | X | Y | Heading | Shot distance (from the robot centre) | Off-axis | Notes |
 |---|---|---|---|---|---|---|
-| A-head | 55 | -12.75 | 180° | 38.5 in | 0° | Default |
-| S1 spot | 61.67 | -12.75 | 180° | 45.2 in | 0° | Against the wall; 10.7 in outside the landing box, so safe during the spill |
-| A2 (zone centre) | 48 | -12.75 | 180° | 31.5 in | 0° | Close. The robot's front edge is about 3 in inside the landing box. The robot does not detect our tip from here, so move off this spot after every volley that may reach the threshold |
-| A-side (AUTO side spot) | 55 | -37 | 148° | 45.5 in | 32° | Red-wall side; 6.8 in outside the landing box |
-| A-left | 58.8 | -35.25 | 152° | 47.9 in | 28° | Red-wall side (tile B1) |
-| A-right | 58.8 | 11.75 | -150° | 48.9 in | 30° | **TELEOP only**: this is blue's side in AUTO (G402) |
+| A-head | 55 | -12.75 | 0° | 31.5 in (38.5) | 0° | Default |
+| S1 spot | 61.67 | -12.75 | 0° | 38.2 in (45.2) | 0° | Front against the wall: the longest head-on shot in this zone. 10.7 in outside the landing box, so safe during the spill |
+| A2 (zone centre) | 48 | -12.75 | 0° | 24.5 in (31.5) | 0° | Close: below the 30–92 in band. The robot's back edge is about 3 in inside the landing box. The robot does not detect our tip from here, so move off this spot after every volley that may reach the threshold |
+| A-side (AUTO side spot) | 55 | -37 | -32° | 38.5 in (45.5) | 32° | Red-wall side; 6.8 in outside the landing box |
+| A-left | 57.5 | -35.25 | -29° | 39.8 in (46.8) | 29° | Red-wall side (tile B1); the turned robot is 1 in off the audience wall |
+| A-right | 57.5 | 11.75 | 31° | 40.8 in (47.8) | 31° | **TELEOP only**: this is blue's side in AUTO (G402). The turned robot is 0.8 in off the audience wall |
 
 **Zone B** (red far CELL up; aim point (-16.48, -12.74, 58.31)):
 
-| Spot | X | Y | Heading | Distance | Off-axis | Notes |
+| Spot | X | Y | Heading | Shot distance (from the robot centre) | Off-axis | Notes |
 |---|---|---|---|---|---|---|
-| B-head | -55 | -12.75 | 0° | 38.5 in | 0° | Default |
-| S6 spot | -61.67 | -10.1 | 0° | 45.3 in | 3° | Against the wall |
-| B2 (zone centre) | -48 | -12.75 | 0° | 31.5 in | 0° | Close; 44 in from the solo park pose. The robot's front edge is about 3 in inside the tip-2 landing box, so move after a tipping volley |
-| B-left | -58.8 | -35.25 | 28° | 47.9 in | 28° | Near the LZ |
-| B-right | -58.8 | 11.75 | -30° | 48.9 in | 30° | Blue side |
-| B-side (A3 role-1 spot) | -52 | -30 | 26° | 39.5 in | 26° | 0.87 in outside the tip-2 landing box |
+| B-head | -55 | -12.75 | 180° | 31.5 in (38.5) | 0° | Default. Its front is only ≈ 1.6 in from the F-far FLOWER: don't overshoot |
+| S6 spot | -61.67 | -10.1 | 180° | 38.3 in (45.3) | 3° | Front against the wall (3.3° off the aim: inside the 4° tolerance) |
+| B2 (zone centre) | -48 | -12.75 | 180° | 24.5 in (31.5) | 0° | Close: below the 30–92 in band (A2's second volley in AUTO fires from here until the shot map decides B2, [02](02-autonomous.md#poses-red)); 44 in from the solo park pose. The robot's back edge is about 3 in inside the tip-2 landing box, so move after a tipping volley |
+| B-left | -57.5 | -35.25 | -151° | 39.8 in (46.8) | 29° | Near the LZ; 1 in off the far wall when turned |
+| B-right | -57.5 | 11.75 | 149° | 40.8 in (47.8) | 31° | Blue side; 0.8 in off the far wall when turned |
+| B-side (A3 role-1 spot) | -52 | -30 | -154° | 32.5 in (39.5) | 26° | 0.87 in outside the tip-2 landing box |
 
-- Ball-flight model: with a fixed hood giving a ~64–65° exit angle, clean-entry chance is about 82–89% from roughly 35 to 50 in head-on, and about 87% at 30° off-axis. It drops sharply closer than ~30 in to the aim point (est.).
-- The Driver Station warns `!! distance N in is outside the reliable shot band (30-92 in)` (R3's 27–90 in band measured to the lip, plus 2.8 in to the opening centre) and `! off-axis N deg (> 40): shots start to hit the cell's side wall`. With auto-aim the robot never fires when the opening faces more than 75° away from it (`!! TARGET CELL FACES AWAY`, RED operator light).
+- With the ball leaving about 7 in behind the centre, the longest head-on shot is about 38 in (front on the end wall); longer shots need an off-axis spot. Re-check every number in this table once `SHOOTER_FORWARD_IN` is measured.
+- Aim tolerance: 4° (the cap) at every spot in these tables, and for every straight-on shot up to about 54 in. It shrinks for longer shots: 3.2° for a 70 in shot straight on, 2.5° for a 92 in shot straight on, 1.8° for a 92 in shot 40° off-axis.
+- Ball-flight model (for a ~64–65° exit angle; ours is fixed and not measured yet): clean-entry chance is about 82–89% from roughly 35 to 50 in head-on, and about 87% at 30° off-axis. It drops sharply closer than ~30 in to the aim point (est.). Measure our exit angle first ([07 Exp 2a](07-testing-and-practice.md#2a-exit-angle-exit-point-and-speed-ratio-k-do-this-first)).
+- The Driver Station warns `!! distance N in is outside the reliable shot band (30-92 in)` (the shot distance; R3's 27–90 in band measured to the lip, plus 2.8 in to the opening centre) and `! off-axis N deg (> 40): shots start to hit the cell's side wall`. With auto-aim the robot never fires when the opening faces more than 75° away from it (`!! TARGET CELL FACES AWAY`, RED operator light).
 - **Stop the robot to shoot.** At 1 ft/s, a 0.4–0.9 s flight misses by 5–11 in (est.). The code waits until the chassis moves less than 6 in/s and turns less than 20°/s.
 - **Shared half:** when our HIVE and the opponent's are in different states, both alliances shoot from the same half. Expect crowding and defence there.
 
@@ -72,7 +78,7 @@ Distances are horizontal, from the robot centre to the aim point. Headings assum
 
 | # | Source | Where (red) | Notes |
 |---|---|---|---|
-| 1 | **Own spill** | Lands in the zone you just shot from: first touch about X 24–42 (Zone A) or X -24 to -42 (Zone B), around Y -28 to +2, then rolls toward the end wall | Predictable; arrives ≈ 3 s after the threshold ball (up to ~6 s). **Wait until it has touched the floor** (G409). The first spill also holds our 3 NECTAR: in phase 1 the intake refuses all NECTAR at the mouth (`ACCEPT_OWN_NECTAR = false`), but the sensor reacts on contact, so steer around the NECTAR |
+| 1 | **Own spill** | Lands in the zone you just shot from: first touch about X 24–42 (Zone A) or X -24 to -42 (Zone B), around Y -28 to +2, then rolls toward the end wall | Predictable; arrives ≈ 3 s after the threshold ball (up to ~6 s). **Wait until it has touched the floor** (G409). The first spill also holds our 3 NECTAR: **steer around the NECTAR**. In phase 1 a mouth sensor refuses all NECTAR (`ACCEPT_OWN_NECTAR = false`) but only reacts on contact, and without one nothing refuses it. It lands behind the robot: one turn, then sweep ([one turn per cycle](#the-two-zone-loop)) |
 | 2 | Loose balls in your zone | Misses and bounce-outs | |
 | 3 | GARDENS (either one in TELEOP) | Red (69.3, -60.6 … -69.3), audience corner. Blue (-69.3, 60.6 … 69.3), far corner | Not protected (G411 box). Each ball taken costs that GARDEN's owner 1 pt |
 | 4 | FLOWER bottoms | 16 of the 24 non-preload POLLEN start in FLOWERS (M p.83) | **Only if [Exp 5](07-testing-and-practice.md#exp-5--flower-bottom-extraction) shows our intake can pull POLLEN through the 3.55 in opening.** Only POLLEN, only from the bottom (G418.B). Any FLOWER in TELEOP |
@@ -121,32 +127,36 @@ This table matches the code (`opmodes/teleop/MainTeleOp.java`, header comment, a
 | Left stick | Drive, field-centric: push up = away from the drivers |
 | Right stick (left/right) | Turn |
 | Left bumper (hold) | Slow mode (× 0.35) |
-| Right bumper (hold) | **Aim-assist**: turns the chassis so the turret is centred on the target (the turret only swings about ±28° as built) |
-| Right trigger (hold) | **Intake in.** Stops itself at 4 balls. Refuses NECTAR at the mouth: always the opponent's, ours too while `ACCEPT_OWN_NECTAR = false` (phase 1) |
+| Right bumper (hold) | **Aim-assist**: the robot turns until its back (the shooter) points at the target CELL; the left stick still drives. It stops turning inside half of the aim tolerance |
+| Right trigger (hold) | **Intake in.** Refused while the count says 4. It stops by itself at 4 only with the mouth sensor or the slot-4 sensor; the mouth sensor also counts each ball and refuses NECTAR at the mouth: always the opponent's, ours too while `ACCEPT_OWN_NECTAR = false` (phase 1). **Without them, stop at 4 balls by eye and steer around NECTAR** |
 | Left trigger (hold) | Intake out |
-| Back / Share | Heading reset: the robot must face straight away from the drivers |
-| LB + Y | Relocalize on **our** S1: only when the robot is still and parked exactly on our S1 (red: back on the audience wall at (61.67, -12.75); blue: back on the far wall at (-61.67, 12.75)) |
+| Back / Share | Heading reset: the robot's **front** must face straight away from the drivers |
+| LB + Y | Relocalize on **our** S1: only when the robot is still and parked exactly on our S1 (red: front on the audience wall at (61.67, -12.75); blue: front on the far wall at (-61.67, 12.75)) |
 
 **Operator (gamepad 2)**
 
 | Control | Action |
 |---|---|
 | A / Cross | **Shooting mode** on/off (flywheel + auto-aim). Turning it OFF also cancels a requested volley |
-| Right bumper | **Fire volley**: every ball, one at a time, each only when ready (firing gates below) |
+| Right bumper | **Fire volley**: every ball, one at a time, each only when ready (firing gates below). Without a mouth sensor it feeds 4 times (empty feeds are harmless) |
 | X / Square | Fire one ball (works even if the count says 0) |
 | B / Circle | Stop firing |
 | Y / Triangle | **"HIVE tipped"**: press once on every "TIP!". It flips the target CELL. Within 3 s of a camera switch it only **confirms** that switch (one strong short buzz): press again to really flip. After Y, vision cannot change the target for 5 s; after that, 0.5 s of disagreeing vision can switch it back. If vision keeps flipping it wrongly, set `HIVE_VISION_AUTO_SWITCH = false` and re-deploy |
 | D-pad up/down | Flywheel RPM trim ±50 |
-| D-pad left/right | Turret trim ±0.5° (left = counter-clockwise) |
-| Right stick X | Manual turret, whenever auto-aim is off |
-| Right-stick click | **Manual aim** on/off: RB / X then fire at the manual turret angle as soon as the flywheel is at speed (no aim, off-axis or stillness check). For when odometry or vision aims wrong |
-| Left bumper (hold) | **Eject**: intake and spinners run backward to clear a jam |
+| D-pad left/right | Aim trim ±0.5° (left = the ball goes further left, seen from the shooter looking toward the cell) |
+| Right-stick click | **Manual aim** on/off: RB / X then fire as soon as the flywheel is at speed, wherever the robot points (no aim, off-axis or stillness check). For when odometry or vision aims wrong: the driver points the robot's back at the CELL by eye |
+| Right stick | Nothing |
+| Left bumper (hold) | **Eject**: intake and carrier run backward to clear a jam. Without a mouth sensor the count does not drop: press back once per ball ejected |
 | Back / Share | Ball count −1 |
 | Left-stick click | Ball count +1 |
 
-**INIT** (nothing moves, G403): gamepad 1 X = BLUE, B = RED; gamepad 2 d-pad up/down sets the ball count. **The count starts at 4** without AUTO data (match preloads, G304), so a TeleOp started without AUTO can never take in more than 4 (G407). Without AUTO data the robot is also assumed to be on our S1: if it isn't, after START point it straight away from the drivers and press back, then relocalize with LB + Y when it is on S1.
+**INIT** (nothing moves, G403): gamepad 1 X = BLUE, B = RED; gamepad 2 d-pad up/down sets the ball count. **The count starts at 4** without AUTO data (match preloads, G304), so the intake refuses until balls are fired. Without AUTO data the robot is also assumed to be on our S1: if it isn't, after START point its front straight away from the drivers and press back, then relocalize with LB + Y when it is on S1.
 
-**Firing gates.** With auto-aim a ball is fed only when the flywheel is at speed (within max(2.5%, 60 rpm) for 3 loops), the target opening faces the robot within 75°, the turret is on a reachable target within 2°, the chassis is still (< 6 in/s and < 20°/s), and there is no TIP pause (1 s after any target change; a requested volley is then cancelled: press RB again). With `TURRET_PINNED = true` (or no turret servo configured) the turret is held at centre and the **chassis** must point at the target within 3° (driver RB aim-assist does that). Manual aim fires on flywheel speed only. If a feed is not confirmed (no beam break and no flywheel dip within 0.4 s), the ball still counts as fired: there is no automatic jam retry. Clear jams with operator LB and fix the count with back / left-stick click.
+**Without a mouth sensor** (TeleOp INIT shows `!!!! NO MOUTH SENSOR …` at the top), the robot cannot count balls coming in or refuse NECTAR. The count starts at the preloads (4) and drops by one per feed, confirmed or not, so the intake refuses while the count says 4; after a volley RT never stops by itself (it stops at 4 only with the mouth sensor or the slot-4 sensor). The drivers stop intaking at 4 balls **by eye** and steer around NECTAR; RB feeds 4 times. An eject (operator LB) does not lower the count either: after an eject the operator presses back once per ball that went out, otherwise the intake keeps refusing (`Intake refused: FULL`). The operator fixes the count with back / left-stick click.
+
+**Firing gates.** With auto-aim a ball is fed only when the flywheel is at speed (within max(2.5%, 60 rpm) for 3 loops), the target opening faces the robot within 75°, the robot's heading is inside the **aim tolerance** (driver RB aim-assist turns it there), the chassis is still (< 6 in/s and < 20°/s), and there is no TIP pause (1 s after any target change; a requested volley is then cancelled: press RB again). The aim tolerance is worked out for every shot from the distance between the robot's centre and the aim point (the robot turns about its centre, so a heading error swings the shot about it) and the 20 in opening as seen from the robot: half the heading error at which a POLLEN would touch the edge of the opening, kept between 1.5° and 4°. Manual aim fires on flywheel speed only.
+
+**Feeding.** The carrier wheel holds the balls while it is stopped. For each ball it spins until the shot is confirmed (a flywheel speed dip, or the feed beam) and then stops at once, or stops after 0.4 s (`CARRIER_FEED_MS`); the next ball waits at least 0.15 s, and until the flywheel is back at speed and the aim is good (whichever takes longer). A feed with no beam break and no flywheel dip by 0.25 s after the carrier stops is "unconfirmed": the ball still counts as fired, and there is no automatic jam retry. Clear jams with operator LB and fix the count with back / left-stick click. While the intake pulls balls in, the carrier stays stopped.
 
 **TELEOP does not hold position while firing**: the motors only brake. If the robot is pushed, firing pauses ("moving") until it is under 6 in/s and 20°/s again.
 
@@ -155,7 +165,7 @@ This table matches the code (`opmodes/teleop/MainTeleOp.java`, header comment, a
 | Who feels it | Rumble | Meaning |
 |---|---|---|
 | Driver | 2 short blips | **4 loaded**: intake stopped |
-| Driver | 1 short buzz | NECTAR refused at the mouth |
+| Driver | 1 short buzz | NECTAR refused at the mouth (needs the mouth sensor) |
 | Operator | 1 light short buzz | **Flywheel at speed** (again after every shot) |
 | Operator | 1 strong short buzz | Your Y **confirmed** the camera's switch (no change) |
 | Operator | 4 blips | A feed was **not confirmed** (jam? check the count). On every shot = dip detection not tuned and no feed beam. TeleOp also shows `!! FEED NOT CONFIRMED …` for 3 s |
@@ -166,7 +176,9 @@ This table matches the code (`opmodes/teleop/MainTeleOp.java`, header comment, a
 
 **After any target switch, shoot from the end the up CELL faces (look at the HIVE). If you are already there, stay.** For 5 s the Driver Station also shows `>> TARGET SWITCHED: GO TO OUR AUDIENCE END` (or `FAR END`) `(stay if you are already there) <<`, correct for our colour.
 
-**Light bars (PS4/PS5 only).** Driver: RED = full (4), YELLOW = 1–3 balls, BLUE = empty. Operator: BLUE = shooting mode off, **RED = target CELL faces away (wrong zone, or the HIVE tipped: press Y)**, PURPLE = turret at its limit (turn the chassis), GREEN = ready to fire, YELLOW = spinning up / aiming.
+**Light bars (PS4/PS5 only).** Driver: RED = full (4), YELLOW = 1–3 balls, BLUE = empty. Operator: BLUE = shooting mode off, **RED = target CELL faces away (wrong zone, or the HIVE tipped: press Y)**, PURPLE = not aimed (driver: hold RB), GREEN = ready to fire, YELLOW = aimed but waiting (flywheel spinning up, robot moving, TIP pause).
+
+**Telemetry to read.** The AIM line names the zone and shows the shot distance (from where the ball leaves the robot once it is aimed, so it does not change while the robot turns), the heading error and the tolerance, e.g. `AIM auto: cell A, ZONE A (AUDIENCE half) 38.2 in | heading err +0.0 (tol 4.0) ON TARGET | trim +0.0 | bias +0.0`; when the robot is off target it says `TURN +12 deg (driver RB)`. The FEED line shows the carrier power and the confirmed / unconfirmed shots. Without a mouth sensor the BALLS line says `mouth NO SENSOR (count drops per feed)`, and a refused intake shows `Intake refused: FULL (4 balls, G407) - no mouth sensor: after an eject, operator back = -1 per ball ejected`.
 
 Use **wired** PS4/PS5-style controllers: wireless is not allowed (R904, QA16), and the Logitech F310 has no rumble (SDK sample `ConceptGamepadRumble`).
 
@@ -190,7 +202,8 @@ Use **wired** PS4/PS5-style controllers: wireless is not allowed (R904, QA16), a
 
 **Counter-defence (when they block us)**
 - Keep moving. Switch between the head, left and right spots in the cone.
-- Steep arcs are hard to block: a 65° shot rises past 29 in within about 6–7 in of leaving the robot (est.).
+- Steep arcs are hard to block: a 65° shot rises past 29 in within about 6–7 in of leaving the robot (est.; our exit angle is fixed and not measured yet).
+- Aiming means turning the whole robot, so a defender that pushes us off the heading stops the volley until RB brings the back onto the CELL again. Stop, aim, fire, move.
 - Our mecanum drive loses pushing fights (gm0), so **evade, don't shove**. TELEOP does not hold position: release the sticks (the motors brake). If we are pushed, firing pauses until the robot is still, so re-aim with RB.
 - If pinned, the drive coach notes the time for the Question Box (T301–T302, M p.149).
 - Protect hubs, wiring and the power switch. Damage to exposed parts in normal play is **not** the opponent's foul (G419 box).
@@ -215,9 +228,13 @@ Use **wired** PS4/PS5-style controllers: wireless is not allowed (R904, QA16), a
 Still waiting for answers: **QA34** (a wide intake bar with extra balls underneath) and **QA29** (lift-and-release, active expulsion, colour rejection). See [09](09-rules-cheatsheet.md#pending-qa-to-watch).
 
 **What each person does**
-- **Robot:** the count starts at 4 (the preloads). A ball is counted once it has passed the mouth sensor; the intake stops at 4, and a short reverse pulse pushes a 5th ball away (with 3 counted, a ball right behind ball 4 counts ball 4 at once so the pulse hits the 5th; two touching balls are only split once `MOUTH_ONE_BALL_MAX_MS` is measured). The slot-4 sensor forces "full" whatever the count says. The colour sensor **refuses NECTAR at the mouth** (always the opponent's; ours too while `ACCEPT_OWN_NECTAR = false`) and keeps reversing for as long as the ball stays there. A guard keeps balls from resting on top.
-- **Driver:** the mouth sensor only reacts on contact, so don't drive the running intake into a pile with NECTAR in it. Split piles first. Don't push piles with the flat front.
-- **Operator:** watch the count. If a 5th ball gets in, **eject immediately** (hold LB), then tell the coach.
+- **Robot:** the count starts at 4 (the preloads), and the tunnel must hold no more than 4 ([07 Exp 0a](07-testing-and-practice.md#exp-0--tunnel-capacity-and-carrier-feed-do-these-first); a stop if a 5th fits). The ball sensors are a MUST refinement ([05 §2](05-robot-tuning.md#2-must-rules-and-inspection)) and every one is optional in the code:
+  - **with the mouth sensor**, a ball is counted once it has passed the sensor; the intake stops at 4, and a short reverse pulse pushes a 5th ball away (with 3 counted, a ball right behind ball 4 counts ball 4 at once so the pulse hits the 5th; two touching balls are only split once `MOUTH_ONE_BALL_MAX_MS` is measured). The colour sensor **refuses NECTAR at the mouth** (always the opponent's; ours too while `ACCEPT_OWN_NECTAR = false`) and keeps reversing for as long as the ball stays there. The slot-4 sensor forces "full" whatever the count says;
+  - **without the mouth sensor**, nothing counts the balls coming in or refuses NECTAR: the count only drops, by one per feed (confirmed or not), and the intake refuses while it says 4. An eject does not lower it. A slot-4 sensor alone still stops the intake when ball 4 reaches it.
+
+  A cover over the shooting wheel must keep balls from resting on top of the robot ([05 §3.9](05-robot-tuning.md#39-protection)).
+- **Driver:** without a mouth sensor, count the balls in and **stop intaking at 4 by eye**. Steer around NECTAR in every case (the mouth sensor only reacts on contact), so don't drive the running intake into a pile with NECTAR in it. Split piles first. Don't push piles with the flat front.
+- **Operator:** watch the count and fix it with back (−1) / left-stick click (+1) when it is wrong. If a 5th ball gets in, **eject immediately** (hold LB), then tell the coach. Without a mouth sensor, press back once for every ball an eject pushed out.
 - **Coach:** track warnings. Warnings carry from qualifications into playoffs (M p.94), and repeated warnings for the same thing draw STRATEGIC scrutiny (M p.92). League Meet warnings clear after each meet (M p.167).
 
 ---
@@ -229,7 +246,8 @@ Still waiting for answers: **QA34** (a wide intake bar with extra balls undernea
 - **TU05** (G407/G408 boxes): https://ftc-resources.firstinspires.org/ftc/game/tu-combined
 - **EFSG §12.3**: https://ftc-resources.firstinspires.org/ftc/field/eventfieldguide
 - **CAD** (spots, distances, lane widths; derived): https://ftc-resources.firstinspires.org/ftc/archive/2027/field/field-cad-step
-- **Code** (controls, cues, firing gates, as of 2026-10-20): `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/opmodes/teleop/MainTeleOp.java`, `subsystems/Feedback.java`, `Robot.java`; `README-12303.md` §7
+- **Code** (controls, cues, firing gates, aim): `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/opmodes/teleop/MainTeleOp.java`, `subsystems/Feedback.java`, `subsystems/Aim.java`, `subsystems/Carrier.java`, `Robot.java`; `README-12303.md` §7
+- **Robot as built** (front intake, rear shooter, carrier): [R8-robot-v2.md](../research/R8-robot-v2.md)
 - **FTCScout / FTC Events** (Saline): https://ftcscout.org/events/2026/USMISAS · https://ftc-events.firstinspires.org/2026/USMISAS/rankings
 - **MonaShores** (tip dwell, defence at Saline; community): https://github.com/Mona-Shores-FTC-Robotics/biobuzz
 - **CD-14343** (benchmarks, "starved of pollen"; community): https://www.chiefdelphi.com/t/ftc-14343-escape-velocity-biobuzz-build-thread/524080

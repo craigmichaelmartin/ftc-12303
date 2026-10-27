@@ -29,7 +29,7 @@ import java.util.List;
  *
  * ALLIANCES: every value below is written ONCE for RED. Blue = red rotated 180 deg about the centre:
  *   (x, y, heading) -> (-x, -y, heading + 180)   (Alliance.fromRed...). Never mirror.
- *   Example: red start S1 (61.67, -12.75, 180) -> blue S1 (-61.67, 12.75, 0).
+ *   Example: red start S1 (61.67, -12.75, 0) -> blue S1 (-61.67, 12.75, 180).
  *
  * HIVE STATES (util/HiveState): A = match start (red AUDIENCE cell up, faces +X -> red shoots from the
  * audience half), B = after a TIP (red far/SCORING cell up, faces -X -> red shoots from the far half).
@@ -68,6 +68,10 @@ public final class FieldConstants {
     public static final FieldPoint RED_AIM_STATE_B = new FieldPoint(-16.48, -12.74, 58.31);
     /** Shots more than ~40 deg off the opening's axis start to hit the cell side wall (R2 9, R2 verify F23). */
     public static final double GOOD_SHOT_MAX_OFF_AXIS_DEG = 40.0;
+    /** The up cell's opening is a pentagon about 20 in wide x 14 in tall (M p.71-72). The aim tolerance uses it. */
+    public static final double CELL_OPENING_WIDTH_IN = 20.0;
+    /** POLLEN is a 2.8 in ball. */
+    public static final double POLLEN_RADIUS_IN = 1.4;
 
     /** Where to aim for our alliance in this HIVE state. */
     public static FieldPoint aimPoint(Alliance alliance, HiveState state) {
@@ -141,26 +145,34 @@ public final class FieldConstants {
     // =============================================================================================
     // Start spots (G304: fully on our side, touching a wall, not in the LOADING ZONE, not touching a
     // FLOWER, 4 POLLEN preloads). Centres of an 18 x 18 robot, RED. "facing" = the direction the
-    // SHOOTER (turret centre) points; the robot heading is facing - TURRET_CENTER_DEG. Every spot is
-    // SQUARE to its wall (S2 180 deg, S7 0 deg red): the 151 / 31 deg values in older notes are aim
-    // bearings, not placement headings - an 18 in robot turned ~30 deg cannot touch the wall there.
+    // SHOOTER points, away from the wall; the robot heading is facing - SHOOTER_FACING_DEG, so at every
+    // spot the FRONT (intake) is against the wall and the back (shooter) faces into the field. Every spot
+    // is SQUARE to its wall (red S2 heading 0, S7 heading 180): the 151 / 31 deg values in older notes are
+    // aim bearings, not placement headings - an 18 in robot turned ~30 deg cannot touch the wall there.
     // "Our start wall" = the end wall behind S1: red = AUDIENCE wall, blue = FAR wall.
     // =============================================================================================
     public enum StartSpot {
-        S1("Audience wall on red HIVE axis (col C) - shoots straight at the up cell",
-                "Far wall on blue HIVE axis (col D) - shoots straight at the up cell", 61.67, -12.75, 180.0),
-        S2("Audience wall, col B - shoot-first routines drive to the Zone A side spot to fire",
-                "Far wall, col E - shoot-first routines drive to the Zone A side spot to fire", 61.67, -37.50, 180.0),
-        S3("Red wall, audience side - shoot-first routines drive to the Zone A side spot",
-                "Blue wall, far side - shoot-first routines drive to the Zone A side spot", 45.00, -61.67, 90.0),
-        S4("Red wall centre, beside the HIVE - shoot-first routines drive to the Zone A side spot",
-                "Blue wall centre, beside the HIVE - shoot-first routines drive to the Zone A side spot", 0.00, -61.67, 90.0),
-        S5("Far/red corner, next to the LOADING ZONE - A0 only",
-                "Audience/blue corner, next to the LOADING ZONE - A0 only", -61.67, -61.67, 0.0),
-        S6("Far wall on red HIVE axis - A3 role 2 (only 1.35 in from the F-far FLOWER!)",
-                "Audience wall on blue HIVE axis - A3 role 2 (only 1.35 in from the F-aud FLOWER!)", -61.67, -10.10, 0.0),
-        S7("Far wall, col B - A0 (role 2 only with > +-32 deg turret travel)",
-                "Audience wall, col E - A0 (role 2 only with > +-32 deg turret travel)", -61.67, -40.00, 0.0);
+        S1("Audience wall on the red HIVE axis (col C): front (intake) against the wall, back toward the HIVE - shoots straight at the up cell",
+                "Far wall on the blue HIVE axis (col D): front (intake) against the wall, back toward the HIVE - shoots straight at the up cell",
+                61.67, -12.75, 180.0),
+        S2("Audience wall, col B: front (intake) against the wall - shoot-first routines drive to the Zone A side spot to fire",
+                "Far wall, col E: front (intake) against the wall - shoot-first routines drive to the Zone A side spot to fire",
+                61.67, -37.50, 180.0),
+        S3("Red wall, audience side: front (intake) against the wall - shoot-first routines drive to the Zone A side spot",
+                "Blue wall, far side: front (intake) against the wall - shoot-first routines drive to the Zone A side spot",
+                45.00, -61.67, 90.0),
+        S4("Red wall centre, beside the HIVE: front (intake) against the wall - shoot-first routines drive to the Zone A side spot",
+                "Blue wall centre, beside the HIVE: front (intake) against the wall - shoot-first routines drive to the Zone A side spot",
+                0.00, -61.67, 90.0),
+        S5("Far/red corner, next to the LOADING ZONE: front (intake) against the far wall - A0 only",
+                "Audience/blue corner, next to the LOADING ZONE: front (intake) against the audience wall - A0 only",
+                -61.67, -61.67, 0.0),
+        S6("Far wall on the red HIVE axis: front (intake) against the wall, back toward the HIVE - A3 role 2 (only 1.35 in from the F-far FLOWER!)",
+                "Audience wall on the blue HIVE axis: front (intake) against the wall, back toward the HIVE - A3 role 2 (only 1.35 in from the F-aud FLOWER!)",
+                -61.67, -10.10, 0.0),
+        S7("Far wall, col B: front (intake) against the wall - A0 only (A3 role 2 starts on S6)",
+                "Audience wall, col E: front (intake) against the wall - A0 only (A3 role 2 starts on S6)",
+                -61.67, -40.00, 0.0);
 
         private final String redText;
         private final String blueText;
@@ -184,35 +196,45 @@ public final class FieldConstants {
 
     /** Robot start pose (FTC frame) for this alliance and start spot. */
     public static Pose startPose(Alliance alliance, StartSpot spot) {
-        double robotHeadingRed = spot.redShooterFacingDeg - RobotConfig.TURRET_CENTER_DEG;
+        double robotHeadingRed = spot.redShooterFacingDeg - RobotConfig.SHOOTER_FACING_DEG;
         return pose(alliance, spot.redX, spot.redY, robotHeadingRed);
     }
 
     // =============================================================================================
-    // Shooting spots (RED). Robot heading is chosen so the turret CENTRE points at the aim point,
-    // which leaves the most turret travel for correction. (Rotated-footprint clearances, 18 in robot.)
+    // Shooting spots (RED). The robot heading is chosen so the shooter (the robot's BACK) points at the
+    // aim point; during the volley the robot turns itself onto the exact aim heading (subsystems/Aim).
+    // Shot distances are measured like the AIM telemetry: from where the ball leaves the aimed robot to the
+    // opening centre, with the placeholder RobotConfig.SHOOTER_FORWARD_IN = -7 (7 in shorter than from the
+    // robot centre). (Rotated-footprint clearances, 18 in robot.)
     // =============================================================================================
     /**
-     * AUTO Zone A "side spot" for shoot-first routines that do not start on S1 (S2-S4): 45.5 in from the
-     * audience-cell opening, 32 deg off-axis, heading ~148 deg. Its footprint is 6.8 in outside the tip-1
-     * landing box (x 24..42, y -28..+2) and 2.9 in clear of a partner still standing on S1, 3.3 in off the
-     * audience wall. (The TeleOp spot A2 (48, -12.75) is 3 in INSIDE the landing box: not used in AUTO.)
+     * AUTO Zone A "side spot" for shoot-first routines that do not start on S1 (S2-S4): a 38.5 in shot
+     * (45.5 in from the robot centre) at the audience-cell opening, 32 deg off-axis, heading ~-32 deg (back
+     * toward the cell). Its footprint is 6.8 in outside the tip-1 landing box (x 24..42, y -28..+2) and 2.9 in
+     * clear of a partner still standing on S1, 3.3 in off the audience wall. (The TeleOp spot A2 (48, -12.75)
+     * is 3 in INSIDE the landing box: not used in AUTO.)
      */
     public static final double ZONE_A_SIDE_SHOOT_X = 55.0, ZONE_A_SIDE_SHOOT_Y = -37.0;
     /** Shoot-first starts on our alliance wall (S3, S4) first drive straight off it to this y. */
     public static final double LEAVE_ALLIANCE_WALL_Y = -48.0;
     /**
-     * Zone B ("B2", A2 volley 2): straight in front of the red far-cell opening, 31.5 in. Its front edge is
-     * ~3 in inside the TIP-2 landing box - fine for A2 (4 balls cannot tip the empty far cell), but a robot
-     * that fires a TIP-2 threshold ball here must move off after the volley.
+     * Zone B ("B2", A2 volley 2): straight in front of the red far-cell opening, heading 180 (back toward the
+     * cell). A 24.5 in shot (31.5 in from the robot centre): BELOW the 30-92 in shot band, the one documented
+     * exception (RouteSweepTest checks B2 against a 24 in floor) until the shot map (07 Exp 2b) decides B2.
+     * If the short shot misses, move B2 back toward (-55, -12.75) (a 31.5 in shot): that spot passes the route
+     * test but is only ~1.6 in from the F-far FLOWER, and the approach drives toward it, so an overshoot
+     * touches it. The robot's edge nearest the HIVE is ~3 in inside the TIP-2 landing box - fine for A2 (4
+     * balls cannot tip the empty far cell), but a robot that fires a TIP-2 threshold ball here must move off
+     * after the volley.
      */
     public static final double ZONE_B_SHOOT_X = -48.0, ZONE_B_SHOOT_Y = -12.75;
     /**
-     * Zone B spot for A3 role 1: 39.5 in from the far-cell opening, heading ~25.9 deg (turret centre on the
-     * aim point), ~26 deg off-axis. With the robot turned 25.9 deg its corners reach 12.0 in: 0.87 in outside
-     * the TIP-2 landing box (x -42..-24, y -28..+2; +-10 in), 1.6 in from the F-far FLOWER, 1.1 in from a
-     * partner still at S6 and 5.0 in from the robot in the corner slot. A partner still at S7 would overlap
-     * this spot by ~8 in - another reason role 2 starts on S6 and is parked before 17 s.
+     * Zone B spot for A3 role 1: a 32.5 in shot (39.5 in from the robot centre) at the far-cell opening,
+     * heading ~-154.1 deg (back toward the aim point), ~26 deg off-axis. Turned 25.9 deg from square, its
+     * corners reach 12.0 in: 0.87 in outside the TIP-2 landing box (x -42..-24, y -28..+2; +-10 in), 1.6 in
+     * from the F-far FLOWER, 1.1 in from a partner still at S6 and 5.0 in from the robot in the corner slot.
+     * A partner on S7 would overlap this spot by ~8 in - another reason role 2 starts on S6 (the only start
+     * it accepts) and is parked before 17 s.
      */
     public static final double ZONE_B_SHOOT_ROLE1_X = -52.0, ZONE_B_SHOOT_ROLE1_Y = -30.0;
     /**
@@ -249,10 +271,10 @@ public final class FieldConstants {
         return shootPose(alliance, ZONE_B_SHOOT_ROLE1_X, ZONE_B_SHOOT_ROLE1_Y, HiveState.B);
     }
 
-    /** A pose at the RED spot (redX, redY) facing so the turret centre points at the target cell. */
+    /** A pose at the RED spot (redX, redY) turned so the shooter (the robot's back) points at the target cell. */
     public static Pose shootPose(Alliance alliance, double redX, double redY, HiveState target) {
         FieldPoint redAim = (target == HiveState.A) ? RED_AIM_STATE_A : RED_AIM_STATE_B;
-        double redHeading = MathUtil.bearingDeg(redX, redY, redAim.x, redAim.y) - RobotConfig.TURRET_CENTER_DEG;
+        double redHeading = MathUtil.bearingDeg(redX, redY, redAim.x, redAim.y) - RobotConfig.SHOOTER_FACING_DEG;
         return pose(alliance, redX, redY, redHeading);
     }
 

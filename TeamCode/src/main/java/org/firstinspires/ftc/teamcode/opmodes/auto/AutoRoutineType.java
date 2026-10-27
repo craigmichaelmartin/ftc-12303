@@ -31,8 +31,9 @@ public enum AutoRoutineType {
 
     /**
      * Starts this routine is built for. Shoot-first routines from S5/S6/S7 would drive through the HIVE,
-     * and A3 role 2 needs the second cell in front of it (S6; S7 is accepted but its aim is outside a
-     * +-28 deg turret - AutoSelector warns). MainAuto runs a NO-MOTION plan for any other combination.
+     * and A3 role 2 starts on S6 only: there its back already points at the second cell (~3 deg off). From
+     * S7 it would have to turn ~31 deg with its front against the far wall, and the turning corners could
+     * hit the wall. MainAuto runs a NO-MOTION plan for any other combination (INIT says which start to use).
      */
     public boolean canStartFrom(StartSpot start) {
         switch (this) {
@@ -41,7 +42,7 @@ public enum AutoRoutineType {
             case A3_ROLE1:
                 return start == StartSpot.S1 || start == StartSpot.S2 || start == StartSpot.S3 || start == StartSpot.S4;
             case A3_ROLE2:
-                return start == StartSpot.S6 || start == StartSpot.S7;
+                return start == StartSpot.S6;
             case A0_SAFE:
             default:
                 return true;

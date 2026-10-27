@@ -14,8 +14,9 @@ Robot code, strategy plan and playbook for FIRST Tech Challenge team 12303.
   for us, or 36 and the SWARM ranking point with a partner that also leaves and parks. Stretch goal: a
   two-robot double tip.
 - **TELEOP: the two-zone loop.** The up cell faces its own end wall and swaps ends after every TIP, and the
-  spill lands where we just shot from. So: shoot, sweep the spill, cross to the other end, shoot again. Two
-  loads of 4 make each TIP after the first.
+  spill lands where we just shot from, behind our robot. So: shoot, turn around once, sweep the spill, keep
+  driving to the other end and arrive with the back already facing the new up cell, shoot again. Two loads
+  of 4 make each TIP after the first.
 - **Last minute:** keep tipping, fire whatever is on board at about 0:12, then both robots park. POLLEN only
   until NECTAR passes its tests.
 
@@ -23,16 +24,21 @@ Robot code, strategy plan and playbook for FIRST Tech Challenge team 12303.
 
 - **[Pedro Pathing 3](https://pedropathing.com/docs/pathing/pedro3)** drives the AUTO paths, on
   **goBILDA Pinpoint** odometry with X/Y pods.
-- **Limelight 3A AprilTags aim the turret** at the cell opening (each HIVE tag cluster marks the center of a cell
-  opening). Position comes from odometry, because the tags move when the HIVE tips; the aim fuses the two.
-- **Turret flywheel shooter** on a SWYFT mecanum drive. We keep the design and tune it: feeding gated on
-  flywheel speed, a steel flywheel, more turret travel, ball sensors.
-- **Never more than 4 balls.** The robot counts every ball, stops the intake at 4 and refuses NECTAR at the
-  mouth (G407 and G408 have no momentary exception).
-- **Driver + operator controls** with auto-aim, one-button volleys and rumble cues. One INIT menu sets
-  alliance, start spot, AUTO routine, park slot and delay.
+- **Intake at the front, shooter at the back,** on a SWYFT mecanum drive: a motor-driven intake wheel on a
+  floating arm, a tunnel that holds the balls, a carrier wheel that holds them and feeds one at a time, and a
+  fixed shooting wheel at the top of the back. The plan adds ball sensors and tunes the rest: feeding gated on
+  flywheel speed, a measured exit angle and RPM table, and a steel flywheel if it fits.
+- **The robot aims by turning its back to the cell.** Odometry gives the aim heading, and **Limelight 3A
+  AprilTags** looking out of the back correct it (each HIVE tag cluster marks the center of a cell opening).
+  Position comes from odometry, because the tags move when the HIVE tips.
+- **Never more than 4 balls.** The tunnel must hold no more than 4. With the mouth sensor the robot counts
+  every ball, stops the intake at 4 and refuses NECTAR at the mouth; without it the count starts at the
+  preloads and drops by one per feed, and the drivers stop at 4 by eye (G407 and G408 have no momentary
+  exception).
+- **Driver + operator controls** with aim-assist (hold RB and the robot turns onto the target), one-button
+  volleys and rumble cues. One INIT menu sets alliance, start spot, AUTO routine, park slot and delay.
 - **Laptop tests** sweep every AUTO route on both alliances for walls, FLOWERS, HIVE legs, the partner robot
-  and the spill zone, and check ball handling and HIVE tracking.
+  and the spill zone, and check ball handling, aiming and HIVE tracking.
 
 ## Start here
 

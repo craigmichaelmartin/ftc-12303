@@ -47,6 +47,11 @@ import java.util.Locale;
  *    tags seen up and then gone A1_SPILL_TAGS_GONE_SEC, or A1_SPILL_HOLD_MAX_SEC after the last shot.
  *    A2 / A3 role 1 leave at once, on legs that keep the turning robot out of the tip-1 landing box (G409).
  *  - A volley never starts when the target cell faces away from the robot (wrong start / zone).
+ *  - Aiming: the shooter is fixed (out of the robot's back). Every shooting pose already faces the target;
+ *    during a volley the robot also turns itself onto the exact aim heading (operator trim and vision bias
+ *    included) whenever it is more than half the aim tolerance off, stepping off a wall first if it is
+ *    touching one (AutoLegs.volleyAimHold / chassisAimPose).
+ *  - A3 role 2 starts on S6 only (any other start is invalid: the robot does not move).
  *
  * Coordinates are written for red in FieldConstants and rotated for blue automatically.
  */
@@ -221,8 +226,8 @@ public class AutoRoutine {
         pathDoneAtSec = -1.0;
         switch (s) {
             case START_DELAY:
-                // Pre-spin and pre-aim while waiting: no chassis motion, so it costs nothing.
-                if (valid && type.shootsStartCellFirst() && robot.indexer.count() > 0) robot.setShootingMode(true);
+                // Pre-spin while waiting: no chassis motion, so it costs nothing.
+                if (valid && type.shootsStartCellFirst() && robot.carrier.count() > 0) robot.setShootingMode(true);
                 break;
 
             case DRIVE_TO_SHOOT_1: {
@@ -240,8 +245,8 @@ public class AutoRoutine {
                 }
                 if (previousTimedOut) robot.drive.holdPose(pose());   // stop chasing a timed-out path
                 robot.setShootingMode(true);
-                ballsBeforeVolley = robot.indexer.count();
-                confirmedBeforeVolley = robot.indexer.confirmedShots();
+                ballsBeforeVolley = robot.carrier.count();
+                confirmedBeforeVolley = robot.carrier.confirmedShots();
                 volleyClockSec = -1.0;
                 volleyRequestedAtSec = -1.0;
                 lastAimHoldSec = -10.0;
@@ -252,7 +257,7 @@ public class AutoRoutine {
                 break;
 
             case SPILL_HOLD:
-                // Turret centred = the camera keeps facing the start cell, so we can see it tip.
+                // The robot holds its firing pose, so the rear camera keeps facing the start cell and sees it tip.
                 robot.setShootingMode(false);
                 intakeOn = false;
                 if (!robot.drive.isBusy()) robot.drive.holdPose(pose());
@@ -264,7 +269,7 @@ public class AutoRoutine {
                 break;
 
             case SWEEP_GARDEN:
-                intakeOn = true;   // stops by itself at 4 balls (G407)
+                intakeOn = true;   // with a mouth sensor it stops by itself at 4 balls (G407)
                 follow(AutoLegs.sweep(alliance));
                 break;
 
@@ -283,12 +288,13 @@ public class AutoRoutine {
 
             case DRIVE_TO_ZONE_B:
                 intakeOn = false;
-                robot.setShootingMode(true);   // spin up and pre-aim on the way
+                robot.setShootingMode(true);   // spin up on the way
                 follow(type == AutoRoutineType.A3_ROLE1 ? AutoLegs.toRole1Spot(alliance) : AutoLegs.toZoneB(alliance, pose()));
                 break;
 
             case WAIT_FOR_PARTNER_TIP:
-                // Pre-aim at the second cell (still down) and spin up; fire when vision sees it come up.
+                // Aim at the second cell (still down; S6 puts the robot's back toward it) and spin up; fire
+                // when vision sees it come up.
                 robot.setAimOverride(HiveState.B);
                 robot.setShootingMode(true);
                 robot.drive.holdPose(pose());
@@ -296,7 +302,7 @@ public class AutoRoutine {
                 break;
 
             case DRIVE_TO_PARK:
-                robot.indexer.cancelFiring();
+                robot.carrier.cancelFiring();
                 robot.setShootingMode(false);
                 robot.setAimOverride(null);
                 intakeOn = false;
@@ -326,7 +332,7 @@ public class AutoRoutine {
                 return pathFinished();
 
             case SWEEP_GARDEN:
-                if (robot.indexer.isFull()) return true;
+                if (robot.carrier.isFull()) return true;
                 if (!pathFinished()) return false;
                 if (pathDoneAtSec < 0) pathDoneAtSec = nowSec;
                 return nowSec - pathDoneAtSec >= RobotConfig.AUTO_SWEEP_DWELL_SEC;
@@ -360,7 +366,7 @@ public class AutoRoutine {
         // The volley clock starts once the robot has stopped (or AUTO_VOLLEY_MAX_SETTLE_SEC after entry).
         if (volleyClockSec < 0 && (!robot.drive.isBusy() || elapsed() >= RobotConfig.AUTO_VOLLEY_MAX_SETTLE_SEC)) {
             volleyClockSec = nowSec;
-            robot.drive.holdPose(pose());   // resist being pushed (pinned turret: during() turns to aim)
+            robot.drive.holdPose(pose());   // resist being pushed (during() turns the robot onto the aim)
         }
         boolean clockExpired = volleyClockSec >= 0 && nowSec - volleyClockSec > RobotConfig.AUTO_VOLLEY_TIMEOUT_SEC;
         if (waitingForB) {
@@ -386,15 +392,15 @@ public class AutoRoutine {
             // A HIVE state change (e.g. "partner TIP seen" just before VOLLEY_2) starts a short TIP pause
             // that cancels firing - so ask for the volley only after the pause.
             if (!robot.hive.tipPauseActive()) {
-                int minCycles = (step == Step.VOLLEY_2 && plan.contains(Step.SWEEP_GARDEN))
-                        ? RobotConfig.AUTO_VOLLEY2_MIN_GATE_CYCLES : 0;
-                robot.indexer.requestVolley(minCycles);
+                int minFeeds = (step == Step.VOLLEY_2 && plan.contains(Step.SWEEP_GARDEN))
+                        ? RobotConfig.AUTO_VOLLEY2_MIN_FEEDS : 0;
+                robot.carrier.requestVolley(minFeeds);
                 volleyPending = false;
                 volleyRequestedAtSec = nowSec;
             }
             return clockExpired;
         }
-        if (!robot.indexer.isFiring() && nowSec - volleyRequestedAtSec > 0.2) return true;   // emptied, or cancelled
+        if (!robot.carrier.isFiring() && nowSec - volleyRequestedAtSec > 0.2) return true;   // emptied, or cancelled
         return clockExpired;
     }
 
@@ -426,11 +432,11 @@ public class AutoRoutine {
     // ---------------------------------------------------------------------------------------------
     private void during(Step s) {
         if ((s == Step.VOLLEY_1 || s == Step.VOLLEY_2) && !skipVolley && volleyClockSec >= 0
-                && robot.chassisMustAim() && robot.drive.hasLocalizer()) {
-            // Pinned / missing turret: turn the chassis onto the target (off the wall if needed).
-            double turn = robot.aim().chassisTurnDeg;
-            if (Math.abs(turn) > RobotConfig.CHASSIS_AIM_TOLERANCE_DEG / 2 && nowSec - lastAimHoldSec > 0.4) {
-                robot.drive.holdPose(AutoLegs.chassisAimPose(pose(), turn));
+                && robot.drive.hasLocalizer()) {
+            // Fixed shooter: turn the robot until its back points at the target (off the wall if needed).
+            Pose hold = AutoLegs.volleyAimHold(pose(), robot.aim(), nowSec - lastAimHoldSec);
+            if (hold != null) {
+                robot.drive.holdPose(hold);
                 lastAimHoldSec = nowSec;
             }
         }
@@ -443,11 +449,11 @@ public class AutoRoutine {
         switch (s) {
             case VOLLEY_1: {
                 // With a feed beam, only CONFIRMED shots count toward the TIP (an unconfirmed feed may be a jam).
-                int confirmed = robot.indexer.confirmedShots() - confirmedBeforeVolley;
-                int countDrop = ballsBeforeVolley - robot.indexer.count();
-                int fired = robot.indexer.hasFeedBeam() ? confirmed : countDrop;
+                int confirmed = robot.carrier.confirmedShots() - confirmedBeforeVolley;
+                int countDrop = ballsBeforeVolley - robot.carrier.count();
+                int fired = robot.carrier.hasFeedBeam() ? confirmed : countDrop;
                 volley1Launched = Math.max(0, Math.max(confirmed, countDrop));
-                robot.indexer.cancelFiring();
+                robot.carrier.cancelFiring();
                 if (fired >= RobotConfig.AUTO_ASSUME_TIP_AFTER_BALLS) {
                     // 3 own NECTAR start in this cell, so ~3 POLLEN tip it (EFSG 12): assume it tipped, and
                     // keep vision out while the start cell is still up during the dwell.
@@ -466,7 +472,7 @@ public class AutoRoutine {
                 }
                 break;
             case VOLLEY_2:
-                robot.indexer.cancelFiring();
+                robot.carrier.cancelFiring();
                 break;
             case WAIT_FOR_PARTNER_TIP: {
                 boolean seen = partnerTipSeen() || robot.hive.state() == HiveState.B;

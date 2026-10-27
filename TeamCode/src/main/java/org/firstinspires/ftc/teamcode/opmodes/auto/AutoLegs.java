@@ -6,6 +6,7 @@ import org.firstinspires.ftc.teamcode.config.FieldConstants;
 import org.firstinspires.ftc.teamcode.config.FieldConstants.ParkSlot;
 import org.firstinspires.ftc.teamcode.config.FieldConstants.StartSpot;
 import org.firstinspires.ftc.teamcode.config.RobotConfig;
+import org.firstinspires.ftc.teamcode.subsystems.Aim;
 import org.firstinspires.ftc.teamcode.util.Alliance;
 import org.firstinspires.ftc.teamcode.util.MathUtil;
 
@@ -17,7 +18,8 @@ import java.util.List;
  * Every AUTO drive ("leg") as pure geometry: waypoints + end pose (+ slow speed / turn-first flags).
  * AutoRoutine drives exactly these legs, and the JUnit RouteSweepTest sweeps exactly these legs for both
  * alliances, every routine, start and park choice - so a route change here is checked before it reaches
- * the field. No hardware in this class.
+ * the field. The volley aim turn (volleyAimHold) is here too, so AimTest can check it. No hardware in this
+ * class.
  */
 public final class AutoLegs {
     private AutoLegs() {
@@ -112,13 +114,28 @@ public final class AutoLegs {
     }
 
     /**
-     * Pinned / missing turret: the pose to hold so the CHASSIS points the shooter at the target - the
-     * current pose turned by turnDeg, moved off any wall the turned robot would otherwise touch.
+     * The pose to hold so the robot's back (the fixed shooter) points at the target: the current pose turned
+     * counter-clockwise by turnDeg, moved off any wall the turned robot would otherwise touch.
      */
     public static Pose chassisAimPose(Pose here, double turnDeg) {
         double h = here.heading() + Math.toRadians(turnDeg);
         double reach = FieldConstants.ROBOT_HALF_WIDTH * (Math.abs(Math.cos(h)) + Math.abs(Math.sin(h)));
         double limit = FieldConstants.WALL - reach - 0.5;
         return new Pose(MathUtil.clamp(here.x(), -limit, limit), MathUtil.clamp(here.y(), -limit, limit), h);
+    }
+
+    /** During an AUTO volley a new aim pose is sent at most this often (Pedro needs a moment to turn). */
+    public static final double VOLLEY_REAIM_PERIOD_SEC = 0.4;
+
+    /**
+     * AUTO volley aim (AutoRoutine runs it every loop of a volley): the pose to hold so the robot turns onto
+     * the aim heading (chassisAimPose), or null = keep the current hold. Null while the heading error is
+     * inside HALF of the aim tolerance (the robot settles instead of hunting; the fire gate needs the whole
+     * tolerance) and for VOLLEY_REAIM_PERIOD_SEC after the last aim pose.
+     */
+    public static Pose volleyAimHold(Pose here, Aim.Solution aim, double secSinceLastHold) {
+        if (Math.abs(aim.headingErrorDeg) <= aim.toleranceDeg / 2) return null;
+        if (secSinceLastHold <= VOLLEY_REAIM_PERIOD_SEC) return null;
+        return chassisAimPose(here, aim.headingErrorDeg);
     }
 }
